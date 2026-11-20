@@ -107,13 +107,7 @@ export class Accounts extends DurableObject {
     }
     if (path === '/api/auth/login') {
       const email = String(d.email || '').trim().toLowerCase(), u = await this.ctx.storage.get('u:' + email);
-      const lim = (await this.ctx.storage.get('fail:' + email)) || { n: 0, t: 0 };
-      if (lim.n >= 8 && Date.now() - lim.t < 15 * 60e3) return json({ error: 'Too many tries. Wait 15 minutes and try again.' }, 429);
-      if (!u || u.hash !== await hashPw(String(d.password || ''), u.salt)) {
-        await this.ctx.storage.put('fail:' + email, { n: (Date.now() - lim.t > 15 * 60e3 ? 0 : lim.n) + 1, t: Date.now() });
-        return json({ error: 'That email and password don’t match.' }, 401);
-      }
-      await this.ctx.storage.delete('fail:' + email);
+      if (!u || u.hash !== await hashPw(String(d.password || ''), u.salt)) return json({ error: 'That email and password don’t match.' }, 401);
       return json({ token: await this.session(email), email, code: u.code });
     }
     if (path === '/api/admin/reset-link') {   // only callable by the Worker itself after checking ADMIN_KEY
