@@ -26,7 +26,7 @@ small{color:var(--muted)}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;white-space:nowrap}.brandname{font-family:Fredoka,system-ui,sans-serif;font-weight:600;font-size:21px;color:#c46a7a;letter-spacing:.01em}.brand img{width:36px;height:36px;border-radius:11px;border:1px solid var(--line)}
 .kpis{display:flex;gap:26px;margin:0 auto}
 .kpi{display:flex;flex-direction:column;line-height:1.15}.kpi small{font-size:11px;text-transform:uppercase;letter-spacing:.06em}.kpi b{font-size:17px;white-space:nowrap}.kpi em{font-style:normal;font-size:11px;color:var(--muted)}
-.who{display:flex;gap:10px;align-items:center}
+.who{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0}
 .chip-state{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;white-space:nowrap}
 .chip-state i{width:9px;height:9px;border-radius:50%;background:var(--muted)}
 .chip-state:has(.focused) i{background:var(--good)}.chip-state:has(.distracted) i{background:var(--bad)}.chip-state:has(.grace) i{background:var(--accent)}.chip-state:has(.idle) i{background:var(--idle)}
@@ -1617,7 +1617,7 @@ function renderAcct() {
 $('acctTop').onclick = $('acctDock').onclick = () => { acctErr = ''; openPanel('acct'); renderAcct(); };
 // a password reset link: #reset=<one-time token>
 const resetToken = (location.hash.match(/^#reset=([a-z0-9]{20,64})$/) || [])[1];
-if (resetToken) { acctMode = 'reset'; setTimeout(() => { document.body.classList.remove('phone'); openPanel('acct'); renderAcct(); }, 300); }
+if (resetToken) { acctMode = 'reset'; setTimeout(() => { openPanel('acct'); renderAcct(); }, 300); }
 $('acct').addEventListener('click', async e => {
   if (e.target.id === 'acctSwitch') { acctMode = acctMode === 'signup' ? 'login' : 'signup'; acctErr = ''; renderAcct(); }
   if (e.target.id === 'acctOut') { try { await api('/api/auth/logout', {method: 'POST', body: '{}'}); } catch (_) {} signedOut(); renderAcct(); }
@@ -2347,7 +2347,7 @@ let onbStep = 0, onbMode = 'signup', onbErr = '';
 const ONB_N = 5, isMac = /Mac/.test(navigator.platform || navigator.userAgent) && !/iPhone|iPad/.test(navigator.userAgent), isWin = /Win/.test(navigator.platform || navigator.userAgent), isPhone = /Android|iPhone|iPad/.test(navigator.userAgent);
 let onbOS = isWin ? 'win' : isMac ? 'mac' : 'win';
 function ensureCode() { if (!CODE) { CODE = newCode(); ls('focusbakery-code', CODE); if (location.protocol !== 'file:') { const u = new URL(location.href); u.searchParams.set('code', CODE); history.replaceState(null, '', u); } poll(); } }
-function openOnb(step = 0) { onbStep = step; onbErr = ''; document.body.classList.remove('phone'); openPanel('onb'); renderOnb(); }
+function openOnb(step = 0) { onbStep = step; onbErr = ''; openPanel('onb'); renderOnb(); }
 function renderOnb() {
   const el = $('onb'), esc = t => String(t).replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
   const dots = `<div class="dots">${Array.from({length: ONB_N}, (_, i) => `<i class="${i <= onbStep ? 'on' : ''}"></i>`).join('')}</div>`;
@@ -2388,7 +2388,7 @@ function finishOnb() {
   if ($('onbCustom') && !$('onbCustom').closest('.custom').hidden) setCustomGoal($('onbCustom').value);
   const t = $('onbTask') && $('onbTask').value.trim();
   if (t) { S.task = t; S.taskId = null; S.taskStart = Date.now(); $('task').value = t; pushTask(); syncDone(); }
-  S.onboarded = true; save(); closePanels(); document.body.classList.toggle('phone', phoneish);
+  S.onboarded = true; save(); closePanels();
   floats.push({x: W/2, y: 120, text: 'Welcome to the bakery! 🧁', t: 0}); B.mood = 'joy'; B.moodT = 2;
 }
 $('onb').addEventListener('click', e => {
