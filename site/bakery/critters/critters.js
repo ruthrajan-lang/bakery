@@ -47,6 +47,7 @@
       const tf = s.tuft.step(-rk*1.5 - hd*.8 + v*.0008, dt), el = s.earL.step(-rk*1.3 - hd + v*.0009, dt), er = s.earR.step(-rk*1.3 - hd - v*.0009, dt), tl = s.tail.step(rk*2 + v*.0006, dt);
       const al = s.armL.step(p.al, dt), ar = s.armR.step(p.ar, dt), lk = s.look.step((p.look || 0) + dir*.35, dt);
       if ((this.next -= dt) < 0) { this.blink = .13; this.next = 2 + Math.random()*3; } this.blink = Math.max(0, this.blink - dt);
+      if (this.giggle > 0) { this.giggle -= dt; p.face = 'joy'; p.rock = (p.rock || 0) + S(t*38)*.06*Math.min(1, this.giggle*2); }
       const face = p.face || 'happy', A = window.CRITTER_ART && CRITTER_ART[k]; if (!A) return {top: feet - h};
       const sc = h/950, ink = '#5d463a';
       if (!A._p) for (const q of A.parts) { q.O = new Path2D(q.o); q.F = new Path2D(q.f); q.D = q.d.map(([col, d]) => [col, new Path2D(d)]); q.K = q.k ? new Path2D(q.k) : null; } A._p = 1;
