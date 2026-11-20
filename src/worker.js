@@ -78,6 +78,9 @@ async function hashPw(pw, salt) {
   const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
   return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, key, 256));
 }
+// the admin (sign-ups page) is identified by a fingerprint of their email, so the address isn't in the code
+const ADMIN_SHA256 = ['9441d2a1518d724196d78695c5a190be7ae181dc41b637b244ee4b03cf73bfde'];
+const sha256 = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
 const okEmail = e => typeof e === 'string' && e.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 export class Accounts extends DurableObject {
   async user(token) {
@@ -128,7 +131,22 @@ export class Accounts extends DurableObject {
     const u = await this.user(token);
     if (!u) return json({ error: 'Please log in again.' }, 401);
     if (path === '/api/auth/logout') { await this.ctx.storage.delete('tok:' + token); return json({ ok: true }); }
-    if (path === '/api/me') return json({ email: u.email, code: u.code });
+    if (path === '/api/me') return json({ email: u.email, code: u.code, admin: ADMIN_SHA256.includes(await sha256(u.email)) });
+    if (path === '/api/admin/users') {   // sign-ups, for the admin page only
+      if (!ADMIN_SHA256.includes(await sha256(u.email))) return json({ error: 'not allowed' }, 403);
+      const users = [];
+      for (const [k, v] of await this.ctx.storage.list({ prefix: 'u:' })) {
+        const sv = (await this.ctx.storage.get('save:' + v.id)) || {}, S = sv.data || {}, days = Object.values(S.daylog || {});
+        let tracker = null;
+        try { const r = await this.env.RELAY.get(this.env.RELAY.idFromName(v.code)).fetch(new Request('https://relay/api/state/' + v.code)); const d = await r.json(); tracker = d.t || null; } catch {}
+        users.push({ email: k.slice(2), created: v.created || null, lastSave: sv.t || null, tracker,
+          focusMin: Math.round((S.life || 0)/60), coins: S.coins || 0, level: S.lvlSeen || 1, bakes: (S.hist || []).length,
+          daysActive: days.filter(d => (d.focus || 0) > 60 || d.bakes).length, goalDays: days.filter(d => d.goalMet).length,
+          friends: Object.values(S.friends || {}).reduce((a, b) => a + b, 0), todoist: !!S.tdTok });
+      }
+      users.sort((a, b) => (b.created || 0) - (a.created || 0));
+      return json({ users, now: Date.now() });
+    }
     if (path === '/api/save') {
       if (req.method === 'PUT') {
         const body = JSON.stringify(d.data || null);
@@ -155,7 +173,7 @@ export default {
       const link = new URL('/bakery/#reset=' + d.token, url).toString();
       return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font:16px system-ui;padding:30px;background:#fdf0df;color:#5d5049"><p>Reset link (works once, for 30 minutes):</p><p><a href="${link}">Set a new password</a></p>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
     }
-    if (/^\/api\/(auth\/(signup|login|logout|reset)|me|save)$/.test(url.pathname)) {
+    if (/^\/api\/(auth\/(signup|login|logout|reset)|me|save|admin\/users)$/.test(url.pathname)) {
       if (req.method === 'OPTIONS') return new Response(null, { headers: { ...CORS, 'access-control-allow-headers': 'content-type, authorization', 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS' } });
       return env.ACCOUNTS.get(env.ACCOUNTS.idFromName('accounts')).fetch(req);
     }

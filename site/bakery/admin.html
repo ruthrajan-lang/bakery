@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bakery sign-ups</title>
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{--bg:#fdf0df;--card:#fffaf2;--line:#ecdcc8;--ink:#5d5049;--muted:#9a8676;--accent:#f2b25c;--good:#4c9a3c}
+  @media (prefers-color-scheme:dark){:root{--bg:#16121b;--card:#221c27;--line:#352c3c;--ink:#efe4d8;--muted:#a99a8c}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif;padding:24px 16px 40px}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  header img{width:40px;height:40px;border-radius:10px}h1{font:600 22px system-ui;margin:0;flex:1}
+  a.btn,button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 13px system-ui;cursor:pointer;text-decoration:none}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}.kpi b{display:block;font-size:24px}.kpi small{color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:auto}
+  table{border-collapse:collapse;width:100%;min-width:900px}th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);cursor:pointer;position:sticky;top:0;background:var(--card)}
+  td.n,th.n{text-align:right}.yes{color:var(--good);font-weight:700}.dim{color:var(--muted)}
+  input{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;min-width:220px}
+  .msg{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="icon-192.png" alt=""><h1>Bakery sign-ups</h1><input id="q" placeholder="Search emails"><button id="csv">⬇︎ Download CSV</button><a class="btn" href="./">🧁 Back to the bakery</a></header>
+  <div class="kpis" id="kpis"></div>
+  <div class="card" id="out"><div class="msg">Loading…</div></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let AUTH = null; try { AUTH = JSON.parse(localStorage.getItem('focusbakery-auth') || 'null'); } catch (e) {}
+const day = 864e5, fmtD = t => t ? new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: '2-digit'}) : '—';
+const ago = (t, now) => { if (!t) return '—'; const d = (now - t)/day; return d < 1/24 ? 'just now' : d < 1 ? Math.round(d*24) + 'h ago' : Math.round(d) + 'd ago'; };
+const hm = m => m >= 60 ? `${Math.floor(m/60)}h ${m % 60}m` : `${m}m`;
+let users = [], now = Date.now(), sortKey = 'created', sortDir = -1;
+const COLS = [['email', 'Email'], ['created', 'Signed up'], ['lastSave', 'Last active'], ['tracker', 'Computer seen'], ['focusMin', 'Focus', 1], ['daysActive', 'Days active', 1], ['goalDays', 'Goal days', 1], ['bakes', 'Bakes', 1], ['coins', 'Coins', 1], ['level', 'Level', 1], ['todoist', 'Todoist']];
+function render() {
+  const q = $('q').value.trim().toLowerCase(), list = users.filter(u => !q || u.email.includes(q)).sort((a, b) => ((a[sortKey] ?? -1) > (b[sortKey] ?? -1) ? 1 : (a[sortKey] ?? -1) < (b[sortKey] ?? -1) ? -1 : 0)*sortDir);
+  const wk = users.filter(u => now - (u.created || 0) < 7*day).length, active7 = users.filter(u => now - (u.lastSave || 0) < 7*day).length;
+  const ret = users.filter(u => u.daysActive >= 2).length, comp = users.filter(u => u.tracker).length;
+  $('kpis').innerHTML = [[users.length, 'sign-ups'], [wk, 'new this week'], [active7, 'active in the last 7 days'], [ret, 'came back on a 2nd day'], [comp, 'connected a computer']].map(([n, l]) => `<div class="kpi"><b>${n}</b><small>${l}</small></div>`).join('');
+  const esc = t => String(t).replace(/[<&]/g, c => ({'<': '&lt;', '&': '&amp;'}[c]));
+  $('out').innerHTML = list.length ? `<table><thead><tr>${COLS.map(([k, l, n]) => `<th data-k="${k}" class="${n ? 'n' : ''}">${l}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('')}</tr></thead><tbody>${list.map(u => `<tr>
+    <td>${esc(u.email)}</td><td>${fmtD(u.created)}</td><td>${ago(u.lastSave, now)}</td><td>${u.tracker ? ago(u.tracker, now) : '<span class="dim">never</span>'}</td>
+    <td class="n">${hm(u.focusMin)}</td><td class="n">${u.daysActive}</td><td class="n">${u.goalDays}</td><td class="n">${u.bakes}</td><td class="n">${u.coins}</td><td class="n">${u.level}</td>
+    <td>${u.todoist ? '<span class="yes">✓</span>' : '<span class="dim">–</span>'}</td></tr>`).join('')}</tbody></table>` : '<div class="msg">No sign-ups match.</div>';
+}
+async function load() {
+  if (!AUTH) { $('out').innerHTML = '<div class="msg">Log in to the bakery with your admin account first, then come back to this page.</div>'; return; }
+  const r = await fetch('/api/admin/users', {headers: {authorization: 'Bearer ' + AUTH.token}}).catch(() => null);
+  if (!r || !r.ok) { $('out').innerHTML = `<div class="msg">${r && r.status === 403 ? 'This page is only for the bakery’s admin.' : r && r.status === 401 ? 'Your login has expired. Log in to the bakery again.' : 'Couldn’t load sign-ups. Try again.'}</div>`; return; }
+  const d = await r.json(); users = d.users; now = d.now; render();
+}
+$('out').addEventListener('click', e => { const k = e.target.closest('th')?.dataset.k; if (!k) return; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); });
+$('q').oninput = render;
+$('csv').onclick = () => {
+  const rows = [COLS.map(c => c[1]), ...users.map(u => COLS.map(([k]) => k === 'created' || k === 'lastSave' || k === 'tracker' ? (u[k] ? new Date(u[k]).toISOString() : '') : u[k]))];
+  const csv = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `bakery-signups-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+};
+load();
+</script>
+</body>
+</html>
