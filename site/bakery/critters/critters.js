@@ -64,7 +64,9 @@
       g.translate(0, by); g.rotate(rk); g.scale(1 - sq*.7, 1 + sq);
       const REST = .3, armAng = {armL: -(al - REST)*.9, armR: (ar - REST)*.9};
       let q;
-      if ((q = part('mane'))) about(q, hd*.25, () => paint(q));
+      if ((q = part('mane'))) {   // the coat is a ring around the face: fill behind the head and body in coat colour so tilting never opens a gap
+        g.fillStyle = q.fc; for (const n of ['head', 'body']) { const r = part(n); if (r) g.fill(r.F, 'evenodd'); }
+        about(q, hd*.25, () => paint(q)); }
       if ((q = part('tail'))) about(q, tl*.5, () => paint(q));
       for (const n of ['armL', 'armR']) if ((q = part(n))) {   // arms: soft rounded nubs at the traced size, colour and line weight, hinged at the shoulder
         const sd = n === 'armL' ? -1 : 1, [cw, ch] = q.cap, Wd = cw*1.02, L = ch*1.12;
