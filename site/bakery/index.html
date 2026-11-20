@@ -67,7 +67,7 @@ body.phone .top,body.phone .side,body.phone #job{display:none!important}
 body.phone .layout,body.phone .stage{display:contents}
 body.phone{display:flex;flex-direction:column;align-items:center}
 body.phone canvas{border:0;box-shadow:none}
-body.phone canvas{width:min(100vw,177.7dvh);border-radius:0;margin-bottom:max(110px,14dvh)}
+body.phone canvas{position:fixed;left:0;top:0;width:100vw!important;height:100dvh!important;aspect-ratio:auto!important;border-radius:0;margin:0!important}
 
 body.phone #phoneBar{display:block;position:fixed;left:0;right:0;bottom:0;padding:14px 20px calc(16px + env(safe-area-inset-bottom));background:#fffaf2;border-top:3px solid #5d5049;color:#5d5049;text-align:center}
 #phoneTask{font:700 clamp(18px,5vw,26px)/1.25 system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -153,10 +153,9 @@ body.phone.dist{background:#c9545a}
 #jobbar.drag #jobfill{transition:none;background:#f7d08a}
 #jobfill{height:100%;width:0;background:var(--accent);transition:width .3s}
 
-@media (orientation:portrait){body.phone canvas{width:100vw;aspect-ratio:5/4;object-fit:cover;object-position:92% 50%}}
+
 @media (orientation:landscape){
   body.phone{flex-direction:row;justify-content:flex-start}
-  body.phone canvas{width:min(100vw - 240px, 177.7dvh);aspect-ratio:16/9;object-fit:contain;margin:0}
   body.phone #phoneBar{left:auto;right:0;top:0;bottom:0;width:240px;display:flex;flex-direction:column;justify-content:center;padding:16px calc(16px + env(safe-area-inset-right)) 16px 18px;border-top:0;border-left:3px solid #5d5049;text-align:left}
   body.phone #phoneTask{white-space:normal;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
   body.phone #pill{left:12px;right:auto;top:auto;bottom:calc(12px + env(safe-area-inset-bottom))}
@@ -165,12 +164,9 @@ body.phone.dist{background:#c9545a}
 body.phone #phoneBar{transition:transform .35s ease,background .8s;touch-action:none}
 #grab{display:block;width:44px;height:5px;border-radius:3px;background:#5d504966;margin:-6px auto 10px}
 body.phone:not(.barOpen) #phoneBar{transform:translateY(calc(100% - 22px - env(safe-area-inset-bottom)))}
-body.phone canvas{transition:margin .35s,width .35s}
-@media (orientation:portrait){body.phone:not(.barOpen) canvas{margin-bottom:0}}
 @media (orientation:landscape){
   #grab{position:absolute;left:7px;top:50%;width:5px;height:44px;margin:-22px 0 0}
   body.phone:not(.barOpen) #phoneBar{transform:translateX(calc(100% - 22px))}
-  body.phone:not(.barOpen) canvas{width:min(100vw - 22px, 177.7dvh)}
 }
 
 /* goal ring, level */
@@ -292,13 +288,31 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
 const $ = id => document.getElementById(id);
 const W = 640, H = 360, cv = $('c'), ctx = cv.getContext('2d');
 // backing resolution follows how big the scene really shows (the phone view zooms it with object-fit: cover)
+// the camera: the 640x360 scene is fitted into the part of the screen not covered by the task bar,
+// and the kitchen is drawn on out to the screen's edges (wall above, floor below, more counter to the sides)
+const CAM = {k:1, x0:0, y0:0, vw:640, vh:360, rw:0, rh:0};
 function fit() {
-  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover';
-  const shown = r.width ? (cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H)) : 1;
-  const d = Math.min(4, Math.max(1, shown*(devicePixelRatio || 1)));
-  if (Math.abs(d - (cv.dpr || 0)) > .05) { cv.width = Math.round(W*d); cv.height = Math.round(H*d); cv.dpr = d; }
+  const r = cv.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const phone = document.body.classList.contains('phone'), bar = phone && document.getElementById('phoneBar');
+  let sw = r.width, sh = r.height, sl = 0, st = 0;
+  if (bar) { const b = bar.getBoundingClientRect();
+    if (b.width >= r.width - 2) sh = Math.max(120, Math.min(r.height, b.top - r.top));      // bar along the bottom
+    else sw = Math.max(200, Math.min(r.width, b.left - r.left)); }                          // bar along the right
+  const portrait = phone && sh > sw;
+  const k = portrait ? Math.min(sh/H, sw/(W*.7)) : Math.min(sh/H, sw/W);
+  const vw = r.width/k, vh = r.height/k, svw = sw/k, svh = sh/k;
+  const x0 = svw < W ? (W - svw)*.92 - sl/k : -(svw - W)/2 - sl/k;      // narrow: show the right side (Bingsu and the oven); wide: centre it
+  const y0 = -(svh - H)*.62 - st/k;                                    // more wall above than floor below
+  Object.assign(CAM, {k, x0, y0, vw, vh, rw: r.width, rh: r.height});
+  const d = Math.min(4, Math.max(1, (devicePixelRatio || 1)));
+  const pw = Math.round(r.width*d), ph = Math.round(r.height*d);
+  if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+  cv.dpr = d*k;
 }
-fit(); addEventListener('resize', fit); setTimeout(fit, 300); new ResizeObserver(fit).observe(cv);
+const camTransform = () => ctx.setTransform(cv.dpr, 0, 0, cv.dpr, -CAM.x0*cv.dpr, -CAM.y0*cv.dpr);
+const toScene = e => { const r = cv.getBoundingClientRect(); return [CAM.x0 + (e.clientX - r.left)/CAM.k, CAM.y0 + (e.clientY - r.top)/CAM.k]; };
+const fillView = () => ctx.fillRect(CAM.x0 - 2, CAM.y0 - 2, CAM.vw + 4, CAM.vh + 4);
+fit(); addEventListener('resize', fit); setTimeout(fit, 300); new ResizeObserver(fit).observe(cv); setInterval(fit, 400);   // also follows the task bar sliding in and out
 
 const SPEED = Math.max(1, +new URLSearchParams(location.search).get('speed') || 1); // ?speed=60 to test
 const GRACE = 15;        // real seconds of distraction before it counts
@@ -436,12 +450,12 @@ function drawCelebration(now) {
   if (out > 1.1) { if (CEL.preview) CEL = null; else showNextReward(); return; }
   const a = Math.min(1, t*4, out ? (1.1 - out)*3 : 1), cx = W/2, cy = H/2 + 6;
   ctx.save(); ctx.globalAlpha = a;
-  ctx.fillStyle = '#fff1dc'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff1dc'; fillView();
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(t*.35);
   for (let i = 0; i < 18; i++) { ctx.fillStyle = i % 2 ? '#ffe2ae' : '#ffd3cc'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 520, i*Math.PI/9, (i + 1)*Math.PI/9); ctx.closePath(); ctx.fill(); }
   ctx.restore();
   const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, 170); g.addColorStop(0, 'rgba(255,250,235,.95)'); g.addColorStop(1, 'rgba(255,250,235,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = g; fillView();
   // twinkles orbiting
   for (let i = 0; i < 8; i++) { const an = t*.8 + i*Math.PI/4, r = 150 + Math.sin(t*3 + i)*10, sx = cx + Math.cos(an)*r*1.25, sy = cy + Math.sin(an)*r*.75, k = 4 + 2*Math.sin(t*6 + i);
     ctx.fillStyle = '#ffc94d'; ctx.beginPath(); ctx.moveTo(sx, sy - k*2); ctx.lineTo(sx + k*.6, sy - k*.6); ctx.lineTo(sx + k*2, sy); ctx.lineTo(sx + k*.6, sy + k*.6); ctx.lineTo(sx, sy + k*2); ctx.lineTo(sx - k*.6, sy + k*.6); ctx.lineTo(sx - k*2, sy); ctx.lineTo(sx - k*.6, sy - k*.6); ctx.fill(); }
@@ -553,10 +567,11 @@ function drawCritter(kind, x, y, s = 1, mood = 'happy') {
   ctx.restore();
 }
 // which part of the scene is on screen (the phone view crops the canvas with object-fit: cover)
-function sceneView() {
-  const r = cv.getBoundingClientRect(); if (!r.width || getComputedStyle(cv).objectFit !== 'cover') return {x0:0, x1:W};
-  const k = Math.max(r.width/W, r.height/H), px = parseFloat((getComputedStyle(cv).objectPosition || '50%').split(' ')[0])/100;
-  const x0 = -(r.width - W*k)*(isNaN(px) ? .5 : px)/k; return {x0, x1:x0 + r.width/k};
+function sceneView() {   // the part of the scene on screen (not under the task bar)
+  const bar = document.body.classList.contains('phone') && document.getElementById('phoneBar');
+  let right = CAM.x0 + CAM.vw;
+  if (bar) { const b = bar.getBoundingClientRect(), r = cv.getBoundingClientRect(); if (b.width < r.width - 2) right = Math.min(right, CAM.x0 + (b.left - r.left)/CAM.k); }
+  return {x0: Math.max(CAM.x0, -200), x1: Math.min(right, W + 200)};
 }
 let VIEW = {x0:0, x1:W};
 const TICKET = i => { const span = VIEW.x1 - VIEW.x0;
@@ -733,11 +748,24 @@ function drawItem(r, x, y, s = 1, burnt = 0, o = {}) {
 // ---- kitchen background (your art, 1672x941 source scaled to the 640x360 scene) ----
 const KITCHEN = new Image(); KITCHEN.src = 'kitchen.webp';
 const KS = 640/1672, COUNTER_TOP = 222;   // scene y where the counter's back edge starts
+function drawExtension(src) {   // wall, floor and more counter beyond the 640x360 kitchen
+  const sc = src.width/W, g2 = src.getContext ? src.getContext('2d') : null;
+  const px = (x, y) => { if (!drawExtension.cache || drawExtension.cache.src !== src) { const c = document.createElement('canvas'); c.width = W; c.height = H; const cc = c.getContext('2d'); cc.drawImage(src, 0, 0, W, H); drawExtension.cache = {src, cc}; }
+    const d = drawExtension.cache.cc.getImageData(x, y, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})`; };
+  if (CAM.y0 < 0) { ctx.fillStyle = px(W/2, 4); ctx.fillRect(CAM.x0 - 2, CAM.y0 - 2, CAM.vw + 4, -CAM.y0 + 3); }
+  if (CAM.y0 + CAM.vh > H) { ctx.fillStyle = px(W*.4, H - 3); ctx.fillRect(CAM.x0 - 2, H - 1, CAM.vw + 4, CAM.y0 + CAM.vh - H + 3);   // floor
+    ctx.fillStyle = 'rgba(93,80,73,.1)'; ctx.fillRect(CAM.x0 - 2, H - 1, CAM.vw + 4, 6); }
+  const slice = (sx0, sx1, dx) => ctx.drawImage(src, sx0*sc, 0, (sx1 - sx0)*sc, src.height, dx, 0, sx1 - sx0, H);
+  for (let x = 0; x > CAM.x0 - 2; ) { const w = 150; x -= w; slice(10, 10 + w, x); }   // a pink cabinet unit, repeated to the left
+  for (let x = W; x < CAM.x0 + CAM.vw + 2; x += 150) slice(330, 480, x);               // and to the right
+}
 function drawScene(now, eff, st) {
   const nk = night() && nightKitchen();
+  const srcImg = nk || (KITCHEN.complete && KITCHEN.naturalWidth ? KITCHEN : null);
+  if (srcImg && (CAM.x0 < 0 || CAM.y0 < 0 || CAM.x0 + CAM.vw > W || CAM.y0 + CAM.vh > H)) { if (!nk) ctx.filter = skinFilter(); drawExtension(srcImg); ctx.filter = 'none'; }
   if (nk) { ctx.drawImage(nk, 0, 0, W, H); drawNightWall(now); }
   else if (KITCHEN.complete && KITCHEN.naturalWidth) { ctx.filter = skinFilter(); ctx.drawImage(KITCHEN, 0, 0, W, H); ctx.filter = 'none'; }
-  else { ctx.fillStyle = '#fdf0df'; ctx.fillRect(0, 0, W, H); }
+  else { ctx.fillStyle = '#fdf0df'; fillView(); }
 }
 // ---- night kitchen: the room itself is re-coloured for evening (not dimmed on top), with a window, moon and string lights ----
 const night = () => document.body.classList.contains('night');
@@ -997,10 +1025,10 @@ const darkPref = matchMedia('(prefers-color-scheme: dark)');
 function isNight() { const m = S.night || 'auto'; if (m !== 'auto') return m === 'on'; const h = new Date().getHours(); return darkPref.matches || h >= 19 || h < 7; }
 function drawNight() {
   if (!night()) return;
-  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#e4dcef'; ctx.fillRect(0, COUNTER_TOP - 140, W, H);   // a touch of evening on the characters
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#e4dcef'; ctx.fillRect(CAM.x0 - 2, COUNTER_TOP - 140, CAM.vw + 4, CAM.vh + H);   // a touch of evening on the characters
   ctx.globalCompositeOperation = 'screen';   // warm lamplight where Bingsu works, the oven's glow
   for (const [x, y, r, a] of [[B.x, 175, 200, .22], [553, 315, 90, .28]]) {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,180,100,${a})`); g.addColorStop(1, 'rgba(255,180,100,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,180,100,${a})`); g.addColorStop(1, 'rgba(255,180,100,0)'); ctx.fillStyle = g; fillView(); }
   ctx.restore();
 }
 function applyNight() { const n = isNight(); document.body.classList.toggle('night', n); const m = S.night || 'auto';
@@ -1008,7 +1036,7 @@ function applyNight() { const n = isNight(); document.body.classList.toggle('nig
 $('nightBtn').onclick = () => { S.night = {auto: 'on', on: 'off', off: 'auto'}[S.night || 'auto']; save(); applyNight(); };
 darkPref.addEventListener?.('change', applyNight); setInterval(applyNight, 60e3);
 function draw(now, eff) {
-  ctx.setTransform(cv.dpr, 0, 0, cv.dpr, 0, 0);
+  camTransform();
   if (eff === 'distracted' && B.mood === 'sad') ctx.translate((Math.random() - .5)*4, (Math.random() - .5)*4);
   const st = stageOf(J());
   drawScene(now, eff, st);
@@ -1032,8 +1060,8 @@ function draw(now, eff) {
     const k = Math.min(1, .55 + S.job.ruin/RUIN_FAIL);
     const g = ctx.createRadialGradient(B.x, 190, 40, B.x, 190, 420);   // dim room, spotlight on the cat
     g.addColorStop(0, `rgba(120,20,30,${.12*k})`); g.addColorStop(1, `rgba(110,10,25,${.42*k})`);
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = `rgba(235,45,55,${.34*k})`; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = g; fillView();
+    ctx.fillStyle = `rgba(235,45,55,${.34*k})`; fillView();
     if (B.bubble) drawBubble(B.bubble, B.x + 66, B.y0 - 70);
   }
   drawDecor(now);
@@ -1069,14 +1097,11 @@ function drawTask() {
 cv.addEventListener('click', e => {
   if (CEL) { collect(); return; }   // tap to collect the reward
   if (shopClosed && breakTap(e)) return;
-  { const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover', kk = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H), pp = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100), qx = (e.clientX - r.left - (r.width - W*kk)*(pp[0] || .5))/kk, qy = (e.clientY - r.top - (r.height - H*kk)*(pp[1] || .5))/kk;
+  { const [qx, qy] = toScene(e);
     if (VIS && VIS.state === 'story') { storyNext(); return; }
     if (tapVisitor(qx, qy)) return; }
   // map the tap into scene coordinates (the phone view crops the canvas with object-fit: cover)
-  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover';
-  const k = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H);
-  const pos = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100);
-  const sx = (e.clientX - r.left - (r.width - W*k)*(pos[0] || .5))/k, sy = (e.clientY - r.top - (r.height - H*k)*(pos[1] || .5))/k;
+  const [sx, sy] = toScene(e);
   if (sx > 360 && sx < 480 && sy > 200 && sy < 255) openCase();   // the cooling rack
   (S.orders || []).forEach((o, i) => { const t = TICKET(i);   // tap a ticket to bake that order next
     if (sx > t.x && sx < t.x + t.w && sy > t.y && sy < t.y + t.h && o.r !== S.job.r) {
@@ -1933,7 +1958,7 @@ function drawClosed(now) {
   if (!shopClosed) return;
   drawBreak(now);
   if (breakBusy()) return;   // break room: no big sign while you play
-  ctx.fillStyle = 'rgba(40,30,55,.62)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(40,30,55,.62)'; fillView();
   const cx = W/2, cy = 150, sw = Math.sin(now/900)*.05;
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(sw);
   ctx.strokeStyle = '#d9c7b0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-40, -38); ctx.lineTo(0, -64); ctx.lineTo(40, -38); ctx.stroke();
@@ -2219,11 +2244,7 @@ function drawStoryBubble(V, feet) {
 // ---- break room: while the bakery is closed you can still hang out with Bingsu ----
 let breakTouch = 0, petCount = 0;
 const breakBusy = () => Date.now() - breakTouch < 45e3 || (VIS && VIS.state !== 'leave');
-function scenePt(e) {
-  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover', k = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H);
-  const pos = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100);
-  return [(e.clientX - r.left - (r.width - W*k)*(pos[0] || .5))/k, (e.clientY - r.top - (r.height - H*k)*(pos[1] || .5))/k];
-}
+const scenePt = toScene;
 // tap a customer: they react with a random little animation and a line, and you get a heart burst
 const TAP_ACTS = ['hop', 'dance', 'cheer', 'excited', 'wave', 'bow', 'shy', 'lookAround'];
 const TAP_LINES = {hop: ['Boing!', 'Wheee!'], dance: ['♪ la la la ♪', 'Dance with me!'], cheer: ['Yay!', 'Hooray!'], excited: ['Ooh! Ooh!', 'So exciting!'],
@@ -2279,7 +2300,7 @@ function petBingsu(x = B.x, y = 150) {
 function drawBreak(now) {
   if (!breakBusy()) { $('breakBar').hidden = true; return; }
   const v = sceneView();
-  ctx.fillStyle = 'rgba(253,240,223,.25)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(253,240,223,.25)'; fillView();
   const left = S.breakUntil ? Math.max(0, Math.ceil((S.breakUntil - Date.now())/60e3)) : 0;
   ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; const tag = S.breakUntil && CUSTOMERS[S.breakWith] ? `☕ Break with ${CUSTOMERS[S.breakWith].name} · ${left}m left` : '☕ Break time · the bakery is closed';
   const tw = ctx.measureText(tag).width + 20, tx = (v.x0 + v.x1)/2; shape('#fffaf2', rr(tx - tw/2, 18, tw, 22, 11), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(tag, tx, 33); ctx.textAlign = 'start';
