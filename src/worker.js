@@ -134,18 +134,22 @@ export class Accounts extends DurableObject {
     if (path === '/api/me') return json({ email: u.email, code: u.code, admin: ADMIN_SHA256.includes(await sha256(u.email)) });
     if (path === '/api/admin/users') {   // sign-ups, for the admin page only
       if (!ADMIN_SHA256.includes(await sha256(u.email))) return json({ error: 'not allowed' }, 403);
-      const users = [];
-      for (const [k, v] of await this.ctx.storage.list({ prefix: 'u:' })) {
-        const sv = (await this.ctx.storage.get('save:' + v.id)) || {}, S = sv.data || {}, days = Object.values(S.daylog || {});
-        let tracker = null;
-        try { const r = await this.env.RELAY.get(this.env.RELAY.idFromName(v.code)).fetch(new Request('https://relay/api/state/' + v.code)); const d = await r.json(); tracker = d.t || null; } catch {}
-        users.push({ email: k.slice(2), created: v.created || null, lastSave: sv.t || null, tracker,
-          focusMin: Math.round((S.life || 0)/60), coins: S.coins || 0, level: S.lvlSeen || 1, bakes: (S.hist || []).length,
-          daysActive: days.filter(d => (d.focus || 0) > 60 || d.bakes).length, goalDays: days.filter(d => d.goalMet).length,
-          friends: Object.values(S.friends || {}).reduce((a, b) => a + b, 0), todoist: !!S.tdTok });
-      }
-      users.sort((a, b) => (b.created || 0) - (a.created || 0));
-      return json({ users, now: Date.now() });
+      try {
+        const recs = [...(await this.ctx.storage.list({ prefix: 'u:' }))];
+        const users = await Promise.all(recs.map(async ([k, v]) => {
+          let sv = {}; try { sv = (v && v.id && await this.ctx.storage.get('save:' + v.id)) || {}; } catch {}
+          const S = (sv && typeof sv.data === 'object' && sv.data) || {}, days = Object.values(S.daylog || {}).filter(d => d && typeof d === 'object');
+          let tracker = null;
+          if (v && /^[A-Za-z0-9_-]{8,64}$/.test(v.code || '') && this.env && this.env.RELAY) {
+            try { const r = await Promise.race([this.env.RELAY.get(this.env.RELAY.idFromName(v.code)).fetch('https://relay/api/state/' + v.code), new Promise((_, no) => setTimeout(no, 3000))]); tracker = (await r.json()).t || null; } catch {}
+          }
+          return { email: k.slice(2), created: (v && v.created) || null, lastSave: sv.t || null, tracker,
+            focusMin: Math.round((+S.life || 0)/60), coins: +S.coins || 0, level: +S.lvlSeen || 1, bakes: Array.isArray(S.hist) ? S.hist.length : 0,
+            daysActive: days.filter(d => (d.focus || 0) > 60 || d.bakes).length, goalDays: days.filter(d => d.goalMet).length, todoist: !!S.tdTok };
+        }));
+        users.sort((a, b) => (b.created || 0) - (a.created || 0));
+        return json({ users, now: Date.now() });
+      } catch (e) { return json({ error: 'admin list failed: ' + (e && e.message || e) }, 500); }
     }
     if (path === '/api/save') {
       if (req.method === 'PUT') {

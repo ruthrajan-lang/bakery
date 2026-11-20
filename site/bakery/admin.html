@@ -52,7 +52,7 @@ function render() {
 async function load() {
   if (!AUTH) { $('out').innerHTML = '<div class="msg">Log in to the bakery with your admin account first, then come back to this page.</div>'; return; }
   const r = await fetch('/api/admin/users', {headers: {authorization: 'Bearer ' + AUTH.token}}).catch(() => null);
-  if (!r || !r.ok) { $('out').innerHTML = `<div class="msg">${r && r.status === 403 ? 'This page is only for the bakery’s admin.' : r && r.status === 401 ? 'Your login has expired. Log in to the bakery again.' : 'Couldn’t load sign-ups. Try again.'}</div>`; return; }
+  if (!r || !r.ok) { const err = r ? await r.json().then(d => d.error || '').catch(() => r.status + ' ' + r.statusText) : 'no connection'; $('out').innerHTML = `<div class="msg">${r && r.status === 403 ? 'This page is only for the bakery’s admin.' : r && r.status === 401 ? 'Your login has expired. Log in to the bakery again.' : 'Couldn’t load sign-ups. Try again.'}<br><small>${String(err).replace(/[<&]/g, '')}</small></div>`; return; }
   const d = await r.json(); users = d.users; now = d.now; render();
 }
 $('out').addEventListener('click', e => { const k = e.target.closest('th')?.dataset.k; if (!k) return; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); });
