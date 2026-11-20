@@ -275,7 +275,7 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
       <button id="goalBtn"><i>🎯</i>Daily goal</button><button id="hoursBtn"><i>🕘</i>Hours &amp; breaks</button><button id="closeBtn2"><i>☕</i>Take a break</button>
       <button id="connectBtn"><i>💻</i>Connect devices</button><button id="distBtn"><i>🚫</i>Distracting sites</button></div>
     <h3>Settings</h3><div class="tiles">
-      <button id="sound"><i>🔕</i><span>Sound off</span></button>
+      <button id="sound"><i>🔕</i><span>Sound off</span></button><button id="musicBtn"><i>🎵</i><span>Music off</span></button>
       <button id="nightBtn"><i>🌙</i><span>Night: auto</span></button><button id="wake"><i>☀️</i><span>Keep screen on</span></button><button id="fs"><i>⛶</i><span>Full screen</span></button></div>
     <div class="menu-foot"><button id="onbBtn">🚀 Getting started</button><button id="simBtn">🧪 Simulator</button></div></div>
   <div id="onb" class="panel" hidden></div>
@@ -287,7 +287,7 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
 </div></div>
 <div id="case" hidden></div><button id="update" hidden>✨ New version, tap to update</button><div id="pill"></div><div id="dock"></div><button id="acctDock" title="Log in">👤</button><button id="caseBtn" title="Display case">🧁</button><div id="invBar" hidden><span id="invTxt"></span><button data-i="yes" class="primary">☕ Take a break</button><button data-i="no">Not now</button></div><div id="breakBar" hidden><button data-b="pet">🐾 Pet Bingsu</button><button data-b="story">📖 Story</button><button data-b="open" class="primary">🔓 Open bakery</button></div><button id="closeBtn" title="Take a break">☕</button><button id="gear" title="Menu">☰</button><button id="install" hidden>📲 Install app</button>
 <div id="phoneBar"><i id="grab"></i><div id="phoneTask"></div><button id="phoneDone" hidden>✓ Mark as done</button><div id="phoneNext"></div><div id="phoneProg"><i></i></div><div id="phoneSub"></div></div>
-<script src="critters/critter-art.js"></script><script src="critters/critters.js"></script>
+<script src="music.js"></script><script src="critters/critter-art.js"></script><script src="critters/critters.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const W = 640, H = 360, cv = $('c'), ctx = cv.getContext('2d');
@@ -1188,6 +1188,13 @@ $('sound').onclick = () => {
   soundOn = !soundOn; ls('focusbakery-sound', soundOn ? '1' : '0'); tile($('sound'), soundOn ? '🔔' : '🔕', soundOn ? 'Sound on' : 'Sound off');
   if (soundOn) { startAudio(); chime(1); }
 };
+// gentle background music (music.js): its own toggle, remembered, quiet, pauses when the app isn't on screen
+let musicOn = ls('focusbakery-music') === '1';
+const showMusic = () => tile($('musicBtn'), musicOn ? '🎶' : '🎵', musicOn ? 'Music on' : 'Music off');
+function syncMusic() { if (musicOn && !document.hidden && actx && actx.state === 'running') BakeryMusic.start(actx); else BakeryMusic.stop(); }
+$('musicBtn').onclick = () => { musicOn = !musicOn; ls('focusbakery-music', musicOn ? '1' : '0'); showMusic(); if (musicOn) startAudio(); setTimeout(syncMusic, 100); };
+document.addEventListener('visibilitychange', syncMusic); showMusic();
+if (musicOn) ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { startAudio(); setTimeout(syncMusic, 100); }, {passive: true}));
 // remember the choice; browsers only allow sound after a tap, so it wakes up on the first one
 if (ls('focusbakery-sound') === '1') { soundOn = true; tile($('sound'), '🔔', 'Sound on'); ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, startAudio, {passive: true})); }
 function chime(level) {
