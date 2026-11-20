@@ -1758,7 +1758,7 @@ function levelProgress() { const l = level(), h = (S.life || 0)/3600; if (l >= L
 const SHOP = {
   decor: [
     {id:'rack', name:'Utensil rack', art:'decor/utensil_rack', cost:20, at:[86, 134, 150]}, {id:'shelves', name:'Plant shelves', art:'decor/plant_shelves', cost:55, at:[554, 159, 164]},
-    {id:'flourjar', name:'Flour jar & rolling pin', art:'decor/flour_jar', cost:20, at:[52, 243, 78]},
+    {id:'flourjar', name:'Flour jar & rolling pin', art:'decor/flour_jar', cost:20, at:[45, 243, 91]},
     {id:'cwindow', name:'Curtained window', art:'decor/curtained_window', cost:60, at:[222, 188, 70]}, {id:'books', name:'Cookbook shelf', art:'decor/cookbook_shelf', cost:35, at:[212, 116, 76]},
     {id:'clock', name:'Wall clock', art:'decor/wall_clock', cost:25, at:[420, 112, 44]}, {id:'picture', name:'Cake painting', art:'decor/framed_cake_picture', cost:40, at:[420, 186, 50]},
     {id:'lights', name:'Fairy lights', art:'decor/fairy_lights', cost:50, at:[318, 96, 190]}, {id:'tulips', name:'Tulips', art:'decor/tulip_vase', cost:20, at:[497, 226, 56]},
@@ -1794,7 +1794,59 @@ function drawDecor(now) {
   for (const it of items) {
     const im = it.art && art(it.art);
     if (ok(im)) { const [x, y, w] = it.at, h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, x - w/2, y - h, w, h); continue; }
-    if (it.icon) { ctx.font = '26px system-ui'; ctx.textAlign = 'center'; ctx.fillText(it.icon, it.at[0], it.at[1]); ctx.textAlign = 'start'; }
+    if (it.icon && !GIFT_ART[it.id]) { ctx.font = '26px system-ui'; ctx.textAlign = 'center'; ctx.fillText(it.icon, it.at[0], it.at[1]); ctx.textAlign = 'start'; }
+  }
+  drawGifts(now);
+}
+// friends' gifts, drawn in the kitchen's style on a little shelf of their own (balloon tied to it, umbrella in a stand)
+const GIFT_ART = {honey: 1, shroom: 1, yarn: 1, carrot: 1, balloon: 1, umbrella: 1};
+function drawGifts(now) {
+  const has = id => equipped(id) && owned(id), any = Object.keys(GIFT_ART).some(has); if (!any) return;
+  const L = 2, sy = 178;   // shelf top
+  if (['honey', 'shroom', 'yarn', 'carrot', 'balloon'].some(has)) {
+    for (const bx of [86, 186]) shape('#c99a6b', () => { ctx.moveTo(bx - 4, sy + 5); ctx.lineTo(bx + 4, sy + 5); ctx.lineTo(bx, sy + 14); ctx.closePath(); }, CINK, L);
+    shape('#e3b98a', rr(72, sy, 128, 6, 3), CINK, L);
+  }
+  if (has('honey')) {   // honey pot with a drip
+    shape('#f2b84b', () => { ctx.moveTo(90, sy); ctx.bezierCurveTo(78, sy - 2, 79, sy - 22, 88, sy - 23); ctx.lineTo(102, sy - 23); ctx.bezierCurveTo(111, sy - 22, 112, sy - 2, 100, sy); ctx.closePath(); }, CINK, L);
+    shape('#fff3d6', rr(87, sy - 28, 16, 6, 3), CINK, L);
+    shape('#f7d27a', () => { ctx.moveTo(84, sy - 18); ctx.quadraticCurveTo(95, sy - 22, 106, sy - 18); ctx.lineTo(106, sy - 14); ctx.quadraticCurveTo(101, sy - 12, 99, sy - 6); ctx.quadraticCurveTo(97, sy - 12, 84, sy - 14); ctx.closePath(); }, null);
+  }
+  if (has('shroom')) {   // mushroom lamp, softly glowing
+    const glow = (night() ? .55 : .25) + .08*Math.sin(now/900);
+    const g = ctx.createRadialGradient(128, sy - 18, 2, 128, sy - 18, 30); g.addColorStop(0, `rgba(255,214,140,${glow})`); g.addColorStop(1, 'rgba(255,214,140,0)'); ctx.fillStyle = g; ctx.fillRect(96, sy - 50, 64, 56);
+    shape('#fff3e4', rr(124, sy - 14, 9, 14, 3), CINK, L);
+    shape('#ef6a5c', () => { ctx.moveTo(114, sy - 13); ctx.bezierCurveTo(113, sy - 30, 143, sy - 30, 142, sy - 13); ctx.closePath(); }, CINK, L);
+    for (const [a, b, r] of [[121, -20, 2.6], [132, -24, 2.2], [137, -17, 1.8], [127, -16, 1.6]]) shape('#fffaf2', ell(a, sy + b, r, r*.85), null);
+  }
+  if (has('yarn')) {   // ball of yarn with a loose end
+    shape('#f49ab0', ell(160, sy - 10, 10, 10), CINK, L);
+    ctx.save(); ctx.beginPath(); ctx.arc(160, sy - 10, 9, 0, 7); ctx.clip(); ctx.strokeStyle = '#d9708c'; ctx.lineWidth = 1.4;
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.ellipse(160 + i*4, sy - 10, 3, 11, .5, 0, 7); ctx.stroke(); } ctx.restore();
+    ctx.strokeStyle = '#d9708c'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(168, sy - 4); ctx.quadraticCurveTo(176, sy + 2, 172, sy + 10 + Math.sin(now/700)*1.5); ctx.stroke();
+  }
+  if (has('carrot')) {   // a carrot in a little pot
+    shape('#f6c9b8', () => { ctx.moveTo(178, sy); ctx.lineTo(176, sy - 12); ctx.lineTo(196, sy - 12); ctx.lineTo(194, sy); ctx.closePath(); }, CINK, L);
+    ctx.save(); ctx.translate(186, sy - 13); ctx.rotate(Math.sin(now/1300)*.04);
+    for (const a of [-.5, 0, .5]) shape('#7cc47a', () => { ctx.ellipse(Math.sin(a)*7, -26, 3, 8, a, 0, 7); }, CINK, 1.6);
+    shape('#f39a4a', () => { ctx.moveTo(-6, -18); ctx.quadraticCurveTo(0, -22, 6, -18); ctx.lineTo(1, 4); ctx.lineTo(-1, 4); ctx.closePath(); }, CINK, L);
+    for (const y of [-12, -6]) { ctx.strokeStyle = '#d97a30'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-3, y); ctx.lineTo(1, y); ctx.stroke(); }
+    ctx.restore();
+  }
+  if (has('balloon')) {   // tied to the end of the shelf, bobbing
+    const bx = 214 + Math.sin(now/1500)*3, by = sy - 62 + Math.sin(now/1100)*3;
+    ctx.strokeStyle = CINK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(199, sy + 2); ctx.quadraticCurveTo(212, sy - 18, bx, by + 18); ctx.stroke();
+    shape('#ff8aa6', () => { ctx.moveTo(bx, by + 17); ctx.bezierCurveTo(bx - 17, by + 8, bx - 15, by - 16, bx, by - 16); ctx.bezierCurveTo(bx + 15, by - 16, bx + 17, by + 8, bx, by + 17); }, CINK, L);
+    shape('#ff8aa6', () => { ctx.moveTo(bx - 3, by + 21); ctx.lineTo(bx + 3, by + 21); ctx.lineTo(bx, by + 16); ctx.closePath(); }, CINK, 1.5);
+    shape('rgba(255,255,255,.7)', ell(bx - 6, by - 6, 3, 5, -.4), null);
+  }
+  if (has('umbrella')) {   // a little umbrella in a stand by the counter
+    const ux = 150, uy = 362;
+    shape('#9cc6e8', () => { ctx.moveTo(ux - 3, uy - 52); ctx.quadraticCurveTo(ux - 12, uy - 24, ux - 7, uy - 8); ctx.lineTo(ux + 7, uy - 8); ctx.quadraticCurveTo(ux + 12, uy - 24, ux + 3, uy - 52); ctx.closePath(); }, CINK, L);
+    ctx.strokeStyle = CINK; ctx.lineWidth = L; ctx.beginPath(); ctx.moveTo(ux, uy - 52); ctx.lineTo(ux, uy - 60); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ux, uy - 8); ctx.lineTo(ux, uy + 2); ctx.stroke();
+    shape('#f3d9b8', rr(ux - 11, uy - 16, 22, 18, 4), CINK, L);
+    ctx.strokeStyle = '#e3bf95'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ux - 7, uy - 10); ctx.lineTo(ux + 7, uy - 10); ctx.stroke();
   }
 }
 // outfits share the cat's 1278x1230 canvas; offsets are each layer's top-left there
