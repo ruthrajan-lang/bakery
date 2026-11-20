@@ -14,7 +14,7 @@ REMOTE="$HOME/.focus-bakery-remote.txt"   # list picked on the bakery page (over
 LIST="$HOME/.focus-bakery-distracting.txt"
 DEV="mac-$(hostname -s | tr -cd '[:alnum:]-')"
 IDLE_AFTER=120      # seconds without keyboard/mouse before you count as away
-GRACE_NOTE="(the bakery itself gives you 30s grace before it counts)"
+GRACE_NOTE="(the bakery itself gives you 15s grace before it counts)"
 
 if [ ! -f "$LIST" ]; then
   cat > "$LIST" <<'LIST'

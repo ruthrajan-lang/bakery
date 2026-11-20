@@ -300,7 +300,7 @@ function fit() {
 fit(); addEventListener('resize', fit); setTimeout(fit, 300); new ResizeObserver(fit).observe(cv);
 
 const SPEED = Math.max(1, +new URLSearchParams(location.search).get('speed') || 1); // ?speed=60 to test
-const GRACE = 30;        // real seconds of distraction before it counts
+const GRACE = 15;        // real seconds of distraction before it counts
 const RUIN_FAIL = 600;   // bake-seconds of distraction before the bake is ruined
 const RECIPES = {
   cookies:    {name:'Cookies',    time:15*60,  sell:4,  unlock:0,   batter:'#e8c48a', stages:[['mix',.3],['shape',.3],['bake',.4]]},
@@ -396,7 +396,7 @@ function effective(now) {
   if (shopClosed) { distractedSince = 0; return 'idle'; }
   if (r !== 'distracted') { distractedSince = 0; return r; }
   if (!distractedSince) distractedSince = now;
-  return now - distractedSince >= (upg('mat') ? 45 : GRACE)*1000 ? 'distracted' : 'grace';
+  return now - distractedSince >= (upg('mat') ? 23 : GRACE)*1000 ? 'distracted' : 'grace';
 }
 
 // ---------- simulation ----------
@@ -621,7 +621,7 @@ function update(rdt, eff, now) {
   B.bubble = null;
   if (eff === 'idle') { B.mood = (pcOff && !manual && !shopClosed) || S.breakUntil ? 'happy' : 'sleep'; return; }   // awake on the phone, and while a friend visits
   if (eff === 'distracted') {
-    S.job.ruin += dt; B.mood = S.job.ruin > 180 ? 'sad' : 'annoyed'; B.bubble = B.mood === 'sad' ? '!!' : '!';
+    S.job.ruin += dt; B.mood = S.job.ruin > 90 ? 'sad' : 'annoyed'; B.bubble = B.mood === 'sad' ? '!!' : '!';
     if (st.a === 'bake' && Math.random() < rdt*6) puff(553, 290, 1, '#6b6b6b', {life:2.2, r:7, grow:16, spread:20});
     if (S.job.ruin >= RUIN_FAIL) fail();
     return;
@@ -1179,7 +1179,7 @@ function chime(level) {
   });
 }
 function drama(now, eff) {
-  const bad = eff === 'distracted', worse = bad && S.job.ruin > 180;
+  const bad = eff === 'distracted', worse = bad && S.job.ruin > 90;
   cv.style.boxShadow = bad ? `0 0 0 ${worse ? 6 : 4}px rgba(239,106,90,${.45 + .45*Math.abs(Math.sin(now/(worse ? 200 : 450)))})` : 'none';
   if (bad) {
     if (now - titleT > 1000) {
@@ -1670,7 +1670,7 @@ const SHOP = {
     {id:'pink_apron', name:'Pink apron', art:'outfit/pink_apron', cost:35, slot:'body'}, {id:'blue_apron_with_pocket', name:'Blue apron', art:'outfit/blue_apron_with_pocket', cost:35, slot:'body'}],
   upgrade: [
     {id:'oven', name:'Bigger oven', icon:'🔥', art:'upg/oven_double', cost:120, desc:'Bakes go 10% faster'}, {id:'window', name:'Display window', icon:'🪟', art:'upg/display_case', cost:100, desc:'Customers are 20% more patient'},
-    {id:'tipjar', name:'Tip jar', icon:'🫙', art:'rew/coin_pile', cost:80, desc:'Tips are 25% bigger'}, {id:'mat', name:'Comfy mat', icon:'🧘', cost:90, desc:'45 seconds of grace instead of 30'}]
+    {id:'tipjar', name:'Tip jar', icon:'🫙', art:'rew/coin_pile', cost:80, desc:'Tips are 25% bigger'}, {id:'mat', name:'Comfy mat', icon:'🧘', cost:90, desc:'23 seconds of grace instead of 15'}]
 };
 const GIFTS = {bun:{id:'carrot', name:'Carrot plant (from Bun)', icon:'🥕', at:[120, 335]}, hazel:{id:'shroom', name:'Mushroom lamp (from Hazel)', icon:'🍄', at:[318, 210]}, mo:{id:'honey', name:'Honey jar (from Mo)', icon:'🍯', at:[455, 210]}, pip:{id:'balloon', name:'Party balloon (from Pip)', icon:'🎈', at:[600, 120]}, cat:{id:'yarn', name:'Ball of yarn (from Tango)', icon:'🧶', at:[200, 335]}, dot:{id:'umbrella', name:'Little umbrella (from Mango)', icon:'☂️', at:[560, 330]}};
 const STORIES = {bun:'Bun says: “I share your cookies with my seven little brothers. They think you’re famous!”', hazel:'Hazel says: “I used to be too shy to come in. Now this is my favourite place in town.”',
