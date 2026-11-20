@@ -1,0 +1,13 @@
+{
+  "name": "bakery",
+  "compatibility_date": "2026-10-08",
+  "main": "src/worker.js",
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY", "class_name": "Relay" }, { "name": "ACCOUNTS", "class_name": "Accounts" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Relay"] }, { "tag": "v2", "new_sqlite_classes": ["Accounts"] }]
+}

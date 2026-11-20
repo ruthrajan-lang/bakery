@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bakery customers</title>
+<style>
+  body{margin:0;background:#fdf0df;color:#5d5049;font:15px/1.4 system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;padding:18px 12px 30px}
+  h1{font:600 22px system-ui;margin:4px 0 2px}p{margin:0 0 10px;color:#8a7768;text-align:center;max-width:560px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:4px 0 10px}
+  button{border:2px solid #e6d3bd;background:#fff;border-radius:999px;padding:7px 14px;font:600 13px system-ui;color:#5d5049;cursor:pointer}
+  button.on{background:#f2b25c;border-color:#c98d3a}
+  canvas{width:min(96vw,1000px);aspect-ratio:2000/660;background:#fffaf2;border:2px solid #ead9c4;border-radius:24px;touch-action:none;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>Bakery customers</h1>
+<p>Drawn entirely in code, the same ones that visit the bakery. Tap a character for a poke.</p>
+<div class="row" id="acts"></div>
+<canvas id="c" width="2000" height="660"></canvas>
+<script src="critter-art.js"></script><script src="critters.js"></script>
+<script>
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const KINDS = ['cat', 'bunny', 'hedgehog', 'bear', 'frog', 'duck'], cs = KINDS.map(k => new BakeryCritters.Critter(k));
+const ACTS = ['idle', 'walk', 'wave', 'hop', 'cheer', 'dance', 'excited', 'impatient', 'bow', 'shy', 'doze', 'lookAround'];
+let act = 'idle', t0 = performance.now(), last = performance.now();
+const chips = () => document.getElementById('acts').innerHTML = ACTS.map(a => `<button data-a="${a}" class="${a === act ? 'on' : ''}">${a}</button>`).join('');
+document.getElementById('acts').onclick = e => { const a = e.target.dataset.a; if (a) { act = a; t0 = performance.now(); chips(); } }; chips();
+cv.onpointerdown = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)/r.width*2000, i = Math.max(0, Math.min(5, Math.floor((x - 30)/325))); cs[i].poke = 1; };
+function f(now) { const dt = (now - last)/1000; last = now; g.clearRect(0, 0, 2000, 660);
+  cs.forEach((c, i) => c.draw(g, act, (now - t0)/1000 + i*.13, dt, 190 + i*325, 590, 400)); requestAnimationFrame(f); }
+requestAnimationFrame(f);
+</script>
+</body>
+</html>

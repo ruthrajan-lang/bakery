@@ -1,0 +1,2240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bakery">
+<meta name="theme-color" content="#fdf0df">
+<link rel="manifest" id="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Bingsu's Bakery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf3e8;--card:#fffaf2;--line:#ecdcc8;--line2:#dcc6ab;--ink:#5d5049;--text:#5d5049;--muted:#9a8676;--accent:#f2b25c;--accent-d:#d98f2f;--good:#4c9a3c;--bad:#d9534f;--idle:#6f82b8;--panel:#fffaf2}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+small{color:var(--muted)}
+.muted{color:var(--muted);margin:0 0 10px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* header */
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:24px;padding:12px 28px;background:#fffaf2ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;white-space:nowrap}.brandname{font-family:Fredoka,system-ui,sans-serif;font-weight:600;font-size:21px;color:#c46a7a;letter-spacing:.01em}.brand img{width:36px;height:36px;border-radius:11px;border:1px solid var(--line)}
+.kpis{display:flex;gap:26px;margin:0 auto}
+.kpi{display:flex;flex-direction:column;line-height:1.15}.kpi small{font-size:11px;text-transform:uppercase;letter-spacing:.06em}.kpi b{font-size:17px;white-space:nowrap}.kpi em{font-style:normal;font-size:11px;color:var(--muted)}
+.who{display:flex;gap:10px;align-items:center}
+.chip-state{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:14px;white-space:nowrap}
+.chip-state i{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.chip-state:has(.focused) i{background:var(--good)}.chip-state:has(.distracted) i{background:var(--bad)}.chip-state:has(.grace) i{background:var(--accent)}.chip-state:has(.idle) i{background:var(--idle)}
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;max-width:1320px;margin:0 auto;padding:24px 28px 48px}
+.stage{display:flex;flex-direction:column;gap:16px;min-width:0}
+canvas{width:100%;aspect-ratio:16/9;border-radius:22px;display:block;box-shadow:0 12px 32px #5d50491f;border:1px solid var(--line)}
+.side{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:0 2px 10px #5d50490b}
+.card h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.row{display:flex;gap:8px}.chips{display:flex;flex-wrap:wrap;gap:8px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#recipes>small{display:none}
+.skins{display:flex;gap:8px;flex-wrap:wrap}.skins button{width:42px;height:42px;padding:0;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line2)}.skins button.on{box-shadow:0 0 0 3px var(--accent-d)}
+.dev summary{cursor:pointer;color:var(--muted);font-size:13px}.dev[open] summary{margin-bottom:10px}.dev .chips+.chips{margin-top:8px}
+/* controls */
+button{font:inherit;background:#fff;color:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:8px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+button:hover{background:#fff6ea;border-color:#cdb293}button:active{transform:translateY(1px)}
+button.on{background:#fde7c4;border-color:var(--accent-d);color:#5a3a12;font-weight:600}
+button.locked{opacity:.7}
+button.primary{background:var(--accent);border-color:var(--accent-d);color:#3a2610;font-weight:700}button.primary:hover{background:#f5be72}
+button.link{background:none;border:0;padding:8px 0 0;color:#a8651a;font-weight:600}button.link:hover{text-decoration:underline;background:none}
+input{font:inherit;background:#fff;color:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:9px 12px;width:100%;min-width:0}
+input:focus{outline:3px solid #f2b25c55;border-color:var(--accent-d)}
+select{font:inherit;background:#fff;color:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:8px 10px;width:100%;margin-top:8px}
+.focused{color:var(--good)}.distracted{color:var(--bad)}.idle{color:var(--idle)}.grace{color:var(--accent-d)}
+/* sheet (dialogs) */
+#sheet{position:fixed;inset:0;z-index:40;background:#3a2c2266;display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto;backdrop-filter:blur(2px)}
+#sheet[hidden]{display:none}
+.sheet-box{position:relative;width:min(620px,100%);background:var(--card);border-radius:22px;box-shadow:0 20px 60px #3a2c2240;padding:26px 26px 22px}
+.sheet-box .x{position:absolute;top:14px;right:14px;border-radius:50%;width:36px;height:36px;padding:0}
+.panel{line-height:1.55}.panel h2{margin:0 0 6px;font-size:22px}
+@media (max-width:1100px){.kpis{gap:16px}.kpi:nth-child(5){display:none}}
+@media (max-width:900px){.layout{grid-template-columns:1fr;padding:16px}.kpis{display:none}.top{padding:10px 16px}}
+/* phone: full-screen bakery with the task at the bottom */
+#phoneBar,#gear{display:none}
+body.phone{background:#fdf0df;padding:0;gap:0;min-height:100dvh;justify-content:center;overflow:hidden}
+body.phone .top,body.phone .side,body.phone #job{display:none!important}
+body.phone .layout,body.phone .stage{display:contents}
+body.phone{display:flex;flex-direction:column;align-items:center}
+body.phone canvas{border:0;box-shadow:none}
+body.phone canvas{width:min(100vw,177.7dvh);border-radius:0;margin-bottom:max(110px,14dvh)}
+
+body.phone #phoneBar{display:block;position:fixed;left:0;right:0;bottom:0;padding:14px 20px calc(16px + env(safe-area-inset-bottom));background:#fffaf2;border-top:3px solid #5d5049;color:#5d5049;text-align:center}
+#phoneTask{font:700 clamp(18px,5vw,26px)/1.25 system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#phoneTask.empty{color:#b7a391;font-weight:500}
+#todolist{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+.titem{display:flex;align-items:center;gap:10px;padding:6px 6px;border-radius:10px}
+.titem:hover{background:#fbefe0}.titem .check{width:22px;height:22px}
+.titem .tt{flex:1;min-width:0;background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.titem .tt:hover{text-decoration:underline;background:none}.titem .src{font-size:11px;color:var(--muted)}
+.titem .x{border:0;background:none;color:var(--muted);padding:0 4px;visibility:hidden}.titem:hover .x{visibility:visible}
+.titem:has(.check:hover) .tt{text-decoration:line-through;color:var(--muted)}
+.addrow input{margin-top:6px;border-style:dashed}.tdfoot{display:flex;justify-content:space-between;align-items:center}.empty-todo{color:var(--muted);font-size:13px;padding:4px 6px}
+#phoneNext{margin-top:6px;font:500 13px system-ui;color:#8a7768}
+#phoneDone{margin-top:10px;background:#8fd07c;color:#1f3b16;border:2px solid #5d5049;border-radius:999px;font-weight:700;padding:8px 18px}
+.taskrow{display:flex;align-items:center;gap:10px}
+button.check{flex:none;width:26px;height:26px;padding:0;border-radius:50%;border:2px solid #b9a08a;background:#fff;position:relative}
+button.check::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:800;color:#4c9a3c;opacity:0;transition:opacity .15s}
+button.check:hover{border-color:#4c9a3c;background:#eef8ea}button.check:hover::after{opacity:1}
+.taskrow:has(button.check:hover) input{text-decoration:line-through;color:var(--muted)}
+.lbl{display:block;margin:12px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+#phoneSub{font:500 13px system-ui;color:#8a7768;margin-top:4px}
+#phoneProg{height:6px;background:#f1e2cf;border-radius:3px;margin-top:8px;overflow:hidden}#phoneProg i{display:block;height:100%;background:#f2b25c}
+#install{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:5;background:#fffaf2;color:#5d5049;border-color:#5d5049}
+
+#caseBtn{display:none}
+#update{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom));z-index:30;background:#f2b25c;color:#2a211c;border-color:#5d5049;font-weight:700}
+#update[hidden]{display:none}
+#breakBar{position:fixed;left:8px;right:8px;bottom:calc(30px + env(safe-area-inset-bottom));z-index:13;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:700px;margin:0 auto;background:#fffaf2ee;border:2px solid #5d5049;border-radius:18px;padding:8px 10px;box-shadow:0 6px 20px #5d504926}
+#breakBar[hidden],#invBar[hidden]{display:none}#invBar{position:fixed;left:8px;right:8px;bottom:calc(30px + env(safe-area-inset-bottom));z-index:14;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:560px;margin:0 auto;background:#fffaf2f2;border:2px solid #5d5049;border-radius:18px;padding:8px 10px;box-shadow:0 6px 20px #5d504926}#invBar span{font-weight:600;padding:0 4px}#invBar button{border-radius:999px;padding:7px 12px}#breakBar button{border-radius:999px;padding:7px 12px;white-space:nowrap;flex:none}
+/* display case */
+#case{position:fixed;inset:0;z-index:20;background:#fbf3e8;color:#5d5049;overflow:auto;padding:calc(22px + env(safe-area-inset-top)) max(18px, calc(50vw - 520px)) 30px;font-family:system-ui}
+#case .close{right:max(14px, calc(50vw - 520px))}
+#case[hidden]{display:none}
+#case h2{margin:0 0 4px;font-size:24px}#case .sub{color:#8a7768;margin:0 0 14px}
+#case .close{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;background:#fffaf2;color:#5d5049;border-color:#5d5049}
+#case .shelf{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;min-height:64px;padding:10px 12px 6px;border-bottom:8px solid #d9a066;border-radius:6px;background:#fff6ea;margin-bottom:18px}
+#case .shelf img{height:46px}
+#case .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+#case .card{background:#fffaf2;border:3px solid #5d5049;border-radius:16px;padding:12px;text-align:center}
+#case .card img{height:72px;max-width:100%;object-fit:contain}
+#case .card.locked img{filter:brightness(0);opacity:.18}
+#case .card b{display:block;font-size:17px;margin-top:6px}#case .card small{color:#8a7768;display:block}
+#case .stars{color:#e0533f;letter-spacing:2px}
+#case .tabs{display:flex;gap:6px;margin:0 90px 14px 0;flex-wrap:wrap}#case .tabs button{background:#fffaf2;color:#5d5049;border-color:#5d5049}#case .tabs button.on{background:#f2b25c}
+#case .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:8px 0 18px}
+#case .stat{background:#fffaf2;border:3px solid #5d5049;border-radius:14px;padding:10px;text-align:center}#case .stat b{display:block;font-size:24px}#case .stat small{color:#8a7768}
+#case .chart{display:flex;gap:8px;align-items:flex-end;height:130px;background:#fffaf2;border:3px solid #5d5049;border-radius:14px;padding:10px 12px 26px;margin:8px 0 18px}
+#case .chart div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+#case .chart i{display:block;width:100%;background:#f2b25c;border-radius:6px 6px 0 0;min-height:2px}#case .chart span{font-size:11px;color:#5d5049}#case .chart small{position:absolute;bottom:-20px;color:#8a7768;font-size:11px}
+#case .list{display:flex;flex-direction:column;gap:6px;margin:8px 0 18px}#case .list>div{display:flex;align-items:center;gap:10px;background:#fffaf2;border:2px solid #5d5049;border-radius:12px;padding:6px 12px}
+#case .list img{height:30px}#case .list span{flex:1}#case .list small{color:#8a7768}
+#case .rew{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:8px 0 18px}
+#case .rew>div{display:flex;gap:10px;align-items:center;background:#fffaf2;border:3px solid #d8cbbd;border-radius:14px;padding:10px;opacity:.75}
+#case .rew>div.ok{border-color:#5d5049;opacity:1;background:#fff3d6}#case .rew .ic{font-size:28px;filter:grayscale(1)}#case .rew .ok .ic{filter:none}
+#case .rew>div>div{flex:1;min-width:0}#case .rew b{display:block}#case .rew small{color:#8a7768;display:block;font-size:12px}
+#case .rew i{display:block;height:6px;background:#eadfd2;border-radius:3px;margin-top:5px;overflow:hidden}#case .rew u{display:block;height:100%;background:#f2b25c}
+#case .rew em{font-style:normal;font-weight:700;font-size:13px;color:#8a7768}#case .rew .ok em{color:#4c9a3c}
+#pill{display:none}
+body.phone #pill{display:block;cursor:pointer;max-width:calc(100vw - 180px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:fixed;top:calc(14px + env(safe-area-inset-top));left:14px;padding:6px 12px;border-radius:999px;font:600 13px system-ui;background:#fffaf2e6;color:#5d5049;border:2px solid #5d5049}
+#pill.d{background:#e0533f;color:#fff;border-color:#a83426}#pill.g{background:#f2b25c;border-color:#b9802f}#pill.off{opacity:.7}
+body.phone.dist #phoneBar{background:#b8434b;color:#fff1ee}
+body.phone.dist #phoneSub{color:#ffd3cc}
+body.phone{transition:background .8s}
+body.phone.dist{background:#c9545a}
+.panel code{display:block;background:#f6ecdf;color:#5d5049;padding:8px 10px;border-radius:8px;word-break:break-all;margin:6px 0;font-size:13px}
+.panel input{width:min(420px,100%)}
+.panel a{color:#a8651a}
+.panel a.dl{display:inline-block;background:var(--accent);color:#3a2610;border:1px solid var(--accent-d);padding:8px 14px;border-radius:999px;font-weight:700;text-decoration:none;margin:6px 0}
+.tasks button.on{border-color:var(--bad);color:var(--bad);background:#fdeceb}
+.tasks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.steps{display:grid;gap:12px;margin-top:14px}.steps section{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:#fff}
+.steps h3{margin:0 0 8px;font-size:15px}.steps .muted{margin:8px 0}.phoneRow{display:flex;gap:14px;align-items:center}
+.steps code+button,.steps details button{margin-top:4px}
+#qr{background:#fff;padding:8px;border-radius:8px;display:inline-block;margin-top:6px}
+#job .jobhead{font-size:15px}
+#jobbar{position:relative;height:14px;background:#f1e2cf;border-radius:7px;margin-top:6px;overflow:hidden;cursor:ew-resize;touch-action:none}
+.tick{position:absolute;top:0;bottom:0;width:2px;background:#fffaf2}
+#steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#steps span{padding:4px 11px;border-radius:999px;background:#f6ecdf;color:var(--muted);font-size:13px}
+#steps span.done{color:var(--good)}
+#steps span.now{background:var(--accent);color:#3a2610;font-weight:600}
+#jobbar.drag #jobfill{transition:none;background:#f7d08a}
+#jobfill{height:100%;width:0;background:var(--accent);transition:width .3s}
+
+@media (orientation:portrait){body.phone canvas{width:100vw;aspect-ratio:5/4;object-fit:cover;object-position:92% 50%}}
+@media (orientation:landscape){
+  body.phone{flex-direction:row;justify-content:flex-start}
+  body.phone canvas{width:min(100vw - 240px, 177.7dvh);aspect-ratio:16/9;object-fit:contain;margin:0}
+  body.phone #phoneBar{left:auto;right:0;top:0;bottom:0;width:240px;display:flex;flex-direction:column;justify-content:center;padding:16px calc(16px + env(safe-area-inset-right)) 16px 18px;border-top:0;border-left:3px solid #5d5049;text-align:left}
+  body.phone #phoneTask{white-space:normal;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+  body.phone #pill{left:12px;right:auto;top:auto;bottom:calc(12px + env(safe-area-inset-bottom))}
+}
+/* bottom bar tucked away until swiped up (side panel in landscape: swipe left) */
+body.phone #phoneBar{transition:transform .35s ease,background .8s;touch-action:none}
+#grab{display:block;width:44px;height:5px;border-radius:3px;background:#5d504966;margin:-6px auto 10px}
+body.phone:not(.barOpen) #phoneBar{transform:translateY(calc(100% - 22px - env(safe-area-inset-bottom)))}
+body.phone canvas{transition:margin .35s,width .35s}
+@media (orientation:portrait){body.phone:not(.barOpen) canvas{margin-bottom:0}}
+@media (orientation:landscape){
+  #grab{position:absolute;left:7px;top:50%;width:5px;height:44px;margin:-22px 0 0}
+  body.phone:not(.barOpen) #phoneBar{transform:translateX(calc(100% - 22px))}
+  body.phone:not(.barOpen) canvas{width:min(100vw - 22px, 177.7dvh)}
+}
+
+/* goal ring, level */
+.kpi.goal{flex-direction:row;align-items:center;gap:8px;background:none;border:0;padding:0;text-align:left;color:inherit;cursor:pointer}
+.kpi.goal span{display:flex;flex-direction:column;line-height:1.15}.kpi.goal svg{width:34px;height:34px;transform:rotate(-90deg)}
+.kpi.goal circle{fill:none;stroke-width:4.5}.kpi.goal .bg{stroke:#f1e2cf}.kpi.goal .fg{stroke:var(--accent-d);stroke-linecap:round;stroke-dasharray:94.25;transition:stroke-dashoffset .6s}
+.kpi.goal.done .fg{stroke:var(--good)}.kpi.goal:hover{background:none}
+.kpi.lvl i{display:block;width:120px;height:6px;border-radius:3px;background:#f1e2cf;margin:5px 0 3px;overflow:hidden}.kpi.lvl u{display:block;height:100%;background:var(--accent)}
+/* shop */
+#case .shopg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:8px 0 18px}
+#case .shopc{background:#fffaf2;border:2px solid #e3d2bd;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+#case .shopc.own{border-color:#5d5049}#case .shopc img.ic{height:56px;max-width:100px;object-fit:contain}#case .shopc .ic{font-size:34px;line-height:1.1}#case .shopc small{color:#8a7768;min-height:2.4em}
+#case .shopc button{margin-top:4px;min-width:90px}#case .shopc button:disabled{opacity:.45;cursor:not-allowed}#case .shopc em{font-style:normal;color:var(--good);font-weight:700;margin-top:6px}
+/* newspaper */
+#case .news{background:#fffdf7;border:2px solid #5d5049;border-radius:6px;padding:20px 24px;font-family:Georgia,'Times New Roman',serif;max-width:820px}
+#case .masthead{text-align:center;border-bottom:3px double #5d5049;margin-bottom:12px}#case .masthead h1{margin:2px 0 8px;font-size:40px;letter-spacing:.02em}
+#case .news h2{font-size:26px;margin:6px 0}#case .news .lede{font-size:17px;line-height:1.5}#case .news .cols p{margin:6px 0;font-size:15px}
+#case .news .stats .stat,#case .news .chart{font-family:system-ui}
+
+/* phone: one tidy dock of round icon buttons under the status pill */
+#dock{display:none}
+body.phone #dock{display:flex;position:fixed;z-index:11;top:calc(8px + env(safe-area-inset-top));right:12px;gap:4px;padding:4px;background:#fffaf2e6;border:2px solid #5d5049;border-radius:999px;box-shadow:0 4px 14px #5d50491a}
+body.phone #dock>button{position:static!important;display:grid!important;place-items:center;width:40px;height:40px;padding:0;border:0!important;border-radius:50%;background:transparent!important;font-size:19px;line-height:1;color:#5d5049}
+body.phone #dock>button:active{background:#f6e6cf!important}
+body.phone #dock>button.off{opacity:.45}
+body.phone #dock>button[hidden]{display:none!important}
+body.phone #gear{width:44px;height:44px;padding:0;border-radius:50%;font-size:20px}
+@media (orientation:landscape){
+  body.phone #dock{top:calc(10px + env(safe-area-inset-top));left:12px;right:auto}
+}
+/* ---- game HUD + menu ---- */
+.hudbtn{border-radius:14px;padding:9px 14px;font-weight:600;white-space:nowrap}
+#menu h3{margin:18px 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}#menu h3:first-of-type{margin-top:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}@media (max-width:520px){.tiles>button,.tiles>a{padding:10px 4px;font-size:12px}.tiles small{display:none}.tiles i{font-size:22px}}
+.tiles>button,.tiles>a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border:2px solid var(--line2);border-radius:16px;background:#fff;color:var(--ink);font:600 13px system-ui;text-align:center;text-decoration:none;cursor:pointer}
+.tiles>button:hover,.tiles>a:hover{border-color:var(--accent-d);background:#fff8ec}
+.tiles i{font-style:normal;font-size:26px;line-height:1}.tiles small{font-weight:400;color:var(--muted);font-size:11px}
+.menu-foot{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}.menu-foot button,.menu-foot a{font-size:12px;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer}
+#src{margin:0 0 8px;font-size:12px}
+.phone-only{display:none!important}body.phone .phone-only,body.phonefull .phone-only{display:flex!important}
+#sim .chips button{font-size:13px}
+body.phonefull .stage,body.phonefull .chip-state,body.phonefull #breakBar,body.phonefull #invBar,body.phonefull #bakeryBtn,body.phonefull #menuBtn{display:none!important}body.phonefull .layout{padding-top:12px}
+/* ---- night: dark page around a lamp-lit kitchen ---- */
+body.night{--bg:#16121b;--card:#221c27;--line:#352c3c;--line2:#4a3f52;--text:#efe4d8;--muted:#a99a8c}
+body.night,body.night.phone{background:#16121b;color:#efe4d8}
+body.night .top{background:#16121bee;border-color:#352c3c}
+body.night .card,body.night .sheet-box,body.night #case{background:#221c27;color:#efe4d8}
+body.night button:not(.primary):not(.on),body.night input,body.night select,body.night .tiles>button,body.night .tiles>a{background:#2c2532;color:#efe4d8;border-color:#4a3f52}
+body.night.phone #phoneBar{background:#221c27;color:#efe4d8;border-color:#0d0a10}
+body.night #pill,body.night.phone #dock{background:#221c27e6;color:#efe4d8;border-color:#0d0a10}
+body.night.phone #dock>button{color:#efe4d8}
+body.night #case{background:#16121b;color:#efe4d8}
+body.night #case .card,body.night #case .stat,body.night #case .chart,body.night #case .list>div,body.night #case .rew>div,body.night #case .shopc,body.night #case .tabs button,body.night #case .close,body.night #case .news{background:#221c27;color:#efe4d8;border-color:#4a3f52}
+body.night #case .rew>div.ok,body.night #case .card:not(.locked),body.night #case .shopc.own{border-color:#8a7a92}
+body.night #case .rew>div.ok{background:#2e2533}body.night #case .shelf{background:#221c27;border-bottom-color:#7a5636}
+body.night #case .tabs button.on{background:#f2b25c;color:#2a2230}
+body.night #case .card small,body.night #case .rew small,body.night #case .shopc small,body.night #case .sub,body.night #case .list small,body.night #case .stat small,body.night #case .rew em{color:#a99a8c}
+body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-color:#8a7a92}body.night #case .card.locked img{filter:brightness(0) invert(1);opacity:.14}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icon-192.png" alt=""><span class="brandname">Bingsu's Bakery</span></div>
+  <div class="kpis">
+    <div class="kpi"><small>Coins</small><b>🪙 <span id="coins">0</span></b></div>
+    <button class="kpi goal" id="goalKpi" title="Daily goal: tap to change"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" id="goalRing" class="fg"/></svg><span><small>Daily goal</small><b id="goalTxt">…</b></span></button>
+    <div class="kpi"><small>Day streak</small><b id="dayStreak">🔥 0</b><em id="daysOff"></em></div>
+    <div class="kpi lvl"><small id="lvlName">Lv 1</small><i><u id="lvlBar"></u></i><em><span id="rep">★ 3.0</span> rating</em></div>
+  </div>
+  <div class="who"><span class="chip-state"><i></i><b id="state">…</b></span><button id="bakeryBtn" class="hudbtn">🧁 Bakery</button><button id="menuBtn" class="hudbtn primary">☰ Menu</button></div>
+</header>
+<main class="layout">
+  <section class="stage">
+    <canvas id="c"></canvas>
+    <div id="job" class="card"><div class="jobhead"><span id="jobtext">…</span></div><div id="jobbar"><div id="jobfill"></div></div><div id="steps"></div></div>
+  </section>
+  <aside class="side">
+    <div class="card"><h3>Working on</h3>
+      <div class="taskrow"><button id="taskDone" class="check" title="Mark task as complete" aria-label="Mark task as complete"></button><input id="task" maxlength="80" placeholder="What are you working on?"></div>
+      <small class="lbl">Up next</small><div id="todolist"></div>
+      <form id="todoAdd" class="addrow"><input id="todoNew" maxlength="80" placeholder="+ Add a task"></form>
+      <div class="tdfoot"><button id="todoBtn" class="link" type="button">Connect Todoist</button></div>
+      <small class="lbl" style="margin-top:16px">Counts as work</small>
+      <div id="kind" class="chips" title="Kinds of work: apps that fit any of them count as focus. Anything else, Claude included, gets 5 minutes, then the oven pauses. Pick none for any work."><button data-k="claude">Claude</button><button data-k="writing">Writing</button><button data-k="research">Research</button><button data-k="coding">Coding</button></div>
+    </div>
+    <div class="card"><h3>Bake next</h3><div id="recipes" class="chips"></div></div>
+  </aside>
+</main>
+<div id="sheet" hidden><div class="sheet-box"><button id="sheetClose" class="x" aria-label="Close">✕</button>
+  <div id="acct" class="panel" hidden></div><div id="goal" class="panel" hidden></div><div id="hours" class="panel" hidden></div><div id="connect" class="panel" hidden></div><div id="todo" class="panel" hidden></div><div id="dist" class="panel" hidden></div>
+  <div id="menu" class="panel" hidden><h2>☰ Menu</h2>
+    <h3>Your bakery</h3><div class="tiles">
+      <button data-case="case"><i>🧁</i>Display case<small>today’s bakes</small></button><button data-case="shop"><i>🛍️</i>Shop<small>decor, outfits, kitchens</small></button>
+      <button data-case="rew"><i>🏆</i>Rewards<small>badges &amp; friends</small></button><button data-case="earn"><i>🪙</i>Earnings</button><button data-case="news"><i>📰</i>Weekly paper</button></div>
+    <h3>Focus</h3><p id="src" class="muted"></p><div class="tiles">
+      <button class="phone-only" id="tasksBtn"><i>📝</i>Tasks<small>working on &amp; up next</small></button>
+      <button id="goalBtn"><i>🎯</i>Daily goal</button><button id="hoursBtn"><i>🕘</i>Hours &amp; breaks</button><button id="closeBtn2"><i>☕</i>Take a break</button>
+      <button id="connectBtn"><i>💻</i>Connect devices</button><button id="distBtn"><i>🚫</i>Distracting sites</button></div>
+    <h3>Settings</h3><div class="tiles">
+      <button id="acctBtn"><i>👤</i><span>Log in</span></button><button id="sound"><i>🔕</i><span>Sound off</span></button>
+      <button id="nightBtn"><i>🌙</i><span>Night: auto</span></button><button id="wake"><i>☀️</i><span>Keep screen on</span></button><button id="fs"><i>⛶</i><span>Full screen</span></button></div>
+    <div class="menu-foot"><button id="simBtn">🧪 Simulator</button><a href="animator/">🎬 Animator</a></div></div>
+  <div id="sim" class="panel" hidden><h2>🧪 Simulator</h2><p class="muted" style="white-space:normal">Try situations without waiting. Skipping ahead counts as real progress in your bakery.</p>
+    <h3 class="lbl">Pretend I’m…</h3><div id="modes" class="chips"></div>
+    <h3 class="lbl">Skip ahead</h3><div class="chips"><button data-sim="f15">⏩ 15 min focused</button><button data-sim="f45">⏩ 45 min focused</button><button data-sim="f90">⏩ 90 min focused</button></div>
+    <h3 class="lbl">Make it happen</h3><div class="chips"><button data-sim="cust">🔔 Customer arrives</button><button data-sim="rare">✨ Rare visitor</button><button data-sim="back">😮‍💨 Back from a distraction</button><button data-sim="invite">☕ Break invite</button><button data-sim="endbreak">⏰ Break ends</button><button data-sim="goal">🎯 Daily goal reached</button><button data-sim="fin">✨ Finish this bake</button></div>
+    <h3 class="lbl">Start over</h3><button id="reset">Reset bakery</button></div>
+</div></div>
+<div id="case" hidden></div><button id="update" hidden>✨ New version, tap to update</button><div id="pill"></div><div id="dock"></div><button id="caseBtn" title="Display case">🧁</button><div id="invBar" hidden><span id="invTxt"></span><button data-i="yes" class="primary">☕ Take a break</button><button data-i="no">Not now</button></div><div id="breakBar" hidden><button data-b="pet">🐾 Pet Bingsu</button><button data-b="story">📖 Story</button><button data-b="open" class="primary">🔓 Open bakery</button></div><button id="closeBtn" title="Take a break">☕</button><button id="gear" title="Menu">☰</button><button id="install" hidden>📲 Install app</button>
+<div id="phoneBar"><i id="grab"></i><div id="phoneTask"></div><button id="phoneDone" hidden>✓ Mark as done</button><div id="phoneNext"></div><div id="phoneProg"><i></i></div><div id="phoneSub"></div></div>
+<script src="animator/critter-art.js"></script><script src="animator/critters.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const W = 640, H = 360, cv = $('c'), ctx = cv.getContext('2d');
+// backing resolution follows how big the scene really shows (the phone view zooms it with object-fit: cover)
+function fit() {
+  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover';
+  const shown = r.width ? (cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H)) : 1;
+  const d = Math.min(4, Math.max(1, shown*(devicePixelRatio || 1)));
+  if (Math.abs(d - (cv.dpr || 0)) > .05) { cv.width = Math.round(W*d); cv.height = Math.round(H*d); cv.dpr = d; }
+}
+fit(); addEventListener('resize', fit); setTimeout(fit, 300); new ResizeObserver(fit).observe(cv);
+
+const SPEED = Math.max(1, +new URLSearchParams(location.search).get('speed') || 1); // ?speed=60 to test
+const GRACE = 30;        // real seconds of distraction before it counts
+const RUIN_FAIL = 600;   // bake-seconds of distraction before the bake is ruined
+const RECIPES = {
+  cookies:    {name:'Cookies',    time:15*60,  sell:4,  unlock:0,   batter:'#e8c48a', stages:[['mix',.3],['shape',.3],['bake',.4]]},
+  muffins:    {name:'Muffins',    time:25*60,  sell:8,  unlock:10,  batter:'#d9a76a', stages:[['mix',.35],['shape',.15],['bake',.5]]},
+  bread:      {name:'Bread',      time:45*60,  sell:15, unlock:30,  batter:'#f0dcb0', stages:[['mix',.15],['knead',.25],['proof',.3],['bake',.3]]},
+  cake:       {name:'Layer cake', time:90*60,  sell:35, unlock:80,  batter:'#f6c9d4', stages:[['mix',.25],['bake',.35],['frost',.4]]},
+  croissants: {name:'Croissants', time:120*60, sell:50, unlock:150, batter:'#f3dfb0', stages:[['mix',.1],['knead',.3],['proof',.3],['bake',.3]]},
+  // seasonal: only on the menu in their months (0 = January)
+  pumpkin:     {name:'Pumpkin pie',     time:60*60, sell:24, unlock:0, batter:'#f2a65a', stages:[['mix',.3],['shape',.2],['bake',.5]], months:[9, 10], season:'🍂 Autumn'},
+  gingerbread: {name:'Gingerbread',     time:30*60, sell:10, unlock:0, batter:'#d9a06a', stages:[['mix',.3],['shape',.3],['bake',.4]], months:[11, 0], season:'❄️ Winter'},
+  hotcross:    {name:'Hot cross buns',  time:50*60, sell:18, unlock:0, batter:'#f0dcb0', stages:[['mix',.15],['knead',.25],['proof',.3],['bake',.3]], months:[2, 3], season:'🌷 Spring'},
+  tart:        {name:'Strawberry tart', time:70*60, sell:28, unlock:0, batter:'#f6e3bf', stages:[['mix',.3],['shape',.25],['bake',.45]], months:[5, 6], season:'🍓 Summer'}
+};
+const inSeason = k => !RECIPES[k].months || RECIPES[k].months.includes(new Date().getMonth());
+let lastStage = null;
+const STAGE = {mix:'Mixing', shape:'Shaping', knead:'Kneading', proof:'Proofing', bake:'Baking', frost:'Frosting'};
+const COUNTER_X = 340, OVEN_X = 420, PROP = {x:290, y:244};
+
+// ---------- state ----------
+const newJob = r => ({r, p:0, ruin:0});
+const fresh = () => ({coins:0, unlocked:['cookies'], recipe:'cookies', job:newJob('cookies'), shelf:[], day:'', today:0, best:0, baked:0, failed:0});
+let S = fresh();
+try { const s = JSON.parse(localStorage.getItem('focusbakery-v1')); if (s && s.job && RECIPES[s.job.r]) S = Object.assign(S, s); } catch (e) {}
+S.unlocked = Object.keys(RECIPES); // everything unlocked
+if (!S.ledger && (S.hist || []).length) S.ledger = S.hist.map(h => ({t:h.t, coins:Math.max(1, Math.round(RECIPES[h.r].sell*(h.q > .85 ? 1 : h.q > .5 ? .75 : .5))), tip:0, r:h.r, c:null}));
+setTimeout(showNextReward, 600);   // rewards you haven't collected yet
+if (!S.hist) S.hist = (S.shelf || []).map(it => ({r:it.r, q:1 - (it.b || 0), t:Date.now()}));
+S.recipe = S.job.r;   // highlighted recipe always matches what's baking
+const save = () => { S.savedAt = Date.now(); try { localStorage.setItem('focusbakery-v1', JSON.stringify(S)); } catch (e) {} try { schedulePush(); } catch (e) {} };
+setInterval(() => { if (!document.hidden) save(); }, 5000);
+
+let shopClosed = '';
+let pcOff = false, trackerRaw = null, trackerWhy = '', manual = null, info = '', distractedSince = 0, streak = 0;
+const STATE_URL = location.hostname === 'localhost' ? '/state' : 'http://localhost:8765/state';
+// pairing code: links this page to your Mac tracker through the Cloudflare relay
+const SITE = location.protocol === 'file:' ? 'https://bakery.ruththomson.workers.dev' : location.origin;
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
+let CODE = new URLSearchParams(location.search).get('code') || ls('focusbakery-code');
+if (CODE) {
+  ls('focusbakery-code', CODE);
+  // keep the code in the address so Add to Home Screen carries it (the home-screen app has its own storage)
+  const u = new URL(location.href); if (location.protocol !== 'file:' && u.searchParams.get('code') !== CODE) { u.searchParams.set('code', CODE); history.replaceState(null, '', u); }
+  document.getElementById('manifest').href = 'manifest.webmanifest?code=' + CODE;
+}
+// ---- task + focus block shared through the relay (from this page, your phone, or Ritual) ----
+function pushTask() {
+  clearTimeout(pushTask.t);
+  pushTask.t = setTimeout(() => { if (!CODE) return; S.taskT = Date.now(); save();
+    fetch(`${SITE}/api/task/${CODE}`, {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({text:S.task || '', id:S.taskId || '', src:S.taskId ? 'todoist' : '', from:'bakery', kind:S.kind || ''})}).catch(() => {}); }, 700);
+}
+function syncShared(d) {
+  if (typeof d.kind === 'string' && d.kind !== (S.kind || '') && Date.now() - (S.taskT || 0) > 5000) { S.kind = d.kind; showKind(); save(); }
+  const tk = d.task;
+  if (tk && tk.t > (S.taskT || 0) + 1500 && document.activeElement !== $('task')) {   // newer task from another device or Ritual
+    if ((tk.text || '') !== (S.task || '')) S.taskStart = Date.now();
+    S.task = tk.text || ''; S.taskId = tk.src === 'todoist' && tk.id ? tk.id : null; S.taskT = tk.t; S.taskFrom = tk.from;
+    S.todo = (S.todo || []).filter(x => !(x.text === S.task || (S.taskId && String(x.ext) === String(S.taskId)))); if (typeof renderTodoList === 'function') renderTodoList();
+    $('task').value = S.task; save(); syncDone();
+    if (document.body.classList.contains('phone') && !document.body.classList.contains('barOpen')) {   // show the new task for a moment
+      document.body.classList.add('barOpen'); clearTimeout(syncShared.peek);
+      syncShared.peek = setTimeout(() => { if (ls('focusbakery-bar') !== '1') document.body.classList.remove('barOpen'); }, 6000);
+    }
+  }
+  const b = d.block;
+  if (b && !b.done && b.end > Date.now() && b.start !== S.blockStart) {   // Ritual started a focus block: bake to match its length
+    S.blockStart = b.start;
+    const secs = (b.end - b.start)/1000, pick = Object.entries(RECIPES).filter(([, R]) => R.time <= secs + 60).sort((a, c) => c[1].time - a[1].time)[0];
+    const k = pick ? pick[0] : 'cookies';
+    S.recipe = k; S.job = newJob(k); B.cool = null; lastStage = null; save(); renderRecipes();
+    floats.push({x:W/2, y:120, text:`Focus block: ${RECIPES[k].name.toLowerCase()} time!`, t:0});
+  }
+  S.block = b && !b.done && b.end > Date.now() ? b : null;
+}
+async function poll() {
+  if (document.hidden) return;   // app not open: the bakery is closed, so don't keep checking
+  try {
+    if (CODE) {   // Mac tracker via relay
+      const r = await fetch(`${SITE}/api/state/${CODE}`, {cache:'no-store'}); if (!r.ok) throw 0;
+      const d = await r.json(), age = (Date.now() - d.t)/1000;
+      syncShared(d);
+      if (!d.state) { trackerRaw = 'idle'; trackerWhy = 'phone'; pcOff = true; info = 'No computer connected yet · 📱 phone mode: Bingsu stays awake, baking waits for your computer'; return; }
+      if (age > 90) { trackerRaw = 'idle'; trackerWhy = 'phone'; pcOff = true; info = `Computer last seen ${fmt(age)} ago · 📱 phone mode: Bingsu stays awake, baking waits for your computer`; return; }   // PC asleep or off: no focus counted, but he stays up with you
+      pcOff = false; trackerRaw = d.state; trackerWhy = d.why || ''; info = `${d.devices > 1 ? d.devices + ' computers' : 'Computer'} connected · ${d.state}`; return;
+    }
+    const r = await fetch(STATE_URL, {cache:'no-store'}); if (!r.ok) throw 0;   // Windows tracker on this PC
+    const d = await r.json(); trackerRaw = d.state; info = d.app ? `${d.app} — ${d.title}` : '';
+  } catch (e) { trackerRaw = null; }
+}
+poll(); setInterval(poll, 3000);
+function effective(now) {
+  const r = manual || trackerRaw || 'focused';
+  shopClosed = typeof closedWhy === 'function' ? closedWhy(r) : '';
+  if (shopClosed) { distractedSince = 0; return 'idle'; }
+  if (r !== 'distracted') { distractedSince = 0; return r; }
+  if (!distractedSince) distractedSince = now;
+  return now - distractedSince >= (upg('mat') ? 45 : GRACE)*1000 ? 'distracted' : 'grace';
+}
+
+// ---------- simulation ----------
+function stageOf(job) {
+  const R = RECIPES[job.r], f = job.p / R.time; let acc = 0;
+  for (const [a, w] of R.stages) { if (f < acc + w) return {a, sp:(f - acc)/w}; acc += w; }
+  return {a:R.stages[R.stages.length - 1][0], sp:1};
+}
+const B = {x:COUNTER_X, mood:'happy', moodT:0, blink:0, nextBlink:2, bubble:null};
+const parts = [], floats = [];
+const puff = (x, y, n, color, o = {}) => { for (let i = 0; i < n; i++) parts.push({x, y, vx:(Math.random() - .5)*(o.spread || 30), vy:-(o.rise || 20) - Math.random()*15, life:0, max:o.life || 1.2, r:o.r || 4 + Math.random()*4, color, grow:o.grow || 6}); };
+
+// ---- finished! the bake fills the screen on a sunburst and wobbles ----
+let CEL = null, lastEff = 'focused';
+// rewards wait on screen until you tap to collect them (S.pending survives a reload)
+function showNextReward() { const r = (S.pending || [])[0]; CEL = r ? Object.assign({}, r, {t0:performance.now()}) : null; }
+function collect() {
+  if (!CEL || CEL.got) return;
+  CEL.got = performance.now();
+  if (!CEL.preview) { S.coins += CEL.coins; S.pending.shift();
+    (S.ledger = S.ledger || []).push({t:Date.now(), coins:CEL.coins, tip:CEL.served ? CEL.served.tip : 0, r:CEL.r, c:CEL.served ? CEL.served.c : null}); if (S.ledger.length > 2000) S.ledger.shift();
+    save(); }
+  coinSound();
+}
+function coinSound() {
+  if (!soundOn || !actx) return;
+  [988, 1319, 1568].forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + i*.07;
+    o.type = 'square'; o.frequency.value = f; g.gain.setValueAtTime(.06, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + .18); o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + .2); });
+}
+function wrapText(t, x, y, maxW, lh) { const words = t.split(' '); let line = ''; ctx.lineWidth = 5; ctx.strokeStyle = '#fffaf2';
+  for (const w of words) { const test = line ? line + ' ' + w : w; if (ctx.measureText(test).width > maxW && line) { ctx.strokeText(line, x, y); ctx.fillStyle = '#5d5049'; ctx.fillText(line, x, y); line = w; y += lh; } else line = test; }
+  if (line) { ctx.strokeText(line, x, y); ctx.fillStyle = '#5d5049'; ctx.fillText(line, x, y); } }
+function drawCelebration(now) {
+  if (!CEL) return;
+  const t = (now - CEL.t0)/1000, out = CEL.got ? (now - CEL.got)/1000 : 0;
+  if (out > 1.1) { if (CEL.preview) CEL = null; else showNextReward(); return; }
+  const a = Math.min(1, t*4, out ? (1.1 - out)*3 : 1), cx = W/2, cy = H/2 + 6;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = '#fff1dc'; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(t*.35);
+  for (let i = 0; i < 18; i++) { ctx.fillStyle = i % 2 ? '#ffe2ae' : '#ffd3cc'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 520, i*Math.PI/9, (i + 1)*Math.PI/9); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, 170); g.addColorStop(0, 'rgba(255,250,235,.95)'); g.addColorStop(1, 'rgba(255,250,235,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // twinkles orbiting
+  for (let i = 0; i < 8; i++) { const an = t*.8 + i*Math.PI/4, r = 150 + Math.sin(t*3 + i)*10, sx = cx + Math.cos(an)*r*1.25, sy = cy + Math.sin(an)*r*.75, k = 4 + 2*Math.sin(t*6 + i);
+    ctx.fillStyle = '#ffc94d'; ctx.beginPath(); ctx.moveTo(sx, sy - k*2); ctx.lineTo(sx + k*.6, sy - k*.6); ctx.lineTo(sx + k*2, sy); ctx.lineTo(sx + k*.6, sy + k*.6); ctx.lineTo(sx, sy + k*2); ctx.lineTo(sx - k*.6, sy + k*.6); ctx.lineTo(sx - k*2, sy); ctx.lineTo(sx - k*.6, sy - k*.6); ctx.fill(); }
+  // the bake: pops in, then pivots back and forth
+  const p = Math.min(1, t/.45), pop = (1 + 2.7*(p - 1)**3 + 1.7*(p - 1)**2)*(out ? Math.max(0, 1 - out*1.6) : 1);   // ease-out-back, shrinks away when collected
+  ctx.save(); ctx.translate(cx, cy + 70); ctx.rotate(Math.sin(t*3.2)*.16 + out*4); ctx.scale(pop, pop);
+  if (CEL.critter) drawCritter(CUSTOMERS[CEL.critter].kind, 0, -10, 3.4, 'love');
+  else if (CEL.kind && CEL.art && ok(art(CEL.art))) { const im = art(CEL.kind === 'chest' && CEL.got ? 'rew/chest_open' : CEL.art), w = 150, h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, -w/2, -h + 20, w, h); }
+  else if (CEL.kind) { ctx.font = '96px system-ui'; ctx.textAlign = 'center'; ctx.fillText(CEL.icon, 0, -6); }
+  else if (CEL.served && CEL.served.special && SPECIAL_ART[CEL.served.special] && ok(art(SPECIAL_ART[CEL.served.special]))) { const im = art(SPECIAL_ART[CEL.served.special]), w = 150, h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, -w/2, -h + 20, w, h); }
+  else drawItem(CEL.r, 0, 0, CEL.r === 'cookies' || CEL.r === 'bread' || CEL.r === 'croissants' ? 3.6 : 2.6, CEL.b);
+  ctx.restore();
+  ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+  const title = CEL.title || `${RECIPES[CEL.r].name} done!`, stars = CEL.q > .85 ? '★★★' : CEL.q > .5 ? '★★☆' : '★☆☆';
+  ctx.font = 'bold 30px system-ui'; ctx.lineWidth = 6; ctx.strokeStyle = '#fffaf2'; ctx.strokeText(title, cx, 52); ctx.fillStyle = CINK; ctx.fillText(title, cx, 52);
+  if (CEL.served && CEL.served.special) { ctx.font = 'bold 15px system-ui'; ctx.fillStyle = '#a8651a'; ctx.fillText(`${CEL.served.special} order delivered!`, cx, 108); }
+  if (CEL.served) { const c = CUSTOMERS[CEL.served.c]; drawCritter(c.kind, cx - 150, cy + 40, 2.6, 'love'); ctx.font = 'bold 18px system-ui'; ctx.lineWidth = 5; ctx.strokeStyle = '#fffaf2'; const msg = `For ${c.name} ♥${CEL.served.fav ? ' (their favourite!)' : ''}${CEL.served.tip ? '  tip +' + CEL.served.tip : ''}`; ctx.strokeText(msg, cx, 84); ctx.fillStyle = '#e0533f'; ctx.fillText(msg, cx, 84); }
+  if (CEL.kind) { ctx.font = '600 16px system-ui'; wrapText(CEL.sub || '', cx, 86, 520, 21); }
+  ctx.font = 'bold 22px system-ui'; const sub = CEL.kind ? (CEL.coins ? `+${CEL.coins} 🪙` : '') : `${stars}   +${CEL.coins} 🪙`;
+  ctx.strokeText(sub, cx, H - 64); ctx.fillStyle = '#e0533f'; ctx.fillText(sub, cx, H - 64);
+  if (!out) {   // pulsing "Tap to collect" button
+    const k = 1 + Math.sin(t*5)*.05; ctx.save(); ctx.translate(cx, H - 30); ctx.scale(k, k);
+    shape('#f2b25c', rr(-92, -19, 184, 38, 19), CINK, 3); ctx.fillStyle = CINK; ctx.font = 'bold 17px system-ui'; ctx.fillText(`Tap to collect${(S.pending || []).length > 1 && !CEL.preview ? ` (${S.pending.length})` : ''}`, 0, 6); ctx.restore();
+  } else {   // coins burst up and away
+    for (let i = 0; i < 16; i++) { const an = i/16*Math.PI*2, d = out*260, x = cx + Math.cos(an)*d*.8, y = cy - out*120 + Math.sin(an)*d*.45 - out*out*140;
+      ctx.globalAlpha = a*(1 - out*.6); const ci = art('rew/coin'); if (ok(ci)) ctx.drawImage(ci, x - 9, y - 9, 18, 18); else { shape('#ffd34d', ell(x, y, 8, 8), '#b8862a', 2); } }
+    ctx.globalAlpha = a; ctx.font = 'bold 34px system-ui'; ctx.lineWidth = 6; ctx.strokeStyle = '#fffaf2'; ctx.strokeText(`+${CEL.coins}`, cx, cy - out*60); ctx.fillStyle = '#e0a020'; ctx.fillText(`+${CEL.coins}`, cx, cy - out*60);
+  }
+  ctx.textAlign = 'start'; ctx.restore();
+}
+// ---- customers: regulars place orders; patience drains faster while you're distracted ----
+const CUSTOMERS = {
+  bun:   {name:'Bun',   kind:'bunny',    fav:'cookies',    lines:['Cookies, please!', 'My usual cookies?', 'Bun loves your cookies!']},
+  hazel: {name:'Hazel', kind:'hedgehog', fav:'muffins',    lines:['A muffin for me', 'Blueberry, if you have it', 'Best muffins in town']},
+  mo:    {name:'Mo',    kind:'bear',     fav:'bread',      lines:['One loaf, please', 'Bread for the picnic', 'Your bread is the best']},
+  pip:   {name:'Pip',   lvl:2, kind:'frog',     fav:'cake',       lines:['Cake for a party!', 'Another cake please', 'Everyone loved the cake']},
+  cat:   {name:'Tango', lvl:2, rare:45, kind:'cat',      fav:'muffins',    lines:['One muffin, extra crumbly', 'Muffin o’clock!', 'Purrfect muffins, as always']},
+  dot:   {name:'Mango',   lvl:3, rare:45, kind:'duck',     fav:'croissants', lines:['Croissants, s’il vous plaît', 'Flaky ones please', 'Croissants make my week']}
+};
+const MAX_ORDERS = 3, BELL_MIN = 15;   // a customer for every 15 focused minutes
+function repStars() { return Math.max(0, Math.min(5, S.rep ?? 3)); }
+function spawnOrder(want) {
+  S.orders = S.orders || [];
+  const taken = new Set(S.orders.map(o => o.c));
+  if (want && !taken.has(want) && CUSTOMERS[want]) { const c = CUSTOMERS[want], R = RECIPES[c.fav], left = Math.max(0, RECIPES[S.job.r].time - S.job.p), pat = (left + (20 + Math.random()*15)*60)*patMult();
+    S.orders.push({id:Date.now() + Math.random(), c:want, r:c.fav, pat, max:pat, tip:Math.round(R.sell*(.3 + repStars()*.12)*tipMult())}); floats.push({x:W/2, y:110, text:`${c.name} is coming in!`, t:0}); chime(1); save(); return true; }
+  // later recipes visit less often; a higher rating brings bigger orders
+  let pool = Object.entries(CUSTOMERS).filter(([k, c]) => !taken.has(k) && (c.lvl || 1) <= level() && (!c.rare || streak >= c.rare*60));   // rare friends only visit long focus streaks
+  if (!pool.length) return;
+  const rare = pool.filter(([, c]) => c.rare); if (rare.length && Math.random() < .6) { pool = rare; floats.push({x:W/2, y:92, text:`✨ A rare visitor, for your ${fmt(streak)} focus streak!`, t:0}); }
+  const weights = pool.map(([, c]) => ({cookies:5, muffins:4, bread:3, cake:1.5, croissants:1}[c.fav] * (c.fav === 'cake' || c.fav === 'croissants' ? .4 + repStars()/5 : 1)));
+  let x = Math.random()*weights.reduce((a, b) => a + b, 0), i = 0; while ((x -= weights[i]) > 0) i++;
+  const [k, c] = pool[Math.min(i, pool.length - 1)], R = RECIPES[c.fav];
+  const left = Math.max(0, RECIPES[S.job.r].time - S.job.p), pat = (left + (20 + Math.random()*15)*60)*patMult();   // farm-seconds: your current bake fits if you stay focused
+  S.orders.push({id:Date.now() + Math.random(), c:k, r:c.fav, pat, max:pat, tip:Math.round(R.sell*(.3 + repStars()*.12)*tipMult()), line:c.lines[Math.min(c.lines.length - 1, (S.friends?.[k] || 0) >> 1)]});
+  floats.push({x:W/2, y:110, text:`${c.name} is waiting (loves ${R.name.toLowerCase()})`, t:0});
+  chime(1); save();
+}
+function urgentOrder(r) { return (S.orders || []).filter(o => !r || o.r === r).sort((a, b) => a.pat - b.pat)[0]; }
+function updateCustomers(rdt, eff) {
+  S.orders = S.orders || [];
+  const dt = rdt*SPEED;
+  if (eff !== 'idle') {
+    for (const o of S.orders) o.pat -= dt*(eff === 'distracted' ? 3 : 1);
+    if (eff === 'focused') S.nextOrder = (S.nextOrder ?? 0) - dt;   // the bell only rings while you focus
+    if (S.orders.length < MAX_ORDERS && S.nextOrder <= 0) { spawnOrder(); S.nextOrder = BELL_MIN*60*SPEED; }
+  }
+  for (const o of S.orders.filter(o => o.pat <= 0)) {   // ran out of patience
+    S.orders = S.orders.filter(x => x !== o); (S.lost = S.lost || []).push({t:Date.now(), c:o.c});
+    S.rep = Math.max(0, repStars() - .4); S.friends = S.friends || {}; S.friends[o.c] = Math.max(0, (S.friends[o.c] || 0) - 1);
+    floats.push({x:W/2, y:110, text:`${CUSTOMERS[o.c].name} left upset 😠  ★ −0.4`, t:0}); visitorLeaves(o.c, 'upset');
+    B.mood = 'sad'; B.moodT = 3; save();
+  }
+}
+// called from finish(): serve the most urgent matching order
+// any finished bake goes to whoever has waited longest; their favourite earns a double tip and an extra heart
+function serveOrder(r, q) {
+  const o = urgentOrder(r) || (S.orders || []).filter(x => !x.special).sort((a, b) => a.pat - b.pat)[0]; if (!o) return null;   // special orders need their exact bake
+  S.orders = S.orders.filter(x => x !== o);
+  const fav = o.r === r, base = q > .85 ? o.tip : q > .5 ? Math.round(o.tip/2) : 0, tip = fav ? base*2 : base;
+  S.rep = Math.min(5, repStars() + (q > .85 ? .25 : .1));
+  S.friends = S.friends || {}; const h0 = S.friends[o.c] || 0; S.friends[o.c] = Math.min(5, h0 + (fav ? 2 : 1) + (o.special ? 1 : 0));
+  friendshipMoments(o.c, h0, S.friends[o.c]); visitorLeaves(o.c, 'served');
+  return {c:o.c, tip:o.special ? tip*2 : tip, fav, special:o.special};
+}
+// what to bake next is your choice (tap a ticket to bake that customer's favourite)
+function nextRecipe() { const o = urgentOrder(); return o && inSeason(o.r) ? o.r : S.recipe; }   // next bake defaults to the next customer's favourite
+
+function drawCritter(kind, x, y, s = 1, mood = 'happy') {
+  const im = art(`cust/${kind}_${{happy:'happy', cross:'impatient', love:'delighted'}[mood] || 'happy'}`);
+  if (ok(im)) { const w = 32*s, h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, x - w/2, y - h*.58, w, h); return; }
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  const C = {bunny:['#fffaf2', '#f7b6c2'], hedgehog:['#f2c79a', '#8a5a3c'], bear:['#c98a5a', '#a0663e'], frog:['#a8d8a0', '#7fbf7a'], cat:['#ffd6b0', '#e89a5a'], duck:['#ffe08a', '#f2a65a']}[kind];
+  if (kind === 'bunny') for (const sx of [-1, 1]) { shape(C[0], ell(sx*6, -16, 4, 10), CINK, 2); shape(C[1], ell(sx*6, -16, 1.8, 6), null); }
+  if (kind === 'bear') for (const sx of [-1, 1]) shape(C[1], ell(sx*10, -9, 5, 5), CINK, 2);
+  if (kind === 'hedgehog') shape(C[1], () => { for (let i = 0; i <= 8; i++) { const a = Math.PI*(1.05 + i*.1125), r = i % 2 ? 13 : 17; ctx.lineTo(Math.cos(a)*r*1.1, Math.sin(a)*r + 1); } ctx.closePath(); }, CINK, 2);
+  shape(C[0], ell(0, 0, 13, 11), CINK, 2.2);
+  if (kind === 'frog') for (const sx of [-1, 1]) shape(C[0], ell(sx*7, -9, 5, 5), CINK, 2);
+  const ey = kind === 'frog' ? -9 : -1;
+  for (const sx of [-1, 1]) {
+    if (mood === 'love') { ctx.beginPath(); ctx.arc(sx*5, ey + 1, 2.5, Math.PI*1.1, Math.PI*1.9); ctx.strokeStyle = CINK; ctx.lineWidth = 1.6; ctx.stroke(); }
+    else shape(CINK, ell(sx*5, ey, 1.7, 1.9), null);
+    shape('rgba(240,110,120,.45)', ell(sx*8, 3, 2.6, 1.6), null);
+  }
+  if (kind === 'duck') shape(C[1], ell(0, 3.5, 4.5, 2.5), CINK, 1.6);
+  else { ctx.beginPath(); if (mood === 'cross') { ctx.moveTo(-2.5, 5); ctx.lineTo(2.5, 5); } else ctx.arc(0, 3, 2.5, .2, Math.PI - .2); ctx.strokeStyle = CINK; ctx.lineWidth = 1.5; ctx.stroke(); }
+  ctx.restore();
+}
+// which part of the scene is on screen (the phone view crops the canvas with object-fit: cover)
+function sceneView() {
+  const r = cv.getBoundingClientRect(); if (!r.width || getComputedStyle(cv).objectFit !== 'cover') return {x0:0, x1:W};
+  const k = Math.max(r.width/W, r.height/H), px = parseFloat((getComputedStyle(cv).objectPosition || '50%').split(' ')[0])/100;
+  const x0 = -(r.width - W*k)*(isNaN(px) ? .5 : px)/k; return {x0, x1:x0 + r.width/k};
+}
+let VIEW = {x0:0, x1:W};
+const TICKET = i => { const span = VIEW.x1 - VIEW.x0;
+  if (span >= 520) return {x:170 + i*104, y:8, w:96, h:66};
+  const w = Math.min(96, (span - 24)/3 - 6); return {x:VIEW.x0 + 12 + i*(w + 6), y:8, w, h:66}; };
+function drawOrders(now) {
+  const os = S.orders || []; VIEW = sceneView();
+  if (!os.length) {   // nobody waiting: say when the next customer is due
+    const t = TICKET(0), mins = Math.min(BELL_MIN, Math.max(1, Math.ceil((S.nextOrder || 0)/SPEED/60)));
+    line([[t.x - 10, 6], [t.x + 200, 6]], '#c99a6b', 4);
+    ctx.save(); ctx.translate(t.x + t.w/2, t.y); ctx.globalAlpha = .85;
+    shape('#fffdf7', rr(-t.w/2, 0, t.w, 44, 6), CINK, 2); shape('#c99a6b', rr(-6, -4, 12, 8, 2), CINK, 1.5);
+    ctx.fillStyle = CINK; ctx.textAlign = 'center'; ctx.font = '600 10px system-ui'; ctx.fillText('No orders yet', 0, 18);
+    ctx.font = '10px system-ui'; ctx.fillStyle = '#8a7768'; ctx.fillText(`🔔 ${mins}m of focus`, 0, 33); ctx.restore(); ctx.textAlign = 'start';
+    return;
+  } const t0 = TICKET(0), tl = TICKET(os.length - 1);
+  line([[t0.x - 10, 6], [Math.max(tl.x + tl.w + 10, t0.x + 200), 6]], '#c99a6b', 4);   // order rail
+  os.forEach((o, i) => {
+    const {x, y, w, h} = TICKET(i), f = Math.max(0, o.pat/o.max), shake = 0, c = CUSTOMERS[o.c];
+    ctx.save(); ctx.translate(x + w/2 + shake, y); ctx.rotate((i - 1)*.03);
+    shape(o.special ? '#fff3cf' : '#fffdf7', rr(-w/2, 0, w, h, 6), f < .25 ? '#e0533f' : o.special ? '#d98f2f' : CINK, f < .25 || o.special ? 3 : 2.2);
+    if (o.special) { ctx.fillStyle = '#a8651a'; ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.fillText(o.special, 0, 12); ctx.textAlign = 'start'; }
+    shape('#c99a6b', rr(-6, -4, 12, 8, 2), CINK, 1.5);   // clip
+    drawCritter(c.kind, -w/2 + 22, 28, 1, f < .3 ? 'cross' : 'happy');
+    const sa = o.special && SPECIAL_ART[o.special] && art(SPECIAL_ART[o.special]);
+    if (ok(sa)) { const iw = 30, ih = iw*sa.naturalHeight/sa.naturalWidth; ctx.drawImage(sa, w/2 - 24 - iw/2, 32 - ih, iw, ih); } else drawItem(o.r, w/2 - 24, 30, .5);
+    ctx.fillStyle = '#e0533f'; ctx.font = '9px system-ui'; ctx.textAlign = 'center'; ctx.fillText(o.special ? RECIPES[o.r].name.toLowerCase() : '♥ fav', w/2 - 24, 41);
+    const mins = Math.max(0, Math.ceil(o.pat/SPEED/60)), fast = lastEff === 'distracted';
+    ctx.fillStyle = CINK; ctx.font = '600 10px system-ui'; ctx.textAlign = 'left'; ctx.fillText(c.name, -w/2 + 8, 53);
+    ctx.textAlign = 'right'; ctx.font = 'bold 11px system-ui'; ctx.fillStyle = f > .25 ? CINK : '#e0533f'; ctx.fillText(`${fast ? '⚡' : '⏳'}${mins}m`, w/2 - 7, 53); ctx.textAlign = 'start';
+    shape('#eadfd2', rr(-w/2 + 7, h - 10, w - 14, 5, 2.5), null);
+    shape(f > .5 ? '#8fd07c' : f > .25 ? '#f2b25c' : '#e0533f', rr(-w/2 + 7, h - 10, (w - 14)*f, 5, 2.5), null);
+    ctx.restore();
+  });
+}
+function finish() {
+  const R = RECIPES[S.job.r], q = 1 - S.job.ruin/RUIN_FAIL, mult = q > .85 ? 1 : q > .5 ? .75 : .5;
+  const coins = Math.max(1, Math.round(R.sell*mult));
+  S.baked++; onBaked();
+  S.shelf.push({r:S.job.r, b:Math.max(0, Math.min(.8, (S.job.ruin - 60)/(RUIN_FAIL - 60)))}); if (S.shelf.length > 8) S.shelf.shift();
+  (S.hist = S.hist || []).push({r:S.job.r, q:+q.toFixed(2), t:Date.now()}); if (S.hist.length > 1000) S.hist.shift();   // every bake, for the display case
+  for (let i = 0; i < 14; i++) parts.push({x:B.x, y:200, vx:(Math.random() - .5)*160, vy:-60 - Math.random()*80, life:0, max:1.2, r:3, color:'#ffd65c', grow:0, star:true, g:120});
+  B.mood = 'joy'; B.moodT = 5; B.cool = S.job.r;
+  const served = serveOrder(S.job.r, q);
+  (S.pending = S.pending || []).push({r:S.job.r, coins:coins + (served ? served.tip : 0), q, b:S.shelf[S.shelf.length - 1].b, served});
+  if (!CEL) showNextReward();
+  S.job = newJob(nextRecipe()); S.recipe = S.job.r; save(); renderRecipes();
+}
+function fail() {
+  const baking = stageOf(S.job).a === 'bake';
+  floats.push({x:baking ? 553 : PROP.x, y:180, text:baking ? 'Burnt!' : 'Dough dried out…', t:0});
+  puff(baking ? 553 : PROP.x, baking ? 290 : 220, 10, '#555', {life:2, r:8, grow:14});
+  S.failed++; B.mood = 'sad'; B.moodT = 3; S.job = newJob(S.recipe); save();
+}
+// drag the progress bar to preview any point of the current bake (snaps back on release)
+let preview = null;
+const J = () => preview == null ? S.job : Object.assign({}, S.job, {p:preview});
+const bar = $('jobbar');
+const scrub = e => { const r = bar.getBoundingClientRect(); preview = Math.max(0, Math.min(.9999, (e.clientX - r.left)/r.width))*RECIPES[S.job.r].time; hud(performance.now(), 'focused'); };
+function update(rdt, eff, now) {
+  const dt = rdt*SPEED, st = stageOf(J()), target = eff === 'idle' ? COUNTER_X : st.a === 'bake' ? OVEN_X : COUNTER_X;
+  const dx = target - B.x; B.walking = Math.abs(dx) > 1; B.x += Math.sign(dx)*Math.min(Math.abs(dx), 110*rdt);
+  if (preview != null) { B.mood = 'happy'; B.moodT = 0; B.bubble = null; return; }
+  if (B.moodT > 0) { B.moodT -= rdt; return; }
+  B.bubble = null;
+  if (eff === 'idle') { B.mood = (pcOff && !manual && !shopClosed) || S.breakUntil ? 'happy' : 'sleep'; return; }   // awake on the phone, and while a friend visits
+  if (eff === 'distracted') {
+    S.job.ruin += dt; B.mood = S.job.ruin > 180 ? 'sad' : 'annoyed'; B.bubble = B.mood === 'sad' ? '!!' : '!';
+    if (st.a === 'bake' && Math.random() < rdt*6) puff(553, 290, 1, '#6b6b6b', {life:2.2, r:7, grow:16, spread:20});
+    if (S.job.ruin >= RUIN_FAIL) fail();
+    return;
+  }
+  B.mood = 'happy'; if (eff === 'grace') { B.mood = 'glance'; B.bubble = '?'; }
+  if (eff === 'grace') return;   // stops and stares at you, no work
+  if (preview == null && lastStage !== S.job.r + st.a) { if (lastStage) floats.push({x:st.a === 'bake' ? 553 : PROP.x, y:st.a === 'bake' ? 270 : 200, text:{mix:'Mixing!', shape:'Shaping!', knead:'Kneading!', proof:'Rising…', bake:'Into the oven!', frost:'Frosting time!'}[st.a], t:0}); lastStage = S.job.r + st.a; }
+  if (B.walking) return;
+  S.job.p += dt*bakeMult();
+  if (st.a === 'knead' && Math.random() < rdt*3) puff(PROP.x, PROP.y - 30, 2, '#fffaf0', {life:.8, r:3, grow:5});
+  if (st.a === 'bake' && Math.random() < rdt*2) puff(553 + (Math.random() - .5)*60, 290, 1, 'rgba(255,255,255,.6)', {life:1.6, r:5, grow:10, spread:10});
+  if (S.job.p >= RECIPES[S.job.r].time) finish();
+}
+
+// ---------- drawing helpers ----------
+const ink = '#5b3f2e';
+const CAT = '#fad2b7', PATCH = '#f4b183', PINK = '#f7b6c2', APRON = '#f9cdd5', MINT = '#c3e6d4';
+function lerpC(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const ch = s => Math.round(((pa >> s) & 255) + ((((pb >> s) & 255) - ((pa >> s) & 255))*t));
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+function shape(fill, path, stroke = ink, lw = 3) { ctx.beginPath(); path(); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.strokeStyle = stroke; ctx.stroke(); } }
+const ell = (x, y, rx, ry, a0 = 0, a1 = Math.PI*2) => () => ctx.ellipse(x, y, rx, ry, 0, a0, a1);
+const rr = (x, y, w, h, r) => () => ctx.roundRect(x, y, w, h, r);
+const line = (pts, color = ink, lw = 3) => { ctx.beginPath(); ctx.moveTo(...pts[0]); for (const p of pts.slice(1)) ctx.lineTo(...p); ctx.lineCap = 'round'; ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke(); };
+
+// baked goods, ~40px wide, baseline y=0
+const ITEMS = {}, RAWIMG = {}; for (const k of Object.keys(RECIPES)) { const im = new Image(); im.src = `items/${k}.png`; ITEMS[k] = im; }
+for (const k of ['pumpkin', 'gingerbread', 'hotcross', 'tart']) { const im = new Image(); im.src = `items/raw_${k}.png`; RAWIMG[k] = im; }
+const ART = {}; const art = (path) => ART[path] || (ART[path] = Object.assign(new Image(), {src:`art/${path}.png`})); const ok = im => im && im.complete && im.naturalWidth;
+// raw (unbaked) versions, drawn in the same style as your art
+function drawRaw(r, x, y, s = 1, o = {}) {
+  if (ok(RAWIMG[r])) { const im = RAWIMG[r], w = 46*s*(o.sx || 1), h = 46*s*(o.sy || 1)*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, x - w/2, y - h, w, h); return; }
+  const D = '#f8e6c4', CH = '#8a5a3c', hl = (a, b, rx, ry) => shape('rgba(255,255,255,.7)', ell(a, b, rx, ry), null);
+  ctx.save(); ctx.translate(x, y); ctx.scale(s*(o.sx || 1), s*(o.sy || 1));
+  if (r === 'cookies') {
+    const n = o.n || 2;
+    for (let i = 0; i < n; i++) {
+      const ox = (i - (n - 1)/2)*22;
+      shape(D, () => { ctx.ellipse(ox, 0, 10, 10, 0, Math.PI, 0); ctx.closePath(); }, CINK, 2.5);
+      for (const [a, b] of [[-4, -4], [3, -2], [0, -7]]) shape(CH, ell(ox + a, b, 1.7, 1.4), null);
+      hl(ox - 4, -7, 2.5, 1.3);
+    }
+  } else if (r === 'muffins') {
+    shape('#f9c0b9', () => { ctx.moveTo(-14, -15); ctx.lineTo(14, -15); ctx.lineTo(11, 0); ctx.lineTo(-11, 0); ctx.closePath(); }, CINK, 2.5);
+    for (const o2 of [-6, 0, 6]) line([[o2, -12], [o2*.8, -3]], '#e8968c', 2);
+    shape(D, ell(0, -15, 14, 3.5), CINK, 2.5);
+    for (const [a, b] of [[-5, -15], [5, -16]]) shape('#7a7fb0', ell(a, b, 2, 1.4), null);
+  } else if (r === 'bread') {
+    shape(D, () => { ctx.ellipse(0, 0, 21, 15, 0, Math.PI, 0); ctx.closePath(); }, CINK, 2.5);
+    hl(-8, -10, 5, 2);
+  } else if (r === 'croissants') {
+    for (const [a, b, rx, ry] of [[-15, -5, 6, 4.5], [-8, -9, 7, 6], [0, -11, 8, 7], [8, -9, 7, 6], [15, -5, 6, 4.5]]) shape(D, ell(a, b, rx, ry), CINK, 2.5);
+    hl(-2, -14, 3, 1.5);
+  } else if (r === 'cake') {
+    shape('#d6dbe0', rr(-18, -14, 36, 14, 3), CINK, 2.5);
+    shape(D, ell(0, -14, 17, 3.5), CINK, 2);
+  }
+  ctx.restore();
+}
+// raw shape cross-fades into your finished art as k goes 0 -> 1
+function drawBaking(r, x, y, s, k, burnt = 0, o = {}) {
+  const a = Math.max(0, Math.min(1, (k - .1)/.45));   // golden by ~55% of the bake
+  if (a < 1) { ctx.globalAlpha = 1 - a; drawRaw(r, x, y, s*(r === 'cookies' ? .9 : 1), o); }
+  if (a > 0) { ctx.globalAlpha = a; drawItem(r, x, y, s, burnt, o); }
+  ctx.globalAlpha = 1;
+}
+// o.raw: 0 = baked, 1 = raw dough look; o.sx / o.sy stretch (rising, spreading)
+function drawItem(r, x, y, s = 1, burnt = 0, o = {}) {
+  const im = ITEMS[r], raw = o.raw || 0, sx = o.sx || 1, sy = o.sy || 1;
+  if (im && im.complete && im.naturalWidth) {   // your art
+    const w = ({cookies:46, bread:46, cake:40, croissants:48, pumpkin:46, gingerbread:50, hotcross:50, tart:46}[r] || 38)*s, h = w*im.naturalHeight/im.naturalWidth;
+    const f = [];
+    if (raw) f.push(`saturate(${1 - .4*raw}) brightness(${1 + .1*raw})`);
+    if (burnt) f.push(`brightness(${1 - burnt*.55}) sepia(${burnt*.8})`);
+    if (f.length) ctx.filter = f.join(' ');
+    ctx.drawImage(im, x - w*sx/2, y - h*sy, w*sx, h*sy); ctx.filter = 'none'; return;
+  }
+  const c = hex => burnt ? lerpC(hex, '#3b2a20', burnt) : raw ? lerpC(hex, '#f6e3bf', raw*.85) : hex;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s*sx, s*sy);
+  if (r === 'cookies') {
+    for (const [ox, oy] of [[-10, -5], [10, -5], [0, -12]]) {
+      shape(c('#e8b86d'), ell(ox, oy, 12, 6.5));
+      for (const [a, b] of [[-4, -1], [3, 1], [0, -3]]) shape(c('#5a3520'), ell(ox + a, oy + b, 2, 1.5), null);
+    }
+  } else if (r === 'muffins') {
+    shape(c('#f7b6c2'), () => { ctx.moveTo(-13, -16); ctx.lineTo(13, -16); ctx.lineTo(10, 0); ctx.lineTo(-10, 0); ctx.closePath(); });
+    for (const o of [-6, 0, 6]) line([[o, -14], [o*.8, -2]], '#e89aa9', 2);
+    shape(c('#c98a4b'), () => { ctx.ellipse(0, -17, 16, 11, 0, Math.PI, 0); ctx.closePath(); });
+    for (const [a, b] of [[-6, -20], [4, -23], [7, -18]]) shape(c('#6b6bc0'), ell(a, b, 2.4, 2.4), null);
+  } else if (r === 'bread') {
+    shape(c('#d99a52'), ell(0, -11, 22, 12));
+    for (const o of [-9, 0, 9]) line([[o - 4, -16], [o + 3, -8]], c('#f6d39a'), 2.5);
+  } else if (r === 'cake') {
+    shape(c('#f9cdd5'), rr(-18, -26, 36, 26, 5)); shape(c('#fffaf2'), rr(-19, -31, 38, 9, 5));
+    line([[-17, -13], [17, -13]], c('#e98fa3'), 3);
+    shape('#e04a5f', ell(0, -34, 4, 4));
+  } else if (r === 'croissants') {
+    for (const [a, b, rx, ry] of [[-15, -6, 7, 5], [-8, -11, 8, 7], [0, -13, 9, 8], [8, -11, 8, 7], [15, -6, 7, 5]]) shape(c('#e9a95a'), ell(a, b, rx, ry));
+  }
+  ctx.restore();
+}
+
+// ---- kitchen background (your art, 1672x941 source scaled to the 640x360 scene) ----
+const KITCHEN = new Image(); KITCHEN.src = 'kitchen.webp';
+const KS = 640/1672, COUNTER_TOP = 222;   // scene y where the counter's back edge starts
+function drawScene(now, eff, st) {
+  const nk = night() && nightKitchen();
+  if (nk) { ctx.drawImage(nk, 0, 0, W, H); drawNightWall(now); }
+  else if (KITCHEN.complete && KITCHEN.naturalWidth) { ctx.filter = skinFilter(); ctx.drawImage(KITCHEN, 0, 0, W, H); ctx.filter = 'none'; }
+  else { ctx.fillStyle = '#fdf0df'; ctx.fillRect(0, 0, W, H); }
+}
+// ---- night kitchen: the room itself is re-coloured for evening (not dimmed on top), with a window, moon and string lights ----
+const night = () => document.body.classList.contains('night');
+function nightKitchen() {
+  if (!KITCHEN.complete || !KITCHEN.naturalWidth) return null;
+  const key = S.skin || 'classic'; if (nightKitchen.k === key) return nightKitchen.c;
+  const c = document.createElement('canvas'), w = c.width = W*2, h = c.height = H*2, g = c.getContext('2d');
+  g.filter = skinFilter(); g.drawImage(KITCHEN, 0, 0, w, h); g.filter = 'none';
+  const im = g.getImageData(0, 0, w, h), d = im.data;
+  for (let y = 0; y < h; y++) { const top = y/h, wall = y < COUNTER_TOP*2, dk = wall ? .62 + .38*Math.min(1, top*1.6) : 1;   // wall darker towards the ceiling
+    for (let x = 0; x < w; x++) { const i = (y*w + x)*4, r = d[i], gg = d[i + 1], b = d[i + 2], l = (r + gg + b)/765;
+      if (l < .35) { d[i] = r*.55 + 8; d[i + 1] = gg*.5 + 6; d[i + 2] = b*.55 + 14; continue; }   // ink stays ink
+      // evening palette: keep each colour's hue but pull it towards plum-indigo and down in brightness
+      d[i] = (r*.34 + 22)*dk; d[i + 1] = (gg*.27 + 18)*dk; d[i + 2] = (b*.36 + 46)*dk; } }
+  g.putImageData(im, 0, 0); nightKitchen.k = key; return nightKitchen.c = c;
+}
+const STARS = Array.from({length: 16}, () => [Math.random(), Math.random(), Math.random()*6]);
+function drawNightWall(now) {
+  // moonlight spilling down the wall from the window
+  const wx = 508, wy = 46, ww = 104, wh = 112;
+  let g = ctx.createLinearGradient(0, wy + wh, 0, COUNTER_TOP); g.addColorStop(0, 'rgba(150,170,255,.16)'); g.addColorStop(1, 'rgba(150,170,255,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(wx, wy + wh); ctx.lineTo(wx + ww, wy + wh); ctx.lineTo(wx + ww - 30, COUNTER_TOP); ctx.lineTo(wx - 40, COUNTER_TOP); ctx.fill();
+  // the window: night sky, moon, stars
+  ctx.save(); ctx.beginPath(); ctx.roundRect(wx, wy, ww, wh, 10); ctx.clip();
+  g = ctx.createLinearGradient(0, wy, 0, wy + wh); g.addColorStop(0, '#1b2350'); g.addColorStop(1, '#3d3a78'); ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
+  for (const [sx, sy, ph] of STARS) { ctx.globalAlpha = .45 + .55*Math.abs(Math.sin(now/900 + ph)); ctx.fillStyle = '#fff6d8'; ctx.fillRect(wx + 4 + sx*(ww - 8), wy + 4 + sy*(wh*.7), 1.6, 1.6); }
+  ctx.globalAlpha = 1;
+  const mx = wx + ww*.68, my = wy + wh*.32; g = ctx.createRadialGradient(mx, my, 6, mx, my, 40); g.addColorStop(0, 'rgba(255,240,200,.45)'); g.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
+  ctx.fillStyle = '#fff3cf'; ctx.beginPath(); ctx.arc(mx, my, 13, 0, 7); ctx.fill(); ctx.fillStyle = '#28305e'; ctx.beginPath(); ctx.arc(mx + 6, my - 4, 11, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.beginPath(); ctx.ellipse(wx + 30, wy + wh*.78, 34, 9, 0, 0, 7); ctx.fill();
+  ctx.restore();
+  shape(null, rr(wx, wy, ww, wh, 10), CINK, 4); line([[wx + ww/2, wy], [wx + ww/2, wy + wh]], CINK, 3); line([[wx, wy + wh*.5], [wx + ww, wy + wh*.5]], CINK, 3);
+  shape('#6d5a6e', rr(wx - 8, wy + wh - 2, ww + 16, 9, 4), CINK, 2.5);   // sill
+  // string lights along the top of the wall
+  const C = ['#ffd27a', '#ffb4b4', '#bfe3ff', '#ffe9a8', '#c9f2c2'];
+  ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 1.5;
+  for (let s = 0; s < 4; s++) { const x0 = s*170 - 20, x1 = x0 + 170; ctx.beginPath(); ctx.moveTo(x0, 14); ctx.quadraticCurveTo((x0 + x1)/2, 46, x1, 14); ctx.stroke();
+    for (let k = 1; k < 6; k++) { const t = k/6, bx = x0 + (x1 - x0)*t, by = 14 + 2*(1 - t)*t*32 + 3, col = C[(s*5 + k) % 5], tw = .75 + .25*Math.sin(now/600 + s*3 + k);
+      const gl2 = ctx.createRadialGradient(bx, by, 0, bx, by, 16); gl2.addColorStop(0, col + 'aa'); gl2.addColorStop(1, col + '00');
+      ctx.globalAlpha = tw; ctx.fillStyle = gl2; ctx.fillRect(bx - 16, by - 16, 32, 32); ctx.globalAlpha = 1;
+      ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(bx, by + 2, 2.6, 3.6, 0, 0, 7); ctx.fill(); } }
+}
+// redraw the counter strip over the cat so it stands behind the counter
+function drawCounter() {
+  if (KITCHEN.complete && KITCHEN.naturalWidth) {
+    const nk = night() && nightKitchen();
+    if (nk) ctx.drawImage(nk, 0, COUNTER_TOP*2, nk.width, nk.height - COUNTER_TOP*2, 0, COUNTER_TOP, W, H - COUNTER_TOP);
+    else { const iw = KITCHEN.naturalWidth, ih = KITCHEN.naturalHeight, sy = COUNTER_TOP/H*ih;
+      ctx.filter = skinFilter(); ctx.drawImage(KITCHEN, 0, sy, iw, ih - sy, 0, COUNTER_TOP, W, H - COUNTER_TOP); ctx.filter = 'none'; }
+  } else shape('#f5d9b3', () => ctx.rect(-10, COUNTER_TOP, W + 20, H), ink, 3.5);
+  // cooling rack with today's latest bakes
+  shape('#fffaf2', rr(368, 236, 104, 9, 3), CINK, 2.5);
+  for (let gx = 380; gx < 470; gx += 13) line([[gx, 237], [gx, 244]], CINK, 1.2);
+  S.shelf.slice(-4).forEach((it, i) => drawItem(it.r, 384 + i*25, 239, .68, it.b));
+}
+// oven window: glow + the tray inside (raw -> golden, rising/spreading)
+function drawOven(now, eff, st) {
+  const baking = st.a === 'bake' && Math.abs(B.x - OVEN_X) < 2, alarm = baking && eff === 'distracted';
+  const wx = 505, wy = 295, ww = 96, wh = 38, cx = wx + ww/2, by = wy + wh - 5;
+  if (baking) {
+    ctx.save(); ctx.beginPath(); ctx.roundRect(wx, wy, ww, wh, 6); ctx.clip();
+    const g = ctx.createLinearGradient(0, wy, 0, wy + wh); g.addColorStop(0, '#ffb066'); g.addColorStop(1, '#c8642e');
+    ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
+    const r = S.job.r, k = st.sp, burnt = Math.min(.85, S.job.ruin/RUIN_FAIL);
+    line([[wx + 12, by + 1], [wx + ww - 12, by + 1]], '#d8d2ca', 3);
+    if (r === 'cake') { const hh = 20*(.6 + .4*k); shape(burnt ? lerpC('#f5c36b', '#3b2a20', burnt) : lerpC('#f6e3bf', '#f5c36b', k), rr(cx - 16, by - hh, 32, hh, 5), CINK, 2); }
+    else if (r === 'cookies') drawBaking(r, cx, by, .8, k, burnt, {sx:.85 + .15*k, n:2});
+    else drawBaking(r, cx, by, .85, k, burnt, {sy:.75 + .25*k});
+    ctx.restore();
+  }
+  shape(alarm && (now/300|0) % 2 ? '#ff5a4a' : baking ? '#ffb347' : null, ell(553, 253, 7, 7), baking ? CINK : null, 2);
+}
+
+// your prop art (bowl, spoon, board, tray)
+const PROPS = {}; for (const k of ['bowl', 'spoon', 'board', 'tray', 'bag']) { const im = new Image(); im.src = `props/${k}.png`; PROPS[k] = im; }
+const hasP = k => PROPS[k].complete && PROPS[k].naturalWidth;
+function prop(k, cx, bottom, w) { const im = PROPS[k], h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, cx - w/2, bottom - h, w, h); return h; }
+const BOWL_W = 84, BOWL_RIM = () => PROP.y - BOWL_W*PROPS.bowl.naturalHeight/PROPS.bowl.naturalWidth*(1 - .19);
+function surface(k, x, y) {   // draws a board/tray, returns the baseline items sit on
+  if (k === 'tray' && hasP('tray')) { prop('tray', x, y + 6, 112); return y - 6; }
+  if (k === 'board' && hasP('board')) { prop('board', x + 8, y + 4, 118); return y - 10; }
+  shape(k === 'tray' ? '#d8d2ca' : '#e8c08a', rr(x - 46, y - 8, 92, 8, 4)); return y - 8;
+}
+function drawProp(st, now) {
+  const {x, y} = PROP;
+  if (B.cool && B.moodT > 0) {   // fresh bake cooling on a tray, steaming
+    drawItem(B.cool, x, surface('tray', x, y), 1.5);
+    ctx.globalAlpha = .6; for (const dx of [-14, 0, 14]) { ctx.beginPath(); for (let i = 0; i <= 10; i++) ctx.lineTo(x + dx + Math.sin(now/300 + i*.8 + dx)*3, y - 50 - i*3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke(); } ctx.globalAlpha = 1;
+    return;
+  }
+  if (Math.abs(B.x - COUNTER_X) > 2) return;
+  const R = RECIPES[S.job.r], dry = Math.min(.6, S.job.ruin/RUIN_FAIL), dough = lerpC('#f6dfa8', '#c9ad86', dry);
+  if (st.a === 'mix' && hasP('bowl')) {
+    const bx = x - 12; prop('bowl', bx, y, BOWL_W);
+    const ry = BOWL_RIM(), batter = {cookies:'#f3d9a4', muffins:'#f6e3bf', bread:'#f8ead0', cake:'#f9cdd5', croissants:'#f6e3bf', pumpkin:'#f2a65a', gingerbread:'#d9a06a', hotcross:'#f6e3bf', tart:'#f6e3bf'}[S.job.r] || R.batter;
+    shape(lerpC(batter, '#c9ad86', dry), ell(bx, ry, 33, 7), CINK, 2.5);
+    const dots = S.job.r === 'cookies' ? '#5a3520' : S.job.r === 'muffins' ? '#6b6bc0' : S.job.r === 'tart' ? '#e0533f' : S.job.r === 'hotcross' ? '#8a5a3c' : null;
+    if (dots) for (const [a, b] of [[-18, 0], [-6, -2], [7, 2], [18, -1], [0, 3]]) shape(dots, ell(bx + a, ry + b, 2.4, 1.8), null);
+  } else if (st.a === 'mix') {
+    shape(MINT, () => { ctx.ellipse(x, y - 36, 44, 36, 0, 0, Math.PI); ctx.closePath(); }, ink, 3.5);
+    ctx.save(); ctx.beginPath(); ctx.ellipse(x, y - 36, 44, 36, 0, 0, Math.PI); ctx.clip();
+    ctx.fillStyle = '#fffaf2'; ctx.fillRect(x - 50, y - 22, 100, 7); ctx.restore();
+    shape(lerpC(R.batter, '#c9ad86', dry), ell(x, y - 36, 44, 10), ink, 3.5);
+    for (const [a, b] of [[-20, -37], [-6, -40], [10, -35], [22, -39], [2, -33]]) shape('#5a3520', ell(x + a, y + b, 2.6, 2), null);
+  } else if (st.a === 'frost' && ITEMS.cake && ITEMS.cake.naturalWidth) {   // frosting reveals your cake art
+    shape('#fffaf2', rr(x - 34, y - 8, 68, 8, 4));
+    shape('#f5c36b', rr(x - 24, y - 42, 48, 34, 6));
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 40, y - 80, 80*st.sp, 80); ctx.clip(); drawItem('cake', x, y - 8, 1.3); ctx.restore();
+  } else if (st.a === 'frost') {
+    shape('#fffaf2', rr(x - 34, y - 8, 68, 8, 4));
+    shape('#f9cdd5', rr(x - 26, y - 46, 52, 38, 8));
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 30, y - 54, 60*st.sp, 50); ctx.clip();
+    shape('#fffaf2', rr(x - 28, y - 52, 56, 14, 7)); ctx.restore();
+    if (st.sp > .7) for (let i = 0; i < 6; i++) shape(['#e05a7a', '#5ab0e0', '#f2c94c'][i % 3], ell(x - 18 + i*7, y - 47, 1.8, 1.8), null);
+  } else if (st.a === 'shape' && (S.job.r === 'cookies' || S.job.r === 'muffins' || RAWIMG[S.job.r])) {
+    const by = surface('tray', x, y), n = 1 + Math.floor(st.sp*3.99);
+    if (RAWIMG[S.job.r]) drawRaw(S.job.r, x, by, 1.25);
+    else if (S.job.r === 'cookies') drawRaw('cookies', x, by, 1.45, {n:Math.min(n, 3)});
+    else for (let i = 0; i < Math.min(n, 3); i++) drawRaw(S.job.r, x - 30 + i*30, by, 1.05);
+  } else if (st.a === 'proof') {   // shaped raw loaf / croissant rising
+    drawRaw(S.job.r, x, surface('board', x, y), 1.45, {sx:.85 + .15*st.sp, sy:.6 + .4*st.sp});
+  } else {
+    const grow = 1, squish = st.a === 'knead' ? Math.abs(Math.sin(now/250))*.12 : 0;
+    const by = surface('board', x, y);
+    shape(dough, () => { ctx.ellipse(x, by, 30*grow*(1 + squish), 16*grow*(1 - squish), 0, Math.PI, 0); ctx.closePath(); });
+  }
+}
+
+// ---- cat drawn from your art (site/bakery/cat/*.png). Parts share one 1278x1230 source canvas. ----
+const CINK = '#5d5049', SRC = {cx:623, cy:711, s:.2};   // source px -> scene px
+const IMG = {};
+for (const [k, sx, sy] of [['body', 279, 378], ['ear', 364, 380], ['tail', 858, 685], ['spots', 522, 410], ['blushL', 407, 642], ['blushR', 761, 642], ['face_joy', 400, 570], ['face_sleep', 400, 570], ['face_sad', 400, 570], ['face_annoyed', 400, 570]]) {
+  const im = new Image(); im.src = `cat/${k}.png`; IMG[k] = {im, sx, sy};
+}
+// draw a part at its source position (relative to cat origin already translated to 0,0)
+function part(k) { const p = IMG[k]; if (!p.im.complete || !p.im.naturalWidth) return; ctx.drawImage(p.im, (p.sx - SRC.cx)*SRC.s, (p.sy - SRC.cy)*SRC.s, p.im.naturalWidth*.4, p.im.naturalHeight*.4); }
+const sp = (sx, sy) => [(sx - SRC.cx)*SRC.s, (sy - SRC.cy)*SRC.s];   // source point -> local
+
+function drawHat(x, y) {
+  ctx.save(); ctx.translate(x - 6, y - 46); ctx.rotate(-.13);
+  const puffs = [[-17, -22, 14], [1, -31, 16], [18, -21, 13]];
+  ctx.lineWidth = 6; ctx.strokeStyle = CINK; ctx.fillStyle = '#f9e8d0';
+  for (const [a, b, r] of puffs) { ctx.beginPath(); ctx.arc(a, b, r, 0, 7); ctx.stroke(); }
+  for (const [a, b, r] of puffs) { ctx.beginPath(); ctx.arc(a, b, r, 0, 7); ctx.fill(); }
+  ctx.fillRect(-20, -22, 40, 16);
+  shape('#f9e8d0', rr(-19, -10, 38, 17, 5), CINK, 3);
+  ctx.fillStyle = '#f9e8d0'; ctx.fillRect(-17, -13, 34, 5);
+  line([[-17, -4], [17, -7]], '#f6a988', 4);
+  ctx.restore();
+}
+
+function drawBaker(now, st) {
+  const t = now/1000, x = B.x;
+  let bob = Math.sin(t*1.7)*1.5;
+  if (B.walking) bob = -Math.abs(Math.sin(t*12))*6;
+  if (B.mood === 'joy') bob = -Math.abs(Math.sin(t*9))*10;
+  if (B.mood === 'annoyed' || B.mood === 'sad') bob = -Math.abs(Math.sin(t*(B.mood === 'sad' ? 9 : 6)))*(B.mood === 'sad' ? 14 : 9);   // hopping for attention
+  const y = 187 + bob, y0 = y + 14, sq = B.walking ? 0 : Math.sin(t*1.7)*.02;
+  const droop = B.mood === 'annoyed' || B.mood === 'sad' || B.mood === 'sleep' ? 1 : 0;
+  ctx.save(); ctx.translate(x, y0 + 60); ctx.scale(1 + sq, 1 - sq); ctx.translate(0, -60);   // squash from the bottom
+  // tail swish (pivot at its base)
+  const [tx, ty] = sp(880, 895);
+  ctx.save(); ctx.translate(tx, ty); ctx.rotate(Math.sin(t*(B.mood === 'annoyed' ? 7 : 1.6))*.25); ctx.translate(-tx, -ty); part('tail'); ctx.restore();
+  // ears (right one mirrored), droop when unhappy
+  for (const s of [-1, 1]) {
+    ctx.save(); ctx.scale(s < 0 ? 1 : -1, 1);
+    const [ex, ey] = sp(470, 515); ctx.translate(ex, ey); ctx.rotate(-droop*.45); ctx.scale(1.25, 1.25); ctx.translate(-ex, -ey - 4);
+    part('ear'); ctx.restore();
+  }
+  part('body'); part('spots');
+  const faceImg = IMG['face_' + B.mood], useFace = faceImg && faceImg.im.complete && faceImg.im.naturalWidth;   // your expression art
+  if (useFace) part('face_' + B.mood);
+  else { part('blushL'); part('blushR'); }
+  // face: your art for the content look, drawn variants for other moods
+  const look = B.mood === 'glance' || B.mood === 'annoyed' || B.mood === 'sad' ? 0 : st.a === 'bake' ? 3 : -3;
+  if ((B.blink -= 1/60) <= -0.12) B.blink = 2 + Math.random()*4;
+  const [lx, ly] = sp(505, 630), [rx2] = sp(745, 630), [mx, my] = sp(627, 652);
+  if (!useFace) {
+    ctx.strokeStyle = CINK; ctx.fillStyle = CINK; ctx.lineCap = 'round'; ctx.lineWidth = 2.5;
+    for (const ex of [lx + look, rx2 + look]) {
+      ctx.beginPath();
+      if (B.mood === 'joy') { ctx.arc(ex, ly + 3, 5, Math.PI*1.15, Math.PI*1.85); ctx.stroke(); }
+      else if (B.mood === 'sleep' || B.blink < 0) { ctx.arc(ex, ly - 1, 5, Math.PI*.2, Math.PI*.8); ctx.stroke(); }
+      else if (B.mood === 'annoyed') { ctx.moveTo(ex - 6, ly - 1); ctx.lineTo(ex + 6, ly - 1); ctx.stroke(); }
+      else { ctx.ellipse(ex, ly, 5, 5, 0, 0, 7); ctx.fill(); }
+    }
+    if (B.mood === 'annoyed' || B.mood === 'sad') for (const [ex, s] of [[lx, -1], [rx2, 1]]) { const a = B.mood === 'annoyed'; line([[ex - s*6, ly + (a ? -7 : -12)], [ex + s*6, ly + (a ? -12 : -8)]], CINK, 2.5); }
+    ctx.beginPath(); ctx.lineWidth = 2.5;
+    if (B.mood === 'joy') shape('#f08aa0', () => { ctx.moveTo(mx - 6, my - 2); ctx.arc(mx, my - 2, 6, 0, Math.PI); ctx.closePath(); }, CINK, 2.5);
+    else if (B.mood === 'sad') { ctx.arc(mx, my + 6, 5, Math.PI*1.15, Math.PI*1.85); ctx.stroke(); }
+    else if (B.mood === 'annoyed') { ctx.moveTo(mx - 4, my + 1); ctx.lineTo(mx + 4, my + 1); ctx.stroke(); }
+    else if (B.mood === 'glance') { ctx.arc(mx, my + 1, 2.5, 0, 7); ctx.stroke(); }
+    else { ctx.arc(mx, my - 3, 5, Math.PI*.15, Math.PI*.85); ctx.stroke(); }
+    if (B.mood === 'sad') shape('#a8daf7', () => { ctx.moveTo(48, -40); ctx.quadraticCurveTo(54, -30, 48, -28); ctx.quadraticCurveTo(42, -30, 48, -40); }, CINK, 2);
+  }
+  drawOutfit(); drawHeadwear();
+  ctx.restore();
+  if (!wearingHat()) drawHat(x, y);
+  return y;
+}
+
+// paws are little 'u' nubs on the tummy (no arms), like the reference art
+function nub(px, py, full) {
+  if (full) { shape(CAT, ell(px, py, 10, 9), CINK, 3); return; }
+  shape(CAT, ell(px, py, 10, 9), null);
+  ctx.beginPath(); ctx.ellipse(px, py, 10, 9, 0, -.3, Math.PI + .3); ctx.strokeStyle = CINK; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+}
+function drawArms(now, st, y) {
+  const t = now/1000, x = B.x, P = PROP, atCounter = !B.walking && Math.abs(x - COUNTER_X) < 2;
+  let L = [x - 22, y + 40], R = [x + 22, y + 40], tool = null, raised = false;
+  if (B.mood === 'joy') { L = [x - 32, y + 12 + Math.sin(t*9)*4]; R = [x + 32, y + 12 + Math.cos(t*9)*4]; }
+  else if (B.mood === 'sleep' || B.mood === 'glance') { L = [x - 18, y + 44]; R = [x + 18, y + 44]; }
+  else if (B.mood === 'annoyed' || B.mood === 'sad') { const w = B.mood === 'sad' ? 14 : 9; L = [x - 64, y - 6 + Math.sin(t*w)*8]; R = [x + 64, y - 6 + Math.cos(t*w)*8]; raised = true; }   // waving beside the head
+  else if (atCounter && st.a === 'mix') { L = [P.x - 6 + Math.cos(t*5)*11, (hasP('bowl') ? BOWL_RIM() - 30 : P.y - 64) + Math.sin(t*5)*3]; tool = 'spoon'; }
+  else if (atCounter && st.a === 'knead') { const k = Math.abs(Math.sin(t*4))*5; L = [P.x - 12, P.y - 24 + k]; R = [P.x + 14, P.y - 19 - k]; }
+  else if (atCounter && st.a === 'shape') { const k = Math.abs(Math.sin(t*7))*4; L = [P.x - 14 + Math.sin(t*2)*16, P.y - 24 - k]; }
+  else if (atCounter && st.a === 'frost') { L = [P.x + Math.sin(t*2)*16, P.y - 90 + Math.abs(Math.sin(t*6))*2]; tool = 'bag'; }
+  else if (st.a === 'bake' && !B.walking) { R = [x + 44, y + 24 + Math.sin(t*2)*3]; }
+  if (tool === 'spoon' && hasP('spoon')) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, BOWL_RIM() - 1); ctx.clip(); ctx.translate(L[0] + 2, L[1] - 6); ctx.rotate(-.15 + Math.sin(now/200)*.06); const sw = 15, sh = sw*PROPS.spoon.naturalHeight/PROPS.spoon.naturalWidth; ctx.drawImage(PROPS.spoon, -sw/2, 0, sw, sh); ctx.restore(); }
+  else if (tool === 'spoon') { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, P.y - 36); ctx.clip(); line([[L[0] + 2, L[1] - 16], [L[0] + 10, L[1] + 24]], CINK, 9); line([[L[0] + 2, L[1] - 16], [L[0] + 10, L[1] + 24]], '#e8c08a', 5); ctx.restore(); }   // spoon dips into the batter
+  // keep paws attached: inside the body's width and no lower than the counter edge
+  const keep = q => [Math.max(x - 66, Math.min(x + 66, q[0])), Math.min(q[1], y + 44)];
+  L = keep(L); R = keep(R);
+  // paws reaching past the counter edge get a short stubby arm so they stay attached
+  for (const q of [L, R]) if (!raised && q[1] > COUNTER_TOP - 6) {
+    const from = [q[0] + (x - q[0])*.08, Math.min(q[1] - 10, COUNTER_TOP - 8)];   // short stub straight up into the body
+    line([from, q], CINK, 21); line([from, q], CAT, 15.5);
+  }
+  nub(...L, raised); nub(...R, raised);
+  if (tool === 'bag' && hasP('bag')) { const bw = 28, bh = bw*PROPS.bag.naturalHeight/PROPS.bag.naturalWidth; ctx.save(); ctx.translate(L[0], L[1]); ctx.rotate(Math.sin(t*2)*.12); ctx.drawImage(PROPS.bag, -bw/2, -bh*.3, bw, bh); ctx.restore(); nub(...L, true); }
+  else if (tool === 'bag') shape('#fffaf2', () => { ctx.moveTo(L[0] - 10, L[1] - 6); ctx.lineTo(L[0] + 10, L[1] - 6); ctx.lineTo(L[0], L[1] + 18); ctx.closePath(); }, CINK, 3);
+}
+
+function drawBubble(text, x, y) {
+  shape('#fffaf2', rr(x - 18, y - 30, 36, 26, 12), ink, 2);
+  shape('#fffaf2', () => { ctx.moveTo(x - 6, y - 5); ctx.lineTo(x + 2, y + 6); ctx.lineTo(x + 6, y - 5); }, null);
+  ctx.fillStyle = text.includes('!') ? '#e0533f' : ink; ctx.font = `bold ${text.includes('!') ? 19 : 16}px system-ui`; ctx.textAlign = 'center'; ctx.fillText(text, x, y - 10); ctx.textAlign = 'start';
+}
+
+// ---- night: after dark (or when the phone is in dark mode) the kitchen is lit by warm lamps ----
+const darkPref = matchMedia('(prefers-color-scheme: dark)');
+function isNight() { const m = S.night || 'auto'; if (m !== 'auto') return m === 'on'; const h = new Date().getHours(); return darkPref.matches || h >= 19 || h < 7; }
+function drawNight() {
+  if (!night()) return;
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#e4dcef'; ctx.fillRect(0, COUNTER_TOP - 140, W, H);   // a touch of evening on the characters
+  ctx.globalCompositeOperation = 'screen';   // warm lamplight where Bingsu works, the oven's glow
+  for (const [x, y, r, a] of [[B.x, 175, 200, .22], [553, 315, 90, .28]]) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,180,100,${a})`); g.addColorStop(1, 'rgba(255,180,100,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
+}
+function applyNight() { const n = isNight(); document.body.classList.toggle('night', n); const m = S.night || 'auto';
+  tile($('nightBtn'), n ? '🌙' : '☀️', m === 'auto' ? `Night: auto${n ? ' (on)' : ''}` : m === 'on' ? 'Night: on' : 'Night: off'); }
+$('nightBtn').onclick = () => { S.night = {auto: 'on', on: 'off', off: 'auto'}[S.night || 'auto']; save(); applyNight(); };
+darkPref.addEventListener?.('change', applyNight); setInterval(applyNight, 60e3);
+function draw(now, eff) {
+  ctx.setTransform(cv.dpr, 0, 0, cv.dpr, 0, 0);
+  if (eff === 'distracted' && B.mood === 'sad') ctx.translate((Math.random() - .5)*4, (Math.random() - .5)*4);
+  const st = stageOf(J());
+  drawScene(now, eff, st);
+  const y = drawBaker(now, st);
+  drawCounter(); drawOven(now, eff, st); drawProp(st, now); drawArms(now, st, y);
+  for (const p of parts) {
+    const k = p.life/p.max; ctx.globalAlpha = 1 - k; ctx.fillStyle = p.color; ctx.beginPath();
+    if (p.heart) { const r = p.r*(1 + k*.4); ctx.save(); ctx.translate(p.x, p.y); ctx.beginPath(); ctx.moveTo(0, r*.9); ctx.bezierCurveTo(-r*1.4, -r*.2, -r*.6, -r*1.2, 0, -r*.35); ctx.bezierCurveTo(r*.6, -r*1.2, r*1.4, -r*.2, 0, r*.9); ctx.fill(); ctx.restore(); }
+    else if (p.star) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(k*6); ctx.fillRect(-p.r, -1, p.r*2, 2); ctx.fillRect(-1, -p.r, 2, p.r*2); ctx.restore(); }
+    else { ctx.arc(p.x, p.y, p.r + k*p.grow, 0, 7); ctx.fill(); }
+  }
+  ctx.globalAlpha = 1;
+  if (B.mood === 'sleep') { ctx.fillStyle = '#7d8fc0'; ctx.font = 'bold 18px system-ui'; for (let i = 0; i < 2; i++) { const z = ((now/1400) + i*.5) % 1; ctx.globalAlpha = 1 - z; ctx.fillText('z', B.x + 50 + z*14, y - 70 - z*30); } ctx.globalAlpha = 1; }
+  B.y0 = y;
+  if (B.bubble) drawBubble(B.bubble, B.x + 66, y - 70);
+  ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'center';
+  { const seen = {}; for (const f of floats) { const k = Math.round(f.y/10); f.dy = f.dy ?? ((seen[k] = (seen[k] || 0) + 1) - 1)*24; } }
+  for (const f of floats) { ctx.globalAlpha = 1 - f.t; ctx.fillStyle = ink; ctx.fillText(f.text, f.x + 1, f.y + f.dy - f.t*30 + 1); ctx.fillStyle = '#ffcf4a'; ctx.fillText(f.text, f.x, f.y + f.dy - f.t*30); }
+  ctx.globalAlpha = 1; ctx.textAlign = 'start';
+  if (eff === 'distracted') {   // gets darker the longer you're away
+    const k = Math.min(1, .55 + S.job.ruin/RUIN_FAIL);
+    const g = ctx.createRadialGradient(B.x, 190, 40, B.x, 190, 420);   // dim room, spotlight on the cat
+    g.addColorStop(0, `rgba(120,20,30,${.12*k})`); g.addColorStop(1, `rgba(110,10,25,${.42*k})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = `rgba(235,45,55,${.34*k})`; ctx.fillRect(0, 0, W, H);
+    if (B.bubble) drawBubble(B.bubble, B.x + 66, B.y0 - 70);
+  }
+  drawDecor(now);
+  drawOrders(now);
+  drawTask();
+  drawSign();
+  drawVisitor(now);   // customers stand in front of everything on the counter
+  drawNight();
+  drawClosed(now);
+  drawCelebration(now);
+}
+// the task you're working on, as a little sign on the counter
+// shop sign: a little hanging plaque on the wall, always inside the part of the scene on screen
+function drawSign() {   // a little plaque on the front of the counter, inside the part of the scene on screen
+  const v = sceneView(), x = Math.min(v.x1 - 70, Math.max(v.x0 + 70, v.x0 + (v.x1 - v.x0)*.36)), y = 263;
+  ctx.save(); ctx.translate(x, y);
+  const nt = night();   // at night the plaque is a dark board with softly glowing letters
+  shape(nt ? '#3a2f3e' : '#fffaf2', rr(-62, -14, 124, 28, 12), CINK, 2.2);
+  shape(nt ? '#5a3f55' : '#f7b6c2', rr(-57, -9, 114, 18, 8), null);
+  for (const sx of [-50, 50]) shape(nt ? '#ffd27a' : '#fffaf2', ell(sx, 0, 2, 2), null);
+  if (nt) { ctx.shadowColor = 'rgba(255,190,120,.8)'; ctx.shadowBlur = 6; }
+  ctx.fillStyle = nt ? '#ffe3b8' : '#5d5049'; ctx.textAlign = 'center'; ctx.font = '600 13px Fredoka, system-ui, sans-serif'; ctx.fillText("Bingsu's Bakery", 0, 4.5);
+  ctx.restore(); ctx.textAlign = 'start';
+}
+function drawTask() {
+  if (document.body.classList.contains('phone')) return;   // phone shows it in the bottom bar
+  const t = (S.task || '').trim(); if (!t) return;
+  ctx.font = '600 15px system-ui'; const text = '📝 ' + t, w = Math.min(W - 40, ctx.measureText(text).width + 32), x = (W - w)/2, y = H - 44;
+  shape('#fffaf2', rr(x, y, w, 30, 15), CINK, 2.5);
+  ctx.save(); ctx.beginPath(); ctx.rect(x + 12, y, w - 24, 30); ctx.clip();
+  ctx.fillStyle = CINK; ctx.textAlign = 'center'; ctx.fillText(text, W/2, y + 20); ctx.restore(); ctx.textAlign = 'start';
+}
+cv.addEventListener('click', e => {
+  if (CEL) { collect(); return; }   // tap to collect the reward
+  if (shopClosed && breakTap(e)) return;
+  { const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover', kk = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H), pp = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100), qx = (e.clientX - r.left - (r.width - W*kk)*(pp[0] || .5))/kk, qy = (e.clientY - r.top - (r.height - H*kk)*(pp[1] || .5))/kk;
+    if (VIS && VIS.state === 'story') { storyNext(); return; }
+    if (VIS && VIS.hit && qx > VIS.hit[0] && qx < VIS.hit[2] && qy > VIS.hit[1] && qy < VIS.hit[3] && VIS.state === 'wait') { VIS.state = 'wave'; VIS.t = 0; return; } }
+  // map the tap into scene coordinates (the phone view crops the canvas with object-fit: cover)
+  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover';
+  const k = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H);
+  const pos = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100);
+  const sx = (e.clientX - r.left - (r.width - W*k)*(pos[0] || .5))/k, sy = (e.clientY - r.top - (r.height - H*k)*(pos[1] || .5))/k;
+  if (sx > 360 && sx < 480 && sy > 200 && sy < 255) openCase();   // the cooling rack
+  (S.orders || []).forEach((o, i) => { const t = TICKET(i);   // tap a ticket to bake that order next
+    if (sx > t.x && sx < t.x + t.w && sy > t.y && sy < t.y + t.h && o.r !== S.job.r) {
+      const f = S.job.p/RECIPES[S.job.r].time;
+      if (f > .1 && !confirm(`Switch to ${RECIPES[o.r].name.toLowerCase()} for ${CUSTOMERS[o.c].name}? Your ${RECIPES[S.job.r].name.toLowerCase()} (${Math.round(f*100)}% done) will be thrown out.`)) return;
+      S.recipe = o.r; S.job = newJob(o.r); lastStage = null; save(); renderRecipes();
+    } });
+});
+// ---- display case: everything you've baked ----
+const stars = q => q > .85 ? '★★★' : q > .5 ? '★★☆' : '★☆☆';
+let caseTab = 'case';
+function openCase(tab) {
+  if (typeof tab === 'string') caseTab = tab;
+  const el = $('case'), tabs = `<div class="tabs">${[['case', '🧁 Display case'], ['shop', '🛍️ Shop'], ['earn', '🪙 Earnings'], ['rew', '🏆 Rewards'], ['news', '📰 Weekly']].map(([k, l]) => `<button data-tab="${k}" class="${caseTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  if (caseTab === 'earn') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + earningsHTML(); el.hidden = false; return; }
+  if (caseTab === 'shop') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + shopHTML(); el.hidden = false; return; }
+  if (caseTab === 'news') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + newsHTML(); el.hidden = false; return; }
+  if (caseTab === 'rew') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + rewardsHTML(); el.hidden = false; return; }
+  const H2 = S.hist || [], today = new Date().toDateString();
+  const todays = H2.filter(h => new Date(h.t).toDateString() === today);
+  const src = r => ITEMS[r] && ITEMS[r].src;
+  el.innerHTML = `<button class="close" id="caseClose">✕ Close</button>${tabs}<h2>🧁 Display case</h2>
+    <p class="sub">${H2.length ? `${H2.length} bake${H2.length > 1 ? 's' : ''} so far · ${todays.length} today` : 'Nothing baked yet. Finish a bake and it will be on display here.'}</p>
+    <b>Today</b><div class="shelf">${todays.map(h => `<img src="${src(h.r)}" alt="${RECIPES[h.r].name}" title="${RECIPES[h.r].name} ${stars(h.q)}">`).join('') || '<small style="color:#8a7768">Empty for now</small>'}</div>
+    <div class="grid">${Object.entries(RECIPES).map(([k, R]) => {
+      const mine = H2.filter(h => h.r === k), best = mine.reduce((m, h) => Math.max(m, h.q), 0), t = mine.filter(h => new Date(h.t).toDateString() === today).length;
+      return mine.length ? `<div class="card"><img src="${src(k)}" alt=""><b>${R.name}</b><span class="stars">${stars(best)}</span><small>${mine.length} baked${t ? ` · ${t} today` : ''}</small></div>`
+        : `<div class="card locked"><img src="${src(k)}" alt=""><b>???</b><small>Bake it to discover · ${fmt(R.time)}</small></div>`;
+    }).join('')}</div>`;
+  el.hidden = false;
+}
+$('case').addEventListener('click', e => { if (e.target.id === 'caseClose') $('case').hidden = true; const t = e.target.closest('[data-tab]'); if (t) openCase(t.dataset.tab); });
+// ---- earnings ----
+const dayKey = t => new Date(t).toDateString();
+function earningsHTML() {
+  const L = S.ledger || [], now = Date.now(), wk = now - 7*864e5, today = dayKey(now), lost = S.lost || [];
+  const sum = (a, f = x => x.coins) => a.reduce((m, x) => m + f(x), 0);
+  const T = L.filter(x => dayKey(x.t) === today), Wk = L.filter(x => x.t >= wk);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(now - (6 - i)*864e5); return {lab:d.toLocaleDateString(undefined, {weekday:'short'}).slice(0, 2), v:sum(L.filter(x => dayKey(x.t) === d.toDateString()))}; });
+  const mx = Math.max(1, ...days.map(d => d.v));
+  const byR = Object.keys(RECIPES).map(k => ({k, v:sum(L.filter(x => x.r === k))})).filter(x => x.v).sort((a, b) => b.v - a.v);
+  const served = L.filter(x => x.c), lostWk = lost.filter(x => x.t >= wk).length;
+  const card = (big, lab) => `<div class="stat"><b>${big}</b><small>${lab}</small></div>`;
+  return `<h2>🪙 Earnings</h2><p class="sub">Shop rating <b class="stars">★ ${repStars().toFixed(1)}</b> · ${S.coins} coins in the till${(S.pending || []).length ? ` · ${S.pending.length} reward${S.pending.length > 1 ? 's' : ''} waiting to collect` : ''}</p>
+    <div class="stats">${card(sum(T), 'today')}${card(sum(Wk), 'this week')}${card(sum(L), 'all time')}${card(sum(Wk, x => x.tip), 'tips this week')}</div>
+    <b>Last 7 days</b><div class="chart">${days.map(d => `<div><i style="height:${Math.round(d.v/mx*100)}%"></i><span>${d.v || ''}</span><small>${d.lab}</small></div>`).join('')}</div>
+    <div class="stats">${card(served.length, 'customers served')}${card(served.filter(x => x.t >= wk).length, 'served this week')}${card(lostWk, 'left upset this week')}${card(L.length, 'bakes sold')}</div>
+    ${byR.length ? `<b>Best sellers</b><div class="list">${byR.map(x => `<div><img src="${ITEMS[x.k].src}" alt=""><span>${RECIPES[x.k].name}</span><b>${x.v} 🪙</b></div>`).join('')}</div>` : ''}
+    ${!L.length ? '<p class="sub">Coins show up here once you collect your first reward.</p>' : ''}`;
+}
+// ---- rewards: milestones with progress ----
+function rewardsHTML() {
+  const H2 = S.hist || [], L = S.ledger || [], fr = S.friends || {};
+  const perfect = H2.filter(h => h.q > .85).length, kinds = new Set(H2.map(h => h.r)).size;
+  const bestDay = Math.max(0, ...Object.values(H2.reduce((m, h) => (m[dayKey(h.t)] = (m[dayKey(h.t)] || 0) + 1, m), {})));
+  const earned = L.reduce((m, x) => m + x.coins, 0), served = L.filter(x => x.c).length;
+  const R = [
+    ['🍪', 'First batch', 'Finish your first bake', H2.length, 1],
+    ['🧁', 'Busy bakery', 'Finish 10 bakes', H2.length, 10],
+    ['🏭', 'Bakery empire', 'Finish 50 bakes', H2.length, 50],
+    ['⭐', 'Perfectionist', '5 three-star bakes', perfect, 5],
+    ['🌟', 'Flawless week', '20 three-star bakes', perfect, 20],
+    ['📖', 'Full menu', 'Bake every recipe', kinds, Object.keys(RECIPES).length],
+    ['🔥', 'Big day', '4 bakes in one day', bestDay, 4],
+    ['✅', 'Done and dusted', 'Finish your first task', S.tasksDone || 0, 1],
+    ['📋', 'Getting things done', 'Finish 25 tasks', S.tasksDone || 0, 25],
+    ['🏁', 'Task master', 'Finish 100 tasks', S.tasksDone || 0, 100],
+    ['🛎️', 'At your service', 'Serve 5 customers', served, 5],
+    ['💐', 'Local favourite', 'Serve 25 customers', served, 25],
+    ['🏅', 'Four-star shop', 'Reach a ★4.0 rating', +repStars().toFixed(1), 4],
+    ['👑', 'Five-star shop', 'Reach a ★5.0 rating', +repStars().toFixed(1), 5],
+    ['💰', 'Piggy bank', 'Earn 100 coins', earned, 100],
+    ['🏦', 'Bakery tycoon', 'Earn 500 coins', earned, 500],
+    ...Object.entries(CUSTOMERS).map(([k, c]) => ['💗', `${c.name}'s best friend`, `5 hearts with ${c.name} (${c.fav})`, fr[k] || 0, 5]),
+  ];
+  const done = R.filter(r => r[3] >= r[4]).length;
+  return `<h2>🏆 Rewards</h2><p class="sub">${done} of ${R.length} earned</p>
+    <div class="rew">${R.map(([ic, n, d, v, goal]) => { const ok = v >= goal; return `<div class="${ok ? 'ok' : ''}"><span class="ic">${ic}</span><div><b>${n}</b><small>${d}</small><i><u style="width:${Math.min(100, v/goal*100)}%"></u></i></div><em>${ok ? '✓' : `${Math.min(v, goal)}/${goal}`}</em></div>`; }).join('')}</div>
+    <b>Regulars</b><div class="list">${Object.entries(CUSTOMERS).map(([k, c]) => `<div><span>${c.name} <small>loves ${RECIPES[c.fav].name.toLowerCase()}</small></span><b class="stars">${'♥'.repeat(fr[k] || 0)}${'♡'.repeat(5 - (fr[k] || 0))}</b></div>`).join('')}</div>`;
+}
+$('caseBtn').onclick = $('bakeryBtn').onclick = () => openCase('case');
+
+// ---------- UI ----------
+const fmt = s => { s = Math.floor(s); const h = s/3600|0, m = (s % 3600)/60|0; return h ? `${h}h ${m}m` : m ? `${m}m` : `${s}s`; };
+function renderRecipes() {
+  $('recipes').innerHTML = '<small>Bake:</small>' + Object.entries(RECIPES).filter(([k]) => inSeason(k) || S.job.r === k).map(([k, r]) => {
+    const own = S.unlocked.includes(k) || r.months;
+    return `<button data-k="${k}" class="${S.recipe === k ? 'on' : ''} ${own ? '' : 'locked'}">${own ? '' : '🔒 '}${r.season ? r.season.split(' ')[0] + ' ' : ''}${r.name} · ${fmt(r.time/SPEED)} → ${r.sell}🪙${own ? '' : ` · unlock ${r.unlock}🪙`}</button>`;
+  }).join('');
+}
+$('recipes').onclick = e => {
+  const k = e.target.closest('button')?.dataset.k; if (!k) return;
+  if (!S.unlocked.includes(k)) { if (S.coins < RECIPES[k].unlock) return; S.coins -= RECIPES[k].unlock; S.unlocked.push(k); }
+  if (S.job.r !== k) {
+    const f = S.job.p/RECIPES[S.job.r].time;
+    if (f > .1 && !confirm(`Switch to ${RECIPES[k].name}? Your ${RECIPES[S.job.r].name.toLowerCase()} (${Math.round(f*100)}% done) will be thrown out.`)) return;
+    S.job = newJob(k); B.cool = null; lastStage = null;
+  }
+  S.recipe = k; save(); renderRecipes();
+};
+const MODES = [['auto', '🔄 Real (tracker)'], ['focused', '● Focused'], ['distracted', '⚠︎ Distracted'], ['idle', '💤 Away']];
+function renderModes() { $('modes').innerHTML = MODES.map(([k, l]) => `<button data-k="${k}" class="${(manual || 'auto') === k ? 'on' : ''}">${l}</button>`).join(''); }
+$('modes').onclick = e => { const k = e.target.dataset.k; if (k) { manual = k === 'auto' ? null : k; renderModes(); } };
+// ---- getting your attention when you drift off ----
+let soundOn = false, actx = null, lastChime = 0, titleT = 0;
+const tile = (el, ic, t) => { if (el) el.innerHTML = `<i>${ic}</i><span>${t}</span>`; };
+applyNight();
+$('sound').onclick = () => {
+  soundOn = !soundOn; tile($('sound'), soundOn ? '🔔' : '🔕', soundOn ? 'Sound on' : 'Sound off');
+  if (soundOn) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); chime(1); } catch (e) {} }
+};
+function chime(level) {
+  if (!soundOn || !actx) return;
+  const notes = level > 1 ? [880, 660, 880, 660] : [660, 880];
+  notes.forEach((f, i) => {
+    const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + i*.18;
+    o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.18, t0 + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + .3);
+    o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + .32);
+  });
+}
+function drama(now, eff) {
+  const bad = eff === 'distracted', worse = bad && S.job.ruin > 180;
+  cv.style.boxShadow = bad ? `0 0 0 ${worse ? 6 : 4}px rgba(239,106,90,${.45 + .45*Math.abs(Math.sin(now/(worse ? 200 : 450)))})` : 'none';
+  if (bad) {
+    if (now - titleT > 1000) {
+      titleT = now; const baking = stageOf(S.job).a === 'bake', what = RECIPES[S.job.r].name.toLowerCase();
+      document.title = document.title.startsWith('Focus') ? (baking ? `🔥 Your ${what} are burning!` : `😿 Come back! Your ${what} need you`) : 'Focus Bakery';
+    }
+    if (now - lastChime > (worse ? 30000 : 60000)) { lastChime = now; chime(worse ? 2 : 1); }
+  } else { if (document.title !== 'Focus Bakery') document.title = 'Focus Bakery'; lastChime = 0; }
+}
+const previewFinished = () => { const R = RECIPES[S.job.r]; CEL = {r:S.job.r, coins:R.sell, q:1, b:0, t0:performance.now(), preview:true}; };
+$('task').value = S.task || '';
+function showKind() { const on = (S.kind || '').split(','); $('kind').querySelectorAll('button').forEach(b => b.classList.toggle('on', on.includes(b.dataset.k))); }
+showKind();
+$('kind').onclick = e => { const b = e.target.closest('button'); if (!b) return; b.classList.toggle('on'); S.kind = [...$('kind').querySelectorAll('button.on')].map(x => x.dataset.k).join(','); S.taskT = Date.now(); save(); pushTask(); };
+$('task').addEventListener('input', e => { if (!(S.task || '').trim()) S.taskStart = Date.now(); S.task = e.target.value; S.taskId = null; save(); syncDone(); pushTask(); });
+let ritualSeen = false;   // Ritual's bakery-link.js says hello when it's on this page
+addEventListener('message', ev => { if (ev.source === window && ev.data && ev.data.type === 'focusbakery-ritual-here') { ritualSeen = true; const m = $('ritualMsg'); if (m && !m.textContent) m.textContent = 'Ritual found in this browser'; } });
+window.postMessage({type: 'focusbakery-ritual-ping'}, location.origin);
+// ---- connect phone & Mac ----
+function newCode() { const a = 'abcdefghjkmnpqrstuvwxyz23456789', b = crypto.getRandomValues(new Uint8Array(12)); return Array.from(b, x => a[x % a.length]).join(''); }
+const phoneLink = () => AUTH ? `${SITE}/bakery/` : `${SITE}/bakery/?code=${CODE}`;
+function renderConnect() {
+  const el = $('connect');
+  if (!CODE) { el.innerHTML = `<h2>Connect devices</h2><p class="muted" style="white-space:normal">Create an account to use your bakery on your phone and computers.</p><button class="primary" id="goAcct">Create account or log in</button> <button id="mkcode">Use a pairing code instead</button>`; return; }
+  const phone = AUTH ? `${SITE}/bakery/` : `${SITE}/bakery/?code=${CODE}`, cmd = `curl -fsSL ${SITE}/bakery/mac-tracker.sh -o ~/focus-bakery.sh && bash ~/focus-bakery.sh ${CODE}`;
+  el.innerHTML = `<h2>Connect devices</h2>
+    <p class="muted" style="white-space:normal">${AUTH ? `Everything links to your account, <b>${AUTH.email}</b>.` : 'Tip: <button class="link" id="goAcct">create an account</button> so your phone just needs a log-in.'} Only “focused / distracted / away” is shared, never what's on your screen.</p>
+    <div class="steps">
+      <section><h3>💻 Windows PC</h3>
+        <a class="dl" href="FocusBakery.exe" download="FocusBakery-${CODE}.exe">⬇︎ Download for Windows</a>
+        <p class="muted" style="white-space:normal">Open it and a cat appears by the clock. If Windows says it “protected your PC”, choose <b>More info → Run anyway</b>.</p>
+</section>
+      <section><h3>🍎 Mac</h3>
+        <p class="muted" style="white-space:normal">Open Terminal, paste this and leave it running. Allow it when macOS asks.</p>
+        <code>${cmd}</code><button id="copycmd2">Copy</button></section>
+      <section><h3>📱 Phone</h3>
+        <div class="phoneRow"><div id="qr"></div><div><p class="muted" style="white-space:normal">Scan or open <b>${phone.replace(/^https?:\/\//, '')}</b>${AUTH ? ' and log in' : ''}, then:<br><b>Android:</b> Chrome ⋮ → Install app<br><b>iPhone:</b> Share → Add to Home Screen</p><button id="copylink">Copy link</button></div></div><code hidden>${phone}</code></section>
+      <section><h3>🔗 Ritual</h3>
+        <p class="muted" style="white-space:normal">Shares your current task, focus blocks and the exact sites you visit. Use this in the browser where Ritual is installed.</p>
+        <button id="linkRitual">Link Ritual</button> <small id="ritualMsg">${ritualSeen ? 'Ritual found in this browser' : ''}</small></section>
+    </div>
+    ${AUTH ? '' : `<p><small>Pairing code: ${CODE} · <a href="#" id="unpair">disconnect this device</a></small></p>`}`;
+  const qr = () => { $('qr').innerHTML = ''; new QRCode($('qr'), {text: phone, width: 120, height: 120}); };
+  if (window.QRCode) qr(); else { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = qr; document.head.appendChild(sc); }
+}
+$('connectBtn').onclick = () => { openPanel('connect'); renderConnect(); };
+$('connect').addEventListener('click', e => {
+  const id = e.target.id, copy = t => navigator.clipboard?.writeText(t).then(() => { e.target.textContent = 'Copied ✓'; });
+  if (id === 'linkRitual') {
+    const msg = $('ritualMsg'); msg.textContent = 'Linking…';
+    const done = ev => { if (ev.source !== window || !ev.data) return;
+      if (ev.data.type === 'focusbakery-linked') msg.textContent = '✓ Ritual linked: your task and focus blocks will sync';
+      else if (ev.data.type === 'focusbakery-link-failed') msg.textContent = 'Ritual answered but couldn\'t link: ' + ev.data.why;
+      else return;
+      removeEventListener('message', done); clearTimeout(to); };
+    addEventListener('message', done);
+    const to = setTimeout(() => { removeEventListener('message', done); msg.textContent = ritualSeen ? 'Ritual is here but didn\'t answer. Reload this page and try again.' : 'Ritual can\'t see this page. Make sure Ritual is version 2.84.478 or newer (chrome://extensions → Reload), then reload this page.'; }, 2500);
+    window.postMessage({type: 'focusbakery-link', code: CODE}, location.origin);
+  }
+  if (id === 'mkcode') { CODE = newCode(); ls('focusbakery-code', CODE); if (location.protocol !== 'file:') { const u = new URL(location.href); u.searchParams.set('code', CODE); history.replaceState(null, '', u); } $('manifest').href = 'manifest.webmanifest?code=' + CODE; renderConnect(); poll(); }
+  if (id === 'copycmd2') copy(e.target.previousElementSibling.textContent);
+  if (id === 'copylink') copy(phoneLink());
+  if (id === 'goAcct') { openPanel('acct'); renderAcct(); }
+  if (id === 'unpair') { e.preventDefault(); if (confirm('Disconnect this device from the Mac tracker?')) { CODE = null; ls('focusbakery-code', null); trackerRaw = null; renderConnect(); } }
+});
+
+// ---- Todoist: pick today's task (token stays in this browser, calls go straight to Todoist) ----
+const TD = 'https://api.todoist.com/api/v1';
+const tdToken = () => ls('focusbakery-todoist') || (S.tdTok || null);   // S.tdTok follows your account to other devices
+function setTdToken(v) { if (v) { ls('focusbakery-todoist', v); S.tdTok = AUTH ? v : undefined; } else { ls('focusbakery-todoist', null); delete S.tdTok; } save(); }
+// back from "Log in with Todoist"
+{ const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('todoist_token')) { setTimeout(() => { setTdToken(h.get('todoist_token')); syncTodoist(); floats.push({x:W/2, y:120, text:'Todoist connected ✓', t:0}); }, 300); history.replaceState(null, '', location.pathname + location.search); }
+  else if (h.get('todoist_error')) { history.replaceState(null, '', location.pathname + location.search); setTimeout(() => alert('Todoist login didn’t finish. Try again.'), 500); } }
+let tdOAuth = null; fetch(SITE + '/api/todoist/available').then(r => r.json()).then(d => { tdOAuth = d.ok; }).catch(() => { tdOAuth = false; });
+async function td(path, opts = {}) {
+  const r = await fetch(TD + path, {...opts, headers: {Authorization: 'Bearer ' + tdToken(), ...(opts.headers || {})}});
+  if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'Todoist rejected the token' : 'Todoist error ' + r.status);
+  return r.status === 204 ? null : r.json().catch(() => null);
+}
+async function renderTodo() {
+  const el = $('todo');
+  if (!tdToken()) {
+    el.innerHTML = `<h2>Connect Todoist</h2><p class="muted" style="white-space:normal">Your Todoist tasks for today show up in <b>Up next</b>, and ticking one off here ticks it off in Todoist.</p>
+      ${tdOAuth !== false ? `<p><a class="dl" href="${SITE}/api/todoist/start">Log in with Todoist</a></p>` : ''}
+      <details ${tdOAuth === false ? 'open' : ''}><summary class="muted">Use an API token instead</summary><p class="muted" style="white-space:normal">Todoist → Settings → Integrations → Developer (<a href="https://app.todoist.com/app/settings/integrations/developer" target="_blank" rel="noopener">open it</a>), copy the token and paste it here.</p><input id="tdtok" type="password" autocomplete="off" placeholder="API token"> <button id="tdsave">Connect</button></details>`;
+    return;
+  }
+  el.innerHTML = '<small>Loading your tasks…</small>';
+  try {
+    let d = await td('/tasks/filter?query=' + encodeURIComponent('today | overdue')), list = Array.isArray(d) ? d : d?.results || [], label = 'Due today';
+    if (!list.length) { d = await td('/tasks?limit=50'); list = Array.isArray(d) ? d : d?.results || []; label = 'All tasks'; }
+    syncTodoist(); el.innerHTML = `<b>Connected ✓</b> Your Todoist tasks for today now show in <b>Up next</b>, and checking one off here ticks it off in Todoist.<p class="muted" style="white-space:normal">${label}:</p><div class="tasks">${list.map(t => `<button data-id="${t.id}">${t.content.replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</button>`).join('') || '<small>No tasks found.</small>'}</div>
+      <p><small><a href="#" id="tdrefresh">Refresh</a> · <a href="#" id="tdout">disconnect Todoist</a></small></p>`;
+    el.tasks = list;
+  } catch (err) { el.innerHTML = `<small>${err.message}. </small><a href="#" id="tdout">Re-enter token</a>`; }
+}
+$('todoBtn').onclick = () => { openPanel('todo'); renderTodo(); };
+$('todo').addEventListener('click', e => {
+  const t = e.target;
+  if (t.id === 'tdsave') { const v = $('tdtok').value.trim(); if (v) { setTdToken(v); renderTodo(); syncTodoist(); } }
+  if (t.id === 'tdrefresh') { e.preventDefault(); renderTodo(); }
+  if (t.id === 'tdout') { e.preventDefault(); setTdToken(null); S.todo = (S.todo || []).filter(x => x.src !== 'todoist'); save(); renderTodoList(); renderTodo(); }
+  if (t.dataset.id) { const task = $('todo').tasks.find(x => String(x.id) === t.dataset.id); const it = (S.todo || []).find(x => String(x.ext) === String(task.id)) || {text:task.content, ext:String(task.id), src:'todoist'}; S.todo = S.todo || []; startItem(it); closePanels(); }
+});
+// tick the Todoist task off when you're done
+function syncDone() { const has = !!(S.task || '').trim(); $('taskDone').hidden = !has; $('phoneDone').hidden = !has; }
+syncDone();
+// ---- mark the task as done: a reward of its own, not just for focus ----
+async function completeTask(item) {
+  const text = ((item ? item.text : S.task) || '').trim(); if (!text) return;
+  const ext = item ? item.ext : S.taskId;
+  if (item) { S.todo = (S.todo || []).filter(x => x !== item); renderTodoList(); }
+  let tdNote = '';
+  if (ext && tdToken()) { try { await td(`/tasks/${ext}/close`, {method: 'POST'}); tdNote = ' · ticked off in Todoist'; } catch (err) { tdNote = ' · couldn’t reach Todoist'; } }
+  const d = dayLog(); d.tasks = (d.tasks || 0) + 1; S.tasksDone = (S.tasksDone || 0) + 1;
+  (S.doneLog = S.doneLog || []).push({t:Date.now(), text}); if (S.doneLog.length > 500) S.doneLog.shift();
+  const mins = Math.round((Date.now() - (S.taskStart || Date.now()))/60e3), coins = 8 + Math.min(12, Math.floor(mins/15));
+  if (!item) { S.task = ''; S.taskId = null; startNext(); }
+  save(); syncDone(); pushTask(); renderTodoList();
+  for (let i = 0; i < 40; i++) parts.push({x:W/2 + (Math.random() - .5)*200, y:H/2, vx:(Math.random() - .5)*420, vy:-120 - Math.random()*260, life:0, max:1.6 + Math.random(), r:3 + Math.random()*2, color:['#f7a6b5', '#ffd34d', '#a8daf7', '#bfe3a8', '#f2b25c'][i % 5], grow:0, star:i % 3 === 0, g:380});
+  B.mood = 'joy'; B.moodT = 3; chime(1);
+  queueReward({kind:'task', art:'rew/ribbon_medal', icon:'✅', title:'Task done!', sub:`“${text.length > 60 ? text.slice(0, 57) + '…' : text}”${d.tasks > 1 ? ` · ${d.tasks} done today` : ''}${tdNote}`, coins});
+}
+$('taskDone').onclick = () => completeTask();
+// ---- built-in to-do list ("Up next"), optionally filled from Todoist ----
+const esc = t => String(t).replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
+function startNext() { const n = (S.todo || []).shift(); S.task = n ? n.text : ''; S.taskId = n && n.ext ? n.ext : null; S.taskStart = Date.now(); $('task').value = S.task; }
+function startItem(it) {   // make a list item the current task; the old one goes back to the top of the list
+  S.todo = S.todo.filter(x => x !== it);
+  if ((S.task || '').trim()) S.todo.unshift({id:Date.now() + '' + Math.random(), text:S.task.trim(), src:S.taskId ? 'todoist' : 'mine', ext:S.taskId || null});
+  S.task = it.text; S.taskId = it.ext || null; S.taskStart = Date.now(); $('task').value = S.task;
+  save(); syncDone(); pushTask(); renderTodoList();
+}
+function renderTodoList() {
+  const L = S.todo = S.todo || [];
+  $('todolist').innerHTML = L.length ? L.map((t, i) => `<div class="titem" data-i="${i}"><button class="check" data-act="done" title="Mark as complete" aria-label="Mark as complete"></button><button class="tt" data-act="start" title="Work on this now">${esc(t.text)}</button>${t.src === 'todoist' ? '<span class="src">Todoist</span>' : `<button class="x" data-act="del" title="Remove">✕</button>`}</div>`).join('')
+    : `<div class="empty-todo">${(S.task || '').trim() ? 'Nothing else queued.' : 'Add what you want to work on today.'}</div>`;
+  $('todoBtn').textContent = tdToken() ? `Todoist connected${S.tdSync ? ' · synced ' + fmt((Date.now() - S.tdSync)/1000) + ' ago' : ''} ↻` : '✅ Connect Todoist';
+  const nx = L[0]; $('phoneNext').textContent = nx ? `Up next: ${nx.text}` : '';
+}
+$('todolist').addEventListener('click', e => {
+  const b = e.target.closest('button'), row = e.target.closest('.titem'); if (!b || !row) return; const it = S.todo[+row.dataset.i]; if (!it) return;
+  if (b.dataset.act === 'done') completeTask(it);
+  if (b.dataset.act === 'start') startItem(it);
+  if (b.dataset.act === 'del') { S.todo = S.todo.filter(x => x !== it); save(); renderTodoList(); }
+});
+$('todoAdd').addEventListener('submit', e => {
+  e.preventDefault(); const v = $('todoNew').value.trim(); if (!v) return; $('todoNew').value = '';
+  if (!(S.task || '').trim()) { S.task = v; S.taskId = null; S.taskStart = Date.now(); $('task').value = v; pushTask(); syncDone(); }
+  else (S.todo = S.todo || []).push({id:Date.now() + '', text:v, src:'mine'});
+  save(); renderTodoList();
+});
+async function syncTodoist() {   // today's and overdue Todoist tasks appear in Up next; ones finished elsewhere disappear
+  if (!tdToken()) return;
+  try {
+    const d = await td('/tasks/filter?query=' + encodeURIComponent('today | overdue')), list = Array.isArray(d) ? d : d?.results || [];
+    const ids = new Set(list.map(t => String(t.id)));
+    S.todo = (S.todo || []).filter(x => x.src !== 'todoist' || ids.has(String(x.ext)));
+    const have = new Set(S.todo.map(x => String(x.ext)).concat(S.taskId ? [String(S.taskId)] : []));
+    for (const t of list) if (!have.has(String(t.id))) S.todo.push({id:'td' + t.id, text:t.content, src:'todoist', ext:String(t.id)});
+    S.tdSync = Date.now(); save(); renderTodoList();
+  } catch (_) {}
+}
+syncTodoist(); setInterval(() => { if (!document.hidden) syncTodoist(); }, 10*60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - (S.tdSync || 0) > 5*60e3) syncTodoist(); });
+renderTodoList();
+// phone mode: on by default on small screens / home-screen app; ⚙︎ shows the controls
+const phoneish = matchMedia('(pointer: coarse) and (max-width: 1024px), (pointer: coarse) and (max-height: 520px), (display-mode: standalone)').matches || navigator.standalone || new URLSearchParams(location.search).has('full');
+if (phoneish) document.body.classList.add('phone');
+$('gear').onclick = $('menuBtn').onclick = openMenu;
+if (phoneish) document.querySelector('.who').insertAdjacentHTML('afterbegin', '<button id="back" class="hudbtn primary">🎮 Back</button>');
+document.addEventListener('click', e => { if (e.target.id === 'back') { document.body.classList.add('phone'); document.body.classList.remove('phonefull'); scrollTo(0, 0); } });
+// ---- pick what counts as distracting (saved to your pairing code; the Mac tracker picks it up within 30s) ----
+const DIST_PRESETS = [['YouTube'], ['Reddit'], ['X / Twitter', 'Twitter', ' / X'], ['Instagram'], ['Facebook'], ['TikTok'], ['Netflix'], ['Twitch'], ['Hulu'], ['Disney+'], ['Discord'], ['Steam'],
+  ['Spotify'], ['Messages'], ['WhatsApp'], ['Slack'], ['Amazon'], ['eBay'], ['Pinterest'], ['LinkedIn'], ['BBC News', 'BBC'], ['Prime Video'], ['Tumblr'], ['Mail']];
+const DIST_DEFAULT = ['YouTube', 'Reddit', 'Twitter', ' / X', 'Instagram', 'Facebook', 'TikTok', 'Netflix', 'Twitch', 'Hulu', 'Disney+', 'Discord', 'Steam'];
+let distList = null, distRitual = [];
+async function renderDist() {
+  const el = $('dist');
+  if (!CODE) { el.innerHTML = '<small>Connect your Mac first (📱 Connect phone &amp; Mac), then pick sites here.</small>'; return; }
+  if (!distList) { el.innerHTML = '<small>Loading…</small>'; try { const d = await (await fetch(`${SITE}/api/config/${CODE}`, {cache:'no-store'})).json(); distList = ('own' in d ? d.own : d.distracting) || DIST_DEFAULT.slice(); distRitual = d.ritual || []; } catch (e) { distList = DIST_DEFAULT.slice(); } }
+  const has = w => distList.some(x => x.toLowerCase() === w.toLowerCase());
+  const presetWords = DIST_PRESETS.flatMap(p => p.length > 1 ? p.slice(1) : p);
+  const custom = distList.filter(w => !presetWords.some(x => x.toLowerCase() === w.toLowerCase()));
+  const esc = t => t.replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
+  el.innerHTML = `<b>Tap to switch on/off.</b> <small>Matched against the app name and window/tab title on your Mac.</small>
+    <div class="tasks">${DIST_PRESETS.map((p, i) => { const words = p.length > 1 ? p.slice(1) : p; return `<button data-p="${i}" class="${words.some(has) ? 'on' : ''}">${words.some(has) ? '🚫 ' : ''}${esc(p[0])}</button>`; }).join('')}</div>
+    <p><b>Your own</b> <small>(any word in the app or tab title)</small></p>
+    <div class="tasks">${custom.map(w => `<button data-x="${esc(w)}" class="on">🚫 ${esc(w)} ✕</button>`).join('') || '<small>None yet.</small>'}</div>
+    <p><input id="distNew" placeholder="e.g. Amazon, Wordle, news" maxlength="60"> <button id="distAdd">Add</button></p>
+    ${distRitual.length ? `<p><small>Also counted, from <b>Ritual</b>'s distracting sites: ${distRitual.map(esc).join(', ')}</small></p>` : ''}
+    <small id="distMsg">Saved to your computer's tracker automatically.</small>`;
+}
+async function saveDist() {
+  try { const r = await fetch(`${SITE}/api/config/${CODE}`, {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({distracting:distList})}); if (!r.ok) throw 0; $('distMsg').textContent = 'Saved ✓ (your Mac picks it up within 30 seconds)'; }
+  catch (e) { $('distMsg').textContent = 'Could not save, check your connection'; }
+}
+$('distBtn').onclick = () => { openPanel('dist'); renderDist(); };
+$('dist').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.p) { const p = DIST_PRESETS[+b.dataset.p], words = p.length > 1 ? p.slice(1) : p, on = words.some(w => distList.some(x => x.toLowerCase() === w.toLowerCase()));
+    distList = on ? distList.filter(x => !words.some(w => w.toLowerCase() === x.toLowerCase())) : distList.concat(words); }
+  else if (b.dataset.x) distList = distList.filter(x => x !== b.dataset.x);
+  else if (b.id === 'distAdd') { const v = $('distNew').value.trim(); if (!v) return; if (!distList.some(x => x.toLowerCase() === v.toLowerCase())) distList.push(v); }
+  else return;
+  await renderDist(); saveDist();
+});
+$('dist').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'distNew') $('distAdd').click(); });
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// ---- keep the screen on (Screen Wake Lock) ----
+let wakeOn = ls('focusbakery-wake') !== '0', wakeLock = null;
+async function applyWake() {
+  const want = wakeOn && document.body.classList.contains('phone') && document.visibilityState === 'visible' && !(shopClosed && S.hours && S.hours.sleep);
+  try {
+    if (want && !wakeLock && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!want && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+  tile($('wake'), wakeOn ? '☀️' : '🌙', wakeOn ? 'Screen stays on' : 'Screen can sleep'); $('wake').title = !('wakeLock' in navigator) ? 'Keep screen on (not supported here)' : wakeOn ? 'Screen stays on (tap to allow sleep)' : 'Screen can sleep (tap to keep it on)'; $('wake').classList.toggle('off', !wakeOn);
+}
+$('wake').onclick = () => { wakeOn = !wakeOn; ls('focusbakery-wake', wakeOn ? '1' : '0'); applyWake(); };
+document.addEventListener('visibilitychange', applyWake);
+document.addEventListener('click', applyWake, {once: true});   // some browsers need a tap first
+new MutationObserver(applyWake).observe(document.body, {attributes: true, attributeFilter: ['class']});
+applyWake();
+// ---- swipe the bottom (or side) bar in and out ----
+if (ls('focusbakery-bar') === '1') document.body.classList.add('barOpen');
+const setBar = o => { document.body.classList.toggle('barOpen', o); ls('focusbakery-bar', o ? '1' : '0'); };
+let t0 = null;
+addEventListener('touchstart', e => { if (document.body.classList.contains('phone')) t0 = e.touches[0]; }, {passive: true});
+addEventListener('touchend', e => {
+  if (!t0) return; const t = e.changedTouches[0], dx = t.clientX - t0.clientX, dy = t.clientY - t0.clientY; t0 = null;
+  const land = matchMedia('(orientation: landscape)').matches;
+  if (land && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) setBar(dx < 0);
+  if (!land && Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) setBar(dy < 0);
+}, {passive: true});
+$('phoneBar').addEventListener('click', e => { if (e.target.id === 'phoneDone') { completeTask(); return; } setBar(!document.body.classList.contains('barOpen')); });
+// ---- install as an app (Android Chrome) ----
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('install').hidden = false; });
+addEventListener('appinstalled', () => { $('install').hidden = true; installEvt = null; });
+$('install').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('install').hidden = true; };
+// ---- true full screen (hides browser bars, e.g. in Firefox) ----
+const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+const fsEl = document.documentElement, canFS = !!(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen);
+const goFS = () => (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl).catch?.(() => {});
+if (standalone || !canFS) $('fs').remove();
+else {
+  $('fs').onclick = e => { e.stopPropagation(); closePanels();
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (!document.body.classList.contains('phone')) { document.body.classList.add('phone', 'fsView'); scrollTo(0, 0); }   // desktop: the game view, kitchen only
+    goFS(); };
+  document.addEventListener('pointerup', function first(e) {   // first tap on the bakery goes full screen
+    if (!document.body.classList.contains('phone') || e.target.closest('button')) return;
+    document.removeEventListener('pointerup', first); if (!document.fullscreenElement) goFS();
+  });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('fsView')) document.body.classList.remove('phone', 'fsView'); const f = $('fs'); if (f) tile(f, document.fullscreenElement ? '⤡' : '⛶', document.fullscreenElement ? 'Exit full screen' : 'Full screen'); applyWake(); });
+}
+// links from the Windows app: ?open=dist opens the distracting-sites picker
+if (new URLSearchParams(location.search).get('open') === 'dist') { document.body.classList.remove('phone'); $('dist').hidden = false; renderDist(); setTimeout(() => $('dist').scrollIntoView({behavior: 'smooth'}), 300); }
+$('pill').onclick = () => {   // not connected? log in (or type a pairing code)
+  if (!AUTH) { acctMode = 'login'; openPanel('acct'); renderAcct(); return; }
+  const v = (prompt('Pairing code (from ⚙︎ → Connect on your computer):', CODE || '') || '').trim().replace(/[^A-Za-z0-9_-]/g, '');
+  if (!v) return; CODE = v; ls('focusbakery-code', v); const u = new URL(location.href); u.searchParams.set('code', v); history.replaceState(null, '', u); poll();
+};
+// ---- auto-update: notice a new version of this page and reload into it (progress is saved first) ----
+let pageTag = null, updateReady = false;
+async function checkUpdate() {
+  if (location.protocol === 'file:') return;
+  try {
+    const r = await fetch('version', {cache:'no-store'}), tag = (await r.json()).v;
+    if (!tag) return; if (!pageTag) { pageTag = tag; return; }
+    if (tag !== pageTag) { updateReady = true; $('update').hidden = false; tryUpdate(); }
+  } catch (e) {}
+}
+function tryUpdate() {   // reload by itself only when nothing is on screen that a reload would interrupt
+  if (!updateReady || CEL || !$('case').hidden || document.activeElement === $('task') || !$('connect').hidden || !$('todo').hidden || !$('dist').hidden) return;
+  save(); location.reload();
+}
+$('update').onclick = () => { save(); location.reload(); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+setInterval(() => { if (!document.hidden) checkUpdate(); }, 3*60e3); setInterval(tryUpdate, 5e3); checkUpdate();
+// ---- dialogs: one panel at a time inside the sheet ----
+const PANELS = ['acct', 'goal', 'hours', 'connect', 'todo', 'dist', 'menu', 'sim'];
+function openPanel(id) { PANELS.forEach(p => $(p).hidden = p !== id); }
+function closePanels() { PANELS.forEach(p => $(p).hidden = true); }
+const syncSheet = () => { const h = PANELS.every(p => $(p).hidden); if ($('sheet').hidden !== h) $('sheet').hidden = h; };
+new MutationObserver(syncSheet).observe($('sheet').firstElementChild, {subtree: true, attributes: true, attributeFilter: ['hidden']});
+$('sheetClose').onclick = closePanels;
+$('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closePanels(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { closePanels(); $('case').hidden = true; } });
+// ---- the menu: everything that doesn't need to be on screen all the time ----
+function openMenu() { openPanel('menu'); }
+$('menu').addEventListener('click', e => { const b = e.target.closest('[data-case]'); if (b) { closePanels(); openCase(b.dataset.case); } });
+$('goalBtn').onclick = () => { openPanel('goal'); renderGoalPanel(); };
+$('simBtn').onclick = () => { openPanel('sim'); renderModes(); };
+$('tasksBtn').onclick = () => { closePanels(); document.body.classList.remove('phone'); document.body.classList.add('phonefull'); scrollTo(0, 0); };
+$('phoneTask').onclick = e => { if (!document.body.classList.contains('barOpen') || (S.task || '').trim()) return; e.stopPropagation(); $('tasksBtn').click(); };   // only an empty, already-open bar opens the task picker; otherwise a tap just expands/collapses
+// ---- simulator: jump ahead or trigger moments without waiting ----
+function simFocus(mins) {
+  const m = manual; manual = null; closedWhy.wasActive = true;
+  for (let i = 0; i < mins*60; i++) {
+    update(1, 'focused', performance.now()); updateCustomers(1, 'focused');
+    S.today += 1; streak += 1; S.best = Math.max(S.best, streak); S.sinceBreak = (S.sinceBreak || 0) + 1; progressTick(1, 'focused');
+  }
+  manual = m; B.moodT = 0; save(); floats.push({x:W/2, y:110, text:`⏩ ${mins} focused minutes later…`, t:0});
+}
+function simRare() {
+  const c = ['dot', 'cat'].find(k => RIGS[k] && !(S.orders || []).some(o => o.c === k)); if (!c) { floats.push({x:W/2, y:110, text:'Mango and Tango are both here already!', t:0}); return; }
+  streak = Math.max(streak, 45*60); spawnOrder(c); floats.push({x:W/2, y:92, text:`✨ A rare visitor, for your ${fmt(streak)} focus streak!`, t:0});
+}
+function simInvite() {
+  if (shopClosed) setClosedManual(false);
+  S.sinceBreak = Math.max(S.sinceBreak || 0, 50*60);
+  if (VIS && ['enter', 'turn', 'wave'].includes(VIS.state)) { VIS.invite = true; VIS.from = 1; }   // asks as soon as they've said hello
+  else if (VIS && VIS.state !== 'leave') { VIS.story = null; VIS.state = 'invite'; VIS.t = 0; VIS.from = 1; showInvite(VIS.c); }
+  else breakTick();
+}
+function simGoal() {
+  const d = dayLog(), n = S.goal.n;
+  if (S.goal.type === 'focus') d.focus = Math.max(d.focus, n*60); else if (S.goal.type === 'tasks') d.tasks = Math.max(d.tasks || 0, n); else d.bakes = Math.max(d.bakes, n);
+  progressTick(0, 'idle');
+}
+$('sim').addEventListener('click', e => {
+  const b = e.target.closest('[data-sim]'); if (!b) return; const k = b.dataset.sim; closePanels();
+  if (k[0] === 'f') simFocus(+k.slice(1));
+  if (k === 'cust') { if (shopClosed) setClosedManual(false); spawnOrder(); S.nextOrder = BELL_MIN*60*SPEED; }
+  if (k === 'rare') simRare();
+  if (k === 'back') { const m = manual; manual = null; trackComeback('distracted'); trackComeback('focused'); manual = m; }
+  if (k === 'invite') simInvite();
+  if (k === 'endbreak') { if (S.breakUntil) S.breakUntil = Date.now(); else floats.push({x:W/2, y:110, text:'No break with a friend right now', t:0}); }
+  if (k === 'goal') simGoal();
+  if (k === 'fin') previewFinished();
+});
+
+// ---- accounts: log in anywhere, progress follows you ----
+let AUTH = null; try { AUTH = JSON.parse(ls('focusbakery-auth') || 'null'); } catch (e) {}
+async function api(path, opts = {}) {
+  const r = await fetch(SITE + path, {...opts, headers: {'content-type': 'application/json', ...(AUTH ? {authorization: 'Bearer ' + AUTH.token} : {})}});
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401 && AUTH && !path.startsWith('/api/auth/')) { signedOut(); }
+  if (!r.ok) throw new Error(d.error || 'Something went wrong. Try again.');
+  return d;
+}
+function adoptCode(code) {
+  if (!code || code === CODE) return;
+  CODE = code; ls('focusbakery-code', code); $('manifest').href = 'manifest.webmanifest?code=' + code;
+  if (location.protocol !== 'file:') { const u = new URL(location.href); u.searchParams.set('code', code); history.replaceState(null, '', u); }
+  poll();
+}
+function signedOut() { AUTH = null; ls('focusbakery-auth', null); renderAcctBtn(); }
+function renderAcctBtn() { tile($('acctBtn'), '👤', AUTH ? AUTH.email.split('@')[0] : 'Log in'); }
+let acctMode = 'signup', acctErr = '';
+function renderAcct() {
+  const el = $('acct'), esc = t => String(t).replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
+  if (AUTH) {
+    el.innerHTML = `<h2>Your account</h2><p>Logged in as <b>${esc(AUTH.email)}</b>.</p>
+      <p class="muted" style="white-space:normal">Your bakes, coins, customers and task sync to every device you log in on, and your computers connect to it automatically.</p>
+      <div class="chips"><button id="acctSync">↻ Sync now</button><button id="acctOut">Log out</button></div><p class="muted" id="acctMsg" style="margin-top:10px"></p>`;
+    return;
+  }
+  const up = acctMode === 'signup';
+  el.innerHTML = `<h2>${up ? 'Create your bakery account' : 'Welcome back'}</h2>
+    <p class="muted" style="white-space:normal">${up ? 'Save your bakery and use it on your phone and computers. Your current progress comes with you.' : 'Log in to open your bakery on this device.'}</p>
+    <form id="acctForm" style="display:grid;gap:10px;max-width:380px">
+      <input id="acctEmail" type="email" autocomplete="email" placeholder="Email" required>
+      <input id="acctPw" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'Password (8+ characters)' : 'Password'}" required minlength="${up ? 8 : 1}">
+      <button class="primary" type="submit">${up ? 'Create account' : 'Log in'}</button>
+      <small style="color:var(--bad)">${esc(acctErr)}</small>
+    </form>
+    <p>${up ? 'Already have an account?' : 'New here?'} <button class="link" id="acctSwitch" type="button">${up ? 'Log in' : 'Create an account'}</button></p>`;
+}
+$('acctBtn').onclick = () => { acctErr = ''; openPanel('acct'); renderAcct(); };
+$('acct').addEventListener('click', async e => {
+  if (e.target.id === 'acctSwitch') { acctMode = acctMode === 'signup' ? 'login' : 'signup'; acctErr = ''; renderAcct(); }
+  if (e.target.id === 'acctOut') { try { await api('/api/auth/logout', {method: 'POST', body: '{}'}); } catch (_) {} signedOut(); renderAcct(); }
+  if (e.target.id === 'acctSync') { await pullSave(); await pushSave(true); $('acctMsg').textContent = 'Synced ✓'; }
+});
+$('acct').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('acctEmail').value.trim(), password = $('acctPw').value, up = acctMode === 'signup';
+  try {
+    const d = await api(up ? '/api/auth/signup' : '/api/auth/login', {method: 'POST', body: JSON.stringify({email, password, code: up ? CODE : undefined})});
+    AUTH = {token: d.token, email: d.email}; ls('focusbakery-auth', JSON.stringify(AUTH));
+    adoptCode(d.code); renderAcctBtn();
+    if (up) await pushSave(true); else await pullSave(true);
+    closePanels();
+    floats.push({x: W/2, y: 120, text: up ? 'Account created ✓' : 'Welcome back ✓', t: 0});
+  } catch (err) { acctErr = err.message; renderAcct(); $('acctEmail').value = email; }
+});
+// progress sync: the device you're using saves; a device just showing the bakery picks up the latest
+let lastInteract = Date.now(), pushT = null, pushing = false;
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { lastInteract = Date.now(); }, {passive: true}));
+function schedulePush() { if (!AUTH) return; clearTimeout(pushT); pushT = setTimeout(() => pushSave(), 4000); }
+async function pushSave(force) {
+  if (!AUTH || pushing) return;
+  if (!force && (document.visibilityState !== 'visible' || Date.now() - lastInteract > 10*60e3)) return;
+  pushing = true;
+  try { await api('/api/save', {method: 'PUT', body: JSON.stringify({data: S, t: S.savedAt || Date.now()})}); } catch (_) {}
+  pushing = false;
+}
+function applyRemote(data, t) {
+  S = Object.assign(fresh(), data); S.savedAt = t;
+  try { localStorage.setItem('focusbakery-v1', JSON.stringify(S)); } catch (e) {}
+  $('task').value = S.task || ''; renderRecipes(); syncDone(); lastStage = null; B.cool = null;
+  if (!CEL) showNextReward();
+}
+async function pullSave(force) {
+  if (!AUTH) return;
+  try {
+    const r = await api('/api/save');
+    if (r.data && (force || r.t > (S.savedAt || 0) + 1000)) applyRemote(r.data, r.t);
+    else if (!r.data) pushSave(true);
+  } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pullSave(); });
+setInterval(() => { if (!document.hidden && Date.now() - lastInteract > 60e3) pullSave(); }, 30e3);
+renderAcctBtn();
+if (AUTH) api('/api/me').then(me => { adoptCode(me.code); pullSave(); }).catch(() => {});
+// ---- kitchen skins (colour variations of your kitchen until layered artwork arrives) ----
+const SKINS = {classic:{name:'Classic', f:'none', sw:'#f6c9c0'}, mint:{name:'Mint', f:'hue-rotate(95deg) saturate(.9)', sw:'#c8e6cf'}, lavender:{name:'Lavender', f:'hue-rotate(250deg) saturate(.8)', sw:'#d9cdf0'},
+  sky:{name:'Sky', f:'hue-rotate(180deg) saturate(.75)', sw:'#c9def2'}, honey:{name:'Honey', f:'hue-rotate(25deg) saturate(1.1)', sw:'#f4dcae'}, cocoa:{name:'Cocoa', f:'sepia(.45) saturate(1.2) brightness(.92)', sw:'#d7b89a'}};
+function skinFilter() { return (SKINS[S.skin] || SKINS.classic).f; }
+function renderSkins() { if (!$('skins')) return; $('skins').innerHTML = Object.entries(SKINS).map(([k, v]) => { const own = k === 'classic' || (S.owned || {})['skin_' + k]; return `<button data-skin="${k}" title="${v.name}${own ? '' : ' (🪙 40 in the shop)'}" class="${(S.skin || 'classic') === k ? 'on' : ''}" style="background:${v.sw};${own ? '' : 'opacity:.45'}">${own ? '' : '🔒'}</button>`; }).join(''); }
+if ($('skins')) $('skins').onclick = e => { const k = e.target.dataset.skin; if (!k) return; if (k !== 'classic' && !(S.owned || {})['skin_' + k]) { openCase('shop'); return; } S.skin = k; save(); renderSkins(); };
+renderSkins();
+// ======================= progression: goals, streaks, levels, shop, stories, newspaper =======================
+const todayKey = () => new Date().toDateString();
+function dayLog(k = todayKey()) { S.daylog = S.daylog || {}; return S.daylog[k] = S.daylog[k] || {focus:0, best:0, bakes:0, comebacks:0, goalMet:false}; }
+if (!S.started) S.started = Date.now();
+{ const gone = {bowtie:30, glasses:35, flowers:45, scarf:40, lamp:30}; for (const [id, c] of Object.entries(gone)) if ((S.owned || {})[id]) { S.coins += c; delete S.owned[id]; } }   // replaced by new artwork: refund
+// ---- daily goal ----
+const GOALS = [['focus', 60], ['focus', 90], ['focus', 120], ['focus', 180], ['bakes', 2], ['bakes', 3], ['bakes', 4], ['bakes', 6], ['tasks', 1], ['tasks', 3], ['tasks', 5]];
+if (!S.goal) S.goal = {type:'focus', n:120};
+const goalLabel = (g = S.goal) => g.type === 'focus' ? `${g.n >= 60 && g.n % 60 === 0 ? g.n/60 + 'h' : g.n + 'm'} of focus` : g.type === 'tasks' ? `${g.n} task${g.n > 1 ? 's' : ''} done` : `${g.n} bakes`;
+function goalProgress() { const d = dayLog(); return S.goal.type === 'focus' ? Math.min(1, d.focus/60/S.goal.n) : S.goal.type === 'tasks' ? Math.min(1, (d.tasks || 0)/S.goal.n) : Math.min(1, d.bakes/S.goal.n); }
+function goalText() { const d = dayLog(); return S.goal.type === 'focus' ? `${fmt(d.focus)} / ${goalLabel().replace(' of focus', '')}` : S.goal.type === 'tasks' ? `${d.tasks || 0} / ${S.goal.n} tasks` : `${d.bakes} / ${S.goal.n} bakes`; }
+// ---- day streak: days the goal was met; up to 2 missed days per week (Mon–Sun) don't break it ----
+function dayStreak() {
+  let n = 0; const misses = {}, start = new Date(S.started || Date.now()); start.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+    if (d < start) break;
+    const l = (S.daylog || {})[d.toDateString()];
+    if (l && l.goalMet) { n++; continue; }
+    if (i === 0) continue;   // today isn't over yet
+    const wk = new Date(d); wk.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const key = wk.toDateString();
+    if ((misses[key] = (misses[key] || 0) + 1) > 2) break;
+  }
+  return n;
+}
+function daysOffLeft() { const now = new Date(), mon = new Date(now); mon.setHours(0, 0, 0, 0); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7)); let m = 0;
+  for (let d = new Date(mon); d < new Date(new Date().setHours(0, 0, 0, 0)); d.setDate(d.getDate() + 1)) if (d >= new Date(new Date(S.started).setHours(0, 0, 0, 0)) && !((S.daylog || {})[d.toDateString()] || {}).goalMet) m++;
+  return Math.max(0, 2 - m); }
+// ---- bakery levels from lifetime focus ----
+const LEVELS = [{h:0, name:'Home kitchen', unlock:''}, {h:5, name:'Corner bakery', unlock:'Pip the frog now visits'}, {h:20, name:'Village bakery', unlock:'Mango the duckling now visits'}, {h:60, name:'Famous patisserie', unlock:'Bigger tips from everyone'}];
+function level() { const h = (S.life || 0)/3600; let l = 0; LEVELS.forEach((L, i) => { if (h >= L.h) l = i; }); return l + 1; }
+function levelProgress() { const l = level(), h = (S.life || 0)/3600; if (l >= LEVELS.length) return 1; const a = LEVELS[l - 1].h, b = LEVELS[l].h; return (h - a)/(b - a); }
+// ---- shop ----
+const SHOP = {
+  decor: [
+    {id:'rack', name:'Utensil rack', art:'decor/utensil_rack', cost:20, at:[86, 134, 150]}, {id:'shelves', name:'Plant shelves', art:'decor/plant_shelves', cost:55, at:[554, 159, 164]},
+    {id:'flourjar', name:'Flour jar & rolling pin', art:'decor/flour_jar', cost:20, at:[52, 243, 78]},
+    {id:'cwindow', name:'Curtained window', art:'decor/curtained_window', cost:60, at:[222, 188, 70]}, {id:'books', name:'Cookbook shelf', art:'decor/cookbook_shelf', cost:35, at:[212, 116, 76]},
+    {id:'clock', name:'Wall clock', art:'decor/wall_clock', cost:25, at:[420, 112, 44]}, {id:'picture', name:'Cake painting', art:'decor/framed_cake_picture', cost:40, at:[420, 186, 50]},
+    {id:'lights', name:'Fairy lights', art:'decor/fairy_lights', cost:50, at:[318, 96, 190]}, {id:'tulips', name:'Tulips', art:'decor/tulip_vase', cost:20, at:[497, 226, 56]},
+    {id:'radio', name:'Little radio', art:'decor/small_radio', cost:35, at:[196, 238, 46]}, {id:'fruit', name:'Fruit bowl', art:'decor/fruit_bowl', cost:25, at:[124, 237, 52]},
+    {id:'plant', name:'Monstera', art:'decor/potted_monstera', cost:30, at:[30, 360, 62]}, {id:'chalk', name:'Chalkboard menu', art:'decor/chalkboard_menu', cost:30, at:[96, 360, 50]},
+    {id:'catbed', name:'Cat bed', art:'decor/cat_bed', cost:45, at:[196, 360, 76]}],
+  outfit: [
+    {id:'red_beret', name:'Red beret', art:'outfit/red_beret', cost:40, slot:'head'}, {id:'strawberry_hat', name:'Strawberry hat', art:'outfit/strawberry_hat', cost:50, slot:'head'},
+    {id:'flower_crown', name:'Flower crown', art:'outfit/flower_crown', cost:45, slot:'head'}, {id:'round_glasses', name:'Round glasses', art:'outfit/round_glasses', cost:35, slot:'face'},
+    {id:'bow_tie', name:'Bow tie', art:'outfit/bow_tie', cost:30, slot:'neck'}, {id:'striped_scarf', name:'Striped scarf', art:'outfit/striped_scarf', cost:40, slot:'neck'},
+    {id:'pink_apron', name:'Pink apron', art:'outfit/pink_apron', cost:35, slot:'body'}, {id:'blue_apron_with_pocket', name:'Blue apron', art:'outfit/blue_apron_with_pocket', cost:35, slot:'body'}],
+  upgrade: [
+    {id:'oven', name:'Bigger oven', icon:'🔥', art:'upg/oven_double', cost:120, desc:'Bakes go 10% faster'}, {id:'window', name:'Display window', icon:'🪟', art:'upg/display_case', cost:100, desc:'Customers are 20% more patient'},
+    {id:'tipjar', name:'Tip jar', icon:'🫙', art:'rew/coin_pile', cost:80, desc:'Tips are 25% bigger'}, {id:'mat', name:'Comfy mat', icon:'🧘', cost:90, desc:'45 seconds of grace instead of 30'}]
+};
+const GIFTS = {bun:{id:'carrot', name:'Carrot plant (from Bun)', icon:'🥕', at:[120, 335]}, hazel:{id:'shroom', name:'Mushroom lamp (from Hazel)', icon:'🍄', at:[318, 210]}, mo:{id:'honey', name:'Honey jar (from Mo)', icon:'🍯', at:[455, 210]}, pip:{id:'balloon', name:'Party balloon (from Pip)', icon:'🎈', at:[600, 120]}, cat:{id:'yarn', name:'Ball of yarn (from Tango)', icon:'🧶', at:[200, 335]}, dot:{id:'umbrella', name:'Little umbrella (from Mango)', icon:'☂️', at:[560, 330]}};
+const STORIES = {bun:'Bun says: “I share your cookies with my seven little brothers. They think you’re famous!”', hazel:'Hazel says: “I used to be too shy to come in. Now this is my favourite place in town.”',
+  mo:'Mo says: “I take your bread on long walks in the woods. It’s the best part of my week.”', pip:'Pip says: “Every party I throw has one of your cakes. Everyone asks where it’s from.”', cat:'Tango says: “I nap in your window every afternoon. It’s the warmest spot in town.”', dot:'Mango says: “I flew south for winter but came back early. I missed your croissants.”'};
+const owned = id => !!(S.owned || {})[id], equipped = id => !!(S.equip || {})[id];
+const upg = id => owned(id);
+const bakeMult = () => upg('oven') ? 1.1 : 1, patMult = () => upg('window') ? 1.2 : 1, tipMult = () => (upg('tipjar') ? 1.25 : 1)*(level() >= 4 ? 1.2 : 1);
+function shopItem(id) { return [...SHOP.decor, ...SHOP.outfit, ...SHOP.upgrade, ...Object.values(GIFTS)].find(x => x.id === id); }
+function buy(id) {
+  const it = shopItem(id); if (!it || owned(id) || S.coins < it.cost) return false;
+  S.coins -= it.cost; (S.owned = S.owned || {})[id] = true; S.equip = S.equip || {};
+  if (it.slot) SHOP.outfit.filter(o => o.slot === it.slot).forEach(o => { S.equip[o.id] = false; });
+  S.equip[id] = true; coinSound(); save(); return true;
+}
+// decorations + outfit pieces drawn in the scene
+function drawDecor(now) {
+  const items = [...SHOP.decor, ...Object.values(GIFTS)].filter(it => equipped(it.id));
+  items.sort((a, b) => (a.id === 'rug' ? -1 : 0) - (b.id === 'rug' ? -1 : 0));
+  for (const it of items) {
+    const im = it.art && art(it.art);
+    if (ok(im)) { const [x, y, w] = it.at, h = w*im.naturalHeight/im.naturalWidth; ctx.drawImage(im, x - w/2, y - h, w, h); continue; }
+    if (it.icon) { ctx.font = '26px system-ui'; ctx.textAlign = 'center'; ctx.fillText(it.icon, it.at[0], it.at[1]); ctx.textAlign = 'start'; }
+  }
+}
+// outfits share the cat's 1278x1230 canvas; offsets are each layer's top-left there
+const OUTFIT_AT = {bow_tie:[539, 690], strawberry_hat:[369, 249], pink_apron:[391, 700], striped_scarf:[391, 709], blue_apron_with_pocket:[398, 700], red_beret:[538, 313], round_glasses:[427, 553], flower_crown:[408, 379]};
+function drawOutfitLayer(id) { const im = art('outfit/' + id), at = OUTFIT_AT[id]; if (!ok(im)) return; ctx.drawImage(im, (at[0] - SRC.cx)*SRC.s, (at[1] - SRC.cy)*SRC.s, im.naturalWidth*.4, im.naturalHeight*.4); }
+const worn = slot => SHOP.outfit.find(o => o.slot === slot && equipped(o.id));
+function drawOutfit() { for (const slot of ['body', 'neck', 'face']) { const o = worn(slot); if (o) drawOutfitLayer(o.id); } }
+function wearingHat() { return !!worn('head'); }
+function drawHeadwear() { const o = worn('head'); if (o) drawOutfitLayer(o.id); }
+// ---- rewards that queue up for "tap to collect" ----
+function queueReward(r) { (S.pending = S.pending || []).push(r); if (!CEL) showNextReward(); save(); }
+function onBaked() { dayLog().bakes++; }
+function friendshipMoments(c, before, after) {
+  if (before < 3 && after >= 3) queueReward({kind:'story', critter:c, title:`${CUSTOMERS[c].name} opened up`, sub:STORIES[c], coins:0});
+  if (before < 5 && after >= 5 && GIFTS[c]) { (S.owned = S.owned || {})[GIFTS[c].id] = true; (S.equip = S.equip || {})[GIFTS[c].id] = true;
+    queueReward({kind:'gift', art:'rew/gift_box', icon:GIFTS[c].icon, title:`A gift from ${CUSTOMERS[c].name}!`, sub:`${GIFTS[c].name}, now in your kitchen`, coins:10}); }
+}
+// ---- comebacks ("phew!") ----
+let prevEff = 'focused';
+function trackComeback(eff) {
+  if (prevEff === 'distracted' && eff === 'focused' && !manual) {   // quick glances (grace) don't count
+    floats.push({x:B.x, y:120, text:'Phew! 😮‍💨 welcome back', t:0});
+    if (VIS && VIS.state === 'wait') { VIS.state = 'act'; VIS.act = 'cheer'; VIS.t = 0; }   // whoever's waiting is happy you're back
+    { B.mood = 'joy'; B.moodT = 1.5; const d = dayLog(); d.comebacks++;
+      if (d.comebacks === 3) queueReward({kind:'bonus', art:'rew/star_badge', icon:'💪', title:'Comeback kid!', sub:'You came back 3 times today. That’s the skill that counts.', coins:10}); save(); }
+  }
+  prevEff = eff;
+}
+// ---- per-tick bookkeeping: focus totals, goal, level ----
+function progressTick(rdt, sim) {
+  if (sim === 'focused' && Math.floor(((S.life || 0) + rdt)/(CHAPTER_H*3600)) > Math.floor((S.life || 0)/(CHAPTER_H*3600)) && Math.floor((S.life || 0)/(CHAPTER_H*3600)) < 3)
+    floats.push({x:W/2, y:96, text:'📖 New chapters unlocked in your friends’ stories', t:0});
+  if (sim === 'focused') { S.life = (S.life || 0) + rdt; const d = dayLog(); d.focus += rdt; d.best = Math.max(d.best, streak); }
+  const d = dayLog();
+  if (!d.goalMet && goalProgress() >= 1) { d.goalMet = true; const st = dayStreak();
+    goalGuest();
+    queueReward({kind:'chest', icon:'🎁', art:'rew/chest_closed', title:'Daily goal reached!', sub:`${goalLabel()} done · 🔥 ${st} day streak`, coins:15 + 5*Math.min(st, 10)}); }
+  const l = level();
+  if (l > (S.lvlSeen || 1)) { S.lvlSeen = l; queueReward({kind:'level', art:'rew/trophy', icon:['🏠', '🥐', '🏘️', '🏰'][l - 1], title:`Level ${l}: ${LEVELS[l - 1].name}!`, sub:LEVELS[l - 1].unlock, coins:25*l}); }
+}
+// ---- special orders: a big order with a deadline, now and then ----
+const OCCASIONS = [['cake', '🎂 Birthday', 'special/birthday_cake'], ['bread', '🧺 Picnic', ''], ['muffins', '🎉 Party', ''], ['cake', '💐 Wedding', 'special/wedding_cake'], ['cookies', '⭐ Bake sale', 'special/gift_wrapped_macarons']];
+const SPECIAL_ART = Object.fromEntries(OCCASIONS.filter(o => o[2]).map(o => [o[1], o[2]]));
+function maybeSpecial(rdt) {
+  if (S.specialDay === todayKey() || (S.orders || []).length >= MAX_ORDERS || (S.orders || []).some(o => o.special)) return;
+  if (Math.random() > rdt/(40*60)) return;   // about once per 40 minutes of work, at most once a day
+  const pool = Object.entries(CUSTOMERS).filter(([k, c]) => (c.lvl || 1) <= level() && !(S.orders || []).some(o => o.c === k));
+  if (!pool.length) return;
+  const [k, c] = pool[Math.random()*pool.length|0], occ = OCCASIONS[Math.random()*OCCASIONS.length|0], R = RECIPES[occ[0]];
+  const pat = (R.time + 45*60)*patMult();
+  S.orders.push({id:Date.now(), c:k, r:occ[0], pat, max:pat, tip:Math.round(R.sell*2*tipMult()), special:occ[1]});
+  S.specialDay = todayKey();
+  floats.push({x:W/2, y:110, text:`${occ[1]} order from ${c.name}: ${R.name.toLowerCase()}!`, t:0}); chime(2); save();
+}
+// ---- header: goal ring, day streak, level ----
+function renderGoalHud() {
+  const p = goalProgress(), C = 2*Math.PI*15;
+  $('goalRing').style.strokeDashoffset = C*(1 - p); $('goalTxt').textContent = goalText();
+  $('goalKpi').classList.toggle('done', p >= 1);
+  $('dayStreak').textContent = `🔥 ${dayStreak()}`; $('daysOff').textContent = `${daysOffLeft()} day${daysOffLeft() === 1 ? '' : 's'} off left`;
+  const l = level(); $('lvlName').textContent = `Lv ${l} · ${LEVELS[l - 1].name}`; $('lvlBar').style.width = Math.round(levelProgress()*100) + '%';
+}
+function renderGoalPanel() {
+  $('goal').innerHTML = `<h2>🎯 Daily goal</h2><p class="muted" style="white-space:normal">Close the ring each day to grow your streak and open a bonus chest. You can miss up to 2 days a week without losing your streak.</p>
+    <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">FOCUS TIME</h3><div class="chips">${GOALS.filter(g => g[0] === 'focus').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${goalLabel({type:t, n}).replace(' of focus', '')}</button>`).join('')}</div>
+    <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">BAKES</h3><div class="chips">${GOALS.filter(g => g[0] === 'bakes').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${n} bakes</button>`).join('')}</div>
+    <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">TASKS DONE</h3><div class="chips">${GOALS.filter(g => g[0] === 'tasks').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${n} task${n > 1 ? 's' : ''}</button>`).join('')}</div>
+    <p class="muted" style="margin-top:14px">Today: ${goalText()} · 🔥 ${dayStreak()} day streak · ${daysOffLeft()} days off left this week</p>`;
+}
+$('goal').addEventListener('click', e => { const g = e.target.dataset.goal; if (!g) return; const [type, n] = g.split(':'); S.goal = {type, n:+n}; save(); renderGoalPanel(); renderGoalHud(); });
+$('goalKpi').onclick = () => { openPanel('goal'); renderGoalPanel(); };
+// ---- shop tab ----
+function shopHTML() {
+  const card = (it, kind) => { const own = owned(it.id), on = equipped(it.id);
+    return `<div class="shopc ${own ? 'own' : ''}">${it.art ? `<img class="ic" src="art/${it.art}.png" alt="">` : `<span class="ic">${it.icon}</span>`}<b>${it.name}</b><small>${it.desc || ({decor:'Decoration', outfit:'For the cat'}[kind])}</small>
+      ${own ? (kind === 'upgrade' ? '<em>✓ Installed</em>' : `<button data-equip="${it.id}" class="${on ? 'on' : ''}">${on ? '✓ Showing' : 'Show'}</button>`) : `<button data-buy="${it.id}" ${S.coins < it.cost ? 'disabled' : ''}>🪙 ${it.cost}</button>`}</div>`; };
+  const gifts = Object.values(GIFTS).filter(g => owned(g.id));
+  return `<h2>🛍️ Shop</h2><p class="sub">🪙 ${S.coins} to spend · earn more by baking, serving customers and closing your daily ring</p>
+    <b>Upgrades</b><div class="shopg">${SHOP.upgrade.map(it => card(it, 'upgrade')).join('')}</div>
+    <b>Decorations</b><div class="shopg">${SHOP.decor.map(it => card(it, 'decor')).join('')}</div>
+    <b>For the cat</b><div class="shopg">${SHOP.outfit.map(it => card(it, 'outfit')).join('')}</div>
+    <b>Kitchen colours</b><div class="shopg">${Object.entries(SKINS).map(([k, v]) => { const own = k === 'classic' || owned('skin_' + k);
+      return `<div class="shopc ${own ? 'own' : ''}"><span class="ic" style="display:inline-block;width:34px;height:34px;border-radius:50%;background:${v.sw};border:2px solid #fff;box-shadow:0 0 0 1px #dcc6ab"></span><b>${v.name}</b><small>Kitchen colour</small>
+        ${own ? `<button data-skinpick="${k}" class="${(S.skin || 'classic') === k ? 'on' : ''}">${(S.skin || 'classic') === k ? '✓ Using' : 'Use'}</button>` : `<button data-buyskin="${k}" ${S.coins < 40 ? 'disabled' : ''}>🪙 40</button>`}</div>`; }).join('')}</div>
+    ${gifts.length ? `<b>Gifts from friends</b><div class="shopg">${gifts.map(g => `<div class="shopc own"><span class="ic">${g.icon}</span><b>${g.name}</b><small>Gift</small><button data-equip="${g.id}" class="${equipped(g.id) ? 'on' : ''}">${equipped(g.id) ? '✓ Showing' : 'Show'}</button></div>`).join('')}</div>` : ''}`;
+}
+$('case').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.buy) { buy(b.dataset.buy); openCase('shop'); }
+  if (b.dataset.equip) { const id = b.dataset.equip, on = !equipped(id), it = SHOP.outfit.find(o => o.id === id); S.equip = S.equip || {};
+    if (on && it) SHOP.outfit.filter(o => o.slot === it.slot).forEach(o => { S.equip[o.id] = false; });
+    S.equip[id] = on; save(); openCase('shop'); }
+  if (b.dataset.buyskin) { if (S.coins >= 40) { S.coins -= 40; (S.owned = S.owned || {})['skin_' + b.dataset.buyskin] = true; S.skin = b.dataset.buyskin; coinSound(); save(); renderSkins(); } openCase('shop'); }
+  if (b.dataset.skinpick) { S.skin = b.dataset.skinpick; save(); renderSkins(); openCase('shop'); }
+  if (b.id === 'newsCopy') navigator.clipboard?.writeText(newsText()).then(() => { b.textContent = 'Copied ✓'; });
+});
+// ---- weekly newspaper ----
+function weekData(offset = 0) {   // offset 0 = this week, 1 = last week (Mon–Sun)
+  const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7) - 7*offset);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
+  const keys = new Set(days.map(d => d.toDateString())), inWk = t => keys.has(new Date(t).toDateString());
+  const logs = days.map(d => ({d, l:(S.daylog || {})[d.toDateString()] || {focus:0, best:0, bakes:0, comebacks:0}}));
+  const hist = (S.hist || []).filter(h => inWk(h.t)), led = (S.ledger || []).filter(x => inWk(x.t));
+  const best = logs.reduce((m, x) => x.l.focus > m.l.focus ? x : m, logs[0]);
+  const cust = led.filter(x => x.c).reduce((m, x) => (m[x.c] = (m[x.c] || 0) + 1, m), {}), topC = Object.entries(cust).sort((a, b) => b[1] - a[1])[0];
+  return {mon, days, bakes:hist.length, focus:logs.reduce((m, x) => m + x.l.focus, 0), best, longest:Math.max(0, ...logs.map(x => x.l.best)), coins:led.reduce((m, x) => m + x.coins, 0),
+    goals:logs.filter(x => x.l.goalMet).length, comebacks:logs.reduce((m, x) => m + (x.l.comebacks || 0), 0), tasks:logs.reduce((m, x) => m + (x.l.tasks || 0), 0), doneList:(S.doneLog || []).filter(x => inWk(x.t)).map(x => x.text), topC, perfect:hist.filter(h => h.q > .85).length, kinds:[...new Set(hist.map(h => h.r))]};
+}
+let newsWeek = 0;
+function newsText() { const w = weekData(newsWeek); return `🥐 Focus Bakery weekly (${w.mon.toLocaleDateString(undefined, {month:'short', day:'numeric'})}): ${w.bakes} bakes, ${fmt(w.focus)} focused, best day ${w.best.l.focus ? w.best.d.toLocaleDateString(undefined, {weekday:'long'}) : 'none yet'}, longest focus streak ${fmt(w.longest)}, ${w.goals}/7 daily goals${w.topC ? `, favourite customer ${CUSTOMERS[w.topC[0]].name}` : ''}.`; }
+function newsHTML() {
+  const w = weekData(newsWeek), day = d => d.toLocaleDateString(undefined, {weekday:'long'}), mx = Math.max(1, ...w.days.map(d => ((S.daylog || {})[d.toDateString()] || {}).focus || 0));
+  const head = w.bakes >= 10 ? 'Bakery booming!' : w.bakes >= 4 ? 'A busy week at the bakery' : w.bakes ? 'The ovens are warming up' : 'A quiet week on Main Street';
+  return `<div class="news"><div class="masthead"><small>${w.mon.toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})} · ${newsWeek ? 'last week' : 'this week so far'}</small><h1>The Bakery Gazette</h1></div>
+    <h2>${head}</h2>
+    <p class="lede">${w.bakes} bake${w.bakes === 1 ? '' : 's'} came out of the oven, with <b>${fmt(w.focus)}</b> of focus${w.best.l.focus ? `. <b>${day(w.best.d)}</b> was the star day with ${fmt(w.best.l.focus)}` : ''}. The longest unbroken focus stretch lasted <b>${fmt(w.longest)}</b>.</p>
+    <div class="stats"><div class="stat"><b>${w.bakes}</b><small>bakes</small></div><div class="stat"><b>${fmt(w.focus)}</b><small>focused</small></div><div class="stat"><b>${w.goals}/7</b><small>daily goals</small></div><div class="stat"><b>${w.coins}</b><small>coins earned</small></div></div>
+    <b>Focus by day</b><div class="chart">${w.days.map(d => { const f = ((S.daylog || {})[d.toDateString()] || {}).focus || 0; return `<div><i style="height:${Math.round(f/mx*100)}%"></i><span>${f ? fmt(f) : ''}</span><small>${d.toLocaleDateString(undefined, {weekday:'short'}).slice(0, 2)}</small></div>`; }).join('')}</div>
+    <div class="cols"><p>👑 <b>Customer of the week:</b> ${w.topC ? `${CUSTOMERS[w.topC[0]].name}, served ${w.topC[1]} time${w.topC[1] > 1 ? 's' : ''}` : 'still waiting for a first visit'}.</p>
+    <p>✅ <b>Tasks done:</b> ${w.tasks}${w.doneList.length ? `: ${w.doneList.slice(-5).map(t => t.replace(/[<&]/g, '')).join(' · ')}` : ''}.</p>
+    <p>⭐ <b>Perfect bakes:</b> ${w.perfect}.</p><p>💪 <b>Comebacks:</b> ${w.comebacks} time${w.comebacks === 1 ? '' : 's'} you drifted off and came back.</p>
+    <p>🔥 <b>Streak:</b> ${dayStreak()} day${dayStreak() === 1 ? '' : 's'}. 🥐 <b>Your bakery:</b> ${LEVELS[level() - 1].name}.</p></div>
+    <div class="chips"><button data-newsweek="1" class="${newsWeek ? 'on' : ''}">Last week</button><button data-newsweek="0" class="${newsWeek ? '' : 'on'}">This week</button><button id="newsCopy">📋 Copy to share</button></div></div>`;
+}
+$('case').addEventListener('click', e => { const b = e.target.closest('[data-newsweek]'); if (b) { newsWeek = +b.dataset.newsweek; openCase('news'); } });
+// Monday morning: the paper for last week is on the counter
+{ const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+  if (new Date().getDay() === 1 && S.newsSeen !== mon.toDateString() && (S.hist || []).length) { S.newsSeen = mon.toDateString(); newsWeek = 1; setTimeout(() => openCase('news'), 1500); } }
+renderGoalHud();
+
+
+// ---- opening hours: the bakery closes (and lets the screen sleep) when you're not at your desk ----
+if (!S.hours) S.hours = {on:false, days:[1, 2, 3, 4, 5], start:9, end:18, away:10, sleep:true};
+let awaySince = 0, openOverride = 0;
+const hh = h => `${((h + 11) % 12) + 1}${h % 24 < 12 ? 'am' : 'pm'}`;
+function inHours(d = new Date()) { const H = S.hours; if (!H.on) return true; const h = d.getHours() + d.getMinutes()/60; return H.days.includes(d.getDay()) && h >= H.start && h < H.end; }
+function nextOpen() { const H = S.hours; for (let i = 0; i < 8; i++) { const d = new Date(); d.setDate(d.getDate() + i); d.setHours(H.start, 0, 0, 0); if (d > new Date() && H.days.includes(d.getDay())) return d; } return null; }
+function closedWhy(raw) {
+  const now = Date.now();
+  if (S.closedManual) return 'manual';
+  const away = (raw === 'idle' && !trackerWhy) || (CODE && !trackerRaw && !manual && !pcOff);
+  if (away) { if (!awaySince) { awaySince = now; if (closedWhy.wasActive) openOverride = 0; } closedWhy.wasActive = false; } else { awaySince = 0; closedWhy.wasActive = true; }   // leaving again ends a tap-to-open
+  if (now < openOverride) return '';
+  if (!inHours()) return 'hours';
+  if (S.hours.away && awaySince && now - awaySince >= S.hours.away*60e3) return 'away';
+  return '';
+}
+function drawClosed(now) {
+  if (!shopClosed) return;
+  drawBreak(now);
+  if (breakBusy()) return;   // break room: no big sign while you play
+  ctx.fillStyle = 'rgba(40,30,55,.62)'; ctx.fillRect(0, 0, W, H);
+  const cx = W/2, cy = 150, sw = Math.sin(now/900)*.05;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(sw);
+  ctx.strokeStyle = '#d9c7b0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-40, -38); ctx.lineTo(0, -64); ctx.lineTo(40, -38); ctx.stroke();
+  shape('#fffaf2', rr(-110, -38, 220, 78, 16), CINK, 3); shape('#f7b6c2', rr(-102, -30, 204, 62, 11), null);
+  ctx.textAlign = 'center'; ctx.fillStyle = CINK; ctx.font = '600 26px Fredoka, system-ui'; ctx.fillText('Closed 💤', 0, 2);
+  const no = nextOpen(), sub = shopClosed === 'hours' && no ? `Opens ${no.toDateString() === new Date().toDateString() ? '' : no.toLocaleDateString(undefined, {weekday:'short'}) + ' '}${hh(S.hours.start)}` : shopClosed === 'away' ? 'Back when you are' : 'Closed for now';
+  ctx.font = '600 13px system-ui'; ctx.fillText(sub, 0, 24); ctx.restore();
+  ctx.fillStyle = '#fffaf2cc'; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Tap to take a break with Bingsu', cx, H - 22); ctx.textAlign = 'start';
+}
+function renderHours() {
+  const H = S.hours, D = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'], opt = (v, cur, l) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${l}</option>`;
+  $('hours').innerHTML = `<h2>🕘 Opening hours</h2><p class="muted" style="white-space:normal">While the bakery is closed nothing bakes, customers don’t wait and your phone screen is allowed to sleep. Nothing is lost.</p>
+    <h3 class="lbl">Close when I’ve been away for</h3><div class="chips">${[[5, '5 min'], [10, '10 min'], [20, '20 min'], [30, '30 min'], [0, 'Never']].map(([v, l]) => `<button data-away="${v}" class="${H.away === v ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <h3 class="lbl">Only open during set hours</h3><div class="chips"><button data-hon="1" class="${H.on ? 'on' : ''}">On</button><button data-hon="0" class="${H.on ? '' : 'on'}">Off</button></div>
+    ${H.on ? `<div class="chips" style="margin-top:8px">${D.map((d, i) => `<button data-day="${i}" class="${H.days.includes(i) ? 'on' : ''}">${d}</button>`).join('')}</div>
+      <div class="row" style="margin-top:8px;align-items:center">From <select id="hStart">${[...Array(24)].map((_, h) => opt(h, H.start, hh(h))).join('')}</select> to <select id="hEnd">${[...Array(24)].map((_, h) => opt(h + 1, H.end, hh(h + 1))).join('')}</select></div>` : ''}
+    <h3 class="lbl">Breaks with friends last</h3><div class="chips">${[5, 10, 15].map(v => `<button data-brk="${v}" class="${(H.brk || 5) === v ? 'on' : ''}">${v} min</button>`).join('')}</div>
+    <h3 class="lbl">While closed</h3><div class="chips"><button data-sleep="1" class="${H.sleep ? 'on' : ''}">Let the screen sleep</button><button data-sleep="0" class="${H.sleep ? '' : 'on'}">Keep a dim “Closed” sign</button></div>
+    <p style="margin-top:16px"><button class="primary" id="closeNow">${S.closedManual ? '🔓 Open the bakery' : '🔒 Close the bakery now'}</button></p>`;
+}
+$('hours').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const H = S.hours;
+  if (b.dataset.away) H.away = +b.dataset.away;
+  if (b.dataset.hon) H.on = b.dataset.hon === '1';
+  if (b.dataset.day) { const d = +b.dataset.day; H.days = H.days.includes(d) ? H.days.filter(x => x !== d) : H.days.concat(d); }
+  if (b.dataset.brk) H.brk = +b.dataset.brk;
+  if (b.dataset.sleep) H.sleep = b.dataset.sleep === '1';
+  if (b.id === 'closeNow') { setClosedManual(!S.closedManual); closePanels(); return; }
+  save(); renderHours(); applyWake();
+});
+$('hours').addEventListener('change', e => { if (e.target.id === 'hStart') S.hours.start = +e.target.value; if (e.target.id === 'hEnd') S.hours.end = +e.target.value; save(); });
+function setClosedManual(v) { S.closedManual = v; openOverride = v ? 0 : Date.now() + 60*60e3; awaySince = 0; save(); shopClosed = v ? 'manual' : ''; applyWake(); }
+$('hoursBtn').onclick = () => { openPanel('hours'); renderHours(); };
+$('closeBtn').onclick = $('closeBtn2').onclick = () => { closePanels(); setClosedManual(true); };
+// the bakery is only open while its app is on screen: leaving it closes the shop, coming back reopens it
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); save(); return; }
+  last = performance.now();   // time away never counts as baking or waiting
+  if (hiddenAt && Date.now() - hiddenAt > 60e3) { floats.push({x:W/2, y:120, text:'Bakery reopened 🥐', t:0}); awaySince = 0; }
+  hiddenAt = 0; poll();
+});
+
+// ---- visitors: rigged customers walk in, turn to you, wave, wait, cheer when served and walk out ----
+// customers are drawn in code (animator/critters.js): crisp at any size, nothing to load
+const RIGS = {dot: 'duck', bun: 'bunny', hazel: 'hedgehog', mo: 'bear', pip: 'frog', cat: 'cat'};
+const CRIT = {}; const critter = c => CRIT[c] || (CRIT[c] = new BakeryCritters.Critter(RIGS[c]));
+let VIS = null;   // {c, state, t, x}
+const VIS_H = 215, ENTER = 2.6, TURN = .6, WAVE = 1.8, CHEER = 2.2, LEAVE = 2.8;
+const visStop = () => { const v = sceneView(); return Math.max(v.x0 + 95, Math.min(v.x1 - 95, v.x0 + (v.x1 - v.x0)*.2)); };
+function pickVisitor() {   // the waiting customer who has a rig, longest waiting first
+  if (VIS) return;
+  const o = (S.orders || []).filter(o => RIGS[o.c]).sort((a, b) => (b.story ? 1 : 0) - (a.story ? 1 : 0) || a.pat - b.pat)[0];
+  if (o) { VIS = {c:o.c, state:'enter', t:0, x:sceneView().x0 - 110}; if (o.story) { delete o.story; VIS.queuedStory = startStory; } }
+}
+function visitorLeaves(c, why) { if (VIS && VIS.c === c && VIS.state !== 'leave') { VIS.state = why === 'served' ? 'served' : 'upset'; VIS.t = 0; } }
+let visLast = 0;
+function drawVisitor(now) {
+  const dt = Math.min(.1, (now - (visLast || now))/1000); visLast = now;
+  pickVisitor(); if (!VIS) return;
+  if (!RIGS[VIS.c]) { VIS = null; return; }
+  const V = VIS, stop = visStop(), o = (S.orders || []).find(x => x.c === V.c);
+  V.t += dt;
+  let A = 'idle', at = V.t, dir = 0;   // action and its clock
+  if (V.state === 'enter') { V.x = Math.min(stop, V.x + (stop - (sceneView().x0 - 110))/ENTER*dt); A = 'walk'; at = now/1000; dir = 1;
+    if (V.x >= stop - .5) { V.state = 'wave'; V.t = 0; } }
+  else if (V.state === 'turn') { V.state = 'wave'; V.t = 0; }
+  else if (V.state === 'wave') { A = 'wave'; if (V.t >= WAVE) { if (V.invite) { V.invite = false; V.state = 'invite'; showInvite(V.c); } else if (V.queuedStory) { const f = V.queuedStory; V.queuedStory = null; f(); } else if (V.queued) { V.state = 'act'; V.act = V.queued; V.queued = null; } else V.state = 'wait'; V.t = 0; } }
+  else if (V.state === 'story') { const bt = V.story.beats[V.story.i] || {}; A = bt.act || 'idle'; at = V.story.t;
+    if (bt.who === 'bingsu') { B.mood = bt.mood || 'happy'; B.moodT = .2; A = 'idle'; at = now/1000; dir = 1; }
+    V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
+  else if (V.state === 'act') { A = V.act; if (V.t >= 2.4) { V.state = 'wait'; V.t = 0; } }
+  else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1;
+    A = f < .3 || lastEff === 'distracted' ? 'impatient' : 'idle'; at = now/1000; }
+  else if (V.state === 'served') { A = 'cheer'; if (V.t >= CHEER) { V.t = 0; if (wantsBreak()) { V.state = 'invite'; showInvite(V.c); } else V.state = 'leave'; } }
+  else if (V.state === 'invite') { A = 'idle'; at = now/1000; dir = 1; if (V.t > 60) { declineBreak(); } }
+  else if (V.state === 'upset') { A = 'impatient'; if (V.t >= 1.4) { V.state = 'leave'; V.t = 0; } }
+  else if (V.state === 'leave') { V.x -= (stop - (sceneView().x0 - 110))/LEAVE*dt; A = 'walk'; at = now/1000; dir = -1;
+    if (V.x < sceneView().x0 - 120) { VIS = null; return; } }
+  // drawn straight into the scene as vector shapes: crisp at any screen size
+  const feet = 372;   // feet just below the frame: standing right at the counter, head above it
+  critter(V.c).draw(ctx, A, at, dt, V.x, feet, VIS_H*.86, dir);
+  if (V.state === 'wait' && o) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#5d5049'; const b = `${CUSTOMERS[V.c].name} · ⏳${Math.max(0, Math.ceil(o.pat/SPEED/60))}m`; const w = ctx.measureText(b).width + 14;
+    const ty = feet - VIS_H*.9 - 24; shape('#fffaf2', rr(V.x - w/2, ty, w, 18, 9), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(b, V.x, ty + 13); ctx.textAlign = 'start'; }
+  V.hit = [V.x - 60, feet - VIS_H, V.x + 60, feet];
+  if (V.state === 'story') drawStoryBubble(V, feet);
+  if (V.state === 'invite') bubble(V.from ? 'You’ve been working so hard! Come sit with me? ☕' : 'Got a minute? Come sit with me! ☕', V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f');
+}
+
+function bringIn(c) {
+  if (shopClosed) breakTouch = Date.now();   // visiting during a break keeps the bakery closed
+  if (VIS && VIS.c === c) return;
+  VIS = {c, state:'enter', t:0, x:sceneView().x0 - 110, puppet:!(S.orders || []).some(o => o.c === c)};
+}
+// gather the phone's round buttons into one dock
+['caseBtn', 'closeBtn', 'gear'].forEach(id => { const el = $(id); if (el) $('dock').appendChild(el); });
+
+// ---- little stories: Mango and Bingsu chat, one scene at a time ----
+const STORIES2 = {dot:[
+  {title:'Hello, Mango', beats:[
+    {who:'dot', act:'lookAround', say:'Hello? Is this the new bakery?'},
+    {who:'bingsu', say:'Welcome! I’m Bingsu. Come in, come in!'},
+    {who:'dot', act:'wave', say:'I’m Mango! I waddled all the way from the pond.'},
+    {who:'dot', act:'turn', say:'Something smells… amazing.'},
+    {who:'bingsu', say:'Croissants! They take a while, but they’re worth it.'},
+    {who:'dot', act:'excited', say:'I can wait! I’m very patient.'},
+    {who:'dot', act:'impatient', say:'…', wait:1.6},
+    {who:'dot', act:'impatient', say:'Are they ready yet?'},
+    {who:'bingsu', mood:'joy', say:'Not yet! They bake faster when I stay focused.'},
+    {who:'dot', act:'cheer', say:'Then I’ll cheer you on! Go, Bingsu, go!'}]},
+  {title:'The picnic', beats:[
+    {who:'dot', act:'hop', say:'Bingsu! Big news!'},
+    {who:'bingsu', say:'Oh? What is it?'},
+    {who:'dot', act:'dance', say:'I’m throwing a picnic by the pond!'},
+    {who:'bingsu', say:'That sounds lovely. Who’s coming?'},
+    {who:'dot', act:'excited', say:'Everyone! The frogs, the snails, my auntie…'},
+    {who:'dot', act:'bow', say:'Would you bake something special for it?'},
+    {who:'bingsu', mood:'joy', say:'Leave it to me.'},
+    {who:'dot', act:'cheer', say:'Yay! You’re the best baker in town!'}]},
+  {title:'A rainy morning', beats:[
+    {who:'dot', act:'doze', say:'Mornin’… the rain kept me up all night.'},
+    {who:'bingsu', say:'Oh no. Here, have a warm bun, on the house.'},
+    {who:'dot', act:'lookAround', say:'Mmm… it’s still warm…'},
+    {who:'dot', act:'excited', say:'I feel SO much better!'},
+    {who:'bingsu', mood:'joy', say:'Nothing a fresh bake can’t fix.'},
+    {who:'dot', act:'wave', say:'Thank you, Bingsu. See you tomorrow!'}]},
+  {title:'Big dreams', beats:[
+    {who:'dot', act:'turn', say:'Bingsu… can I tell you a secret?'},
+    {who:'bingsu', say:'Of course.'},
+    {who:'dot', act:'bow', say:'I want to be a baker one day. Like you.'},
+    {who:'bingsu', mood:'joy', say:'Then you can watch me work. Bakers learn by watching.'},
+    {who:'dot', act:'hop', say:'Really?! I’ll be the best apprentice ever!'},
+    {who:'dot', act:'lookAround', say:'Lesson one: stay focused… right?'},
+    {who:'bingsu', mood:'joy', say:'You’re a natural.'},
+    {who:'dot', act:'cheer', say:'Hooray!'}]}
+], bun:[
+  {title:'Seven little brothers', beats:[
+    {who:'bun', act:'hop', say:'Bingsu! Bingsu! Guess what!'},
+    {who:'bingsu', say:'What is it, Bun?'},
+    {who:'bun', act:'excited', say:'My brothers want to meet the famous baker!'},
+    {who:'bun', act:'lookAround', say:'They’re… um… outside. All seven of them.'},
+    {who:'bingsu', mood:'joy', say:'Bring them in! I’ll bake extra cookies.'},
+    {who:'bun', act:'dance', say:'Best. Day. EVER!'}]},
+  {title:'The cookie count', beats:[
+    {who:'bun', act:'lookAround', say:'One for me, one for Hop, one for Flop…'},
+    {who:'bun', act:'turn', say:'…one for Dot, one for Dash, one for Bounce…'},
+    {who:'bun', act:'impatient', say:'Wait. Who did I forget?'},
+    {who:'bingsu', say:'Maybe… you?'},
+    {who:'bun', act:'cheer', say:'Oh! Two for me, then!'},
+    {who:'bingsu', mood:'joy', say:'That’s not how counting works!'}]},
+  {title:'A carrot cake idea', beats:[
+    {who:'bun', act:'bow', say:'Bingsu, can I ask you something serious?'},
+    {who:'bingsu', say:'Of course.'},
+    {who:'bun', act:'excited', say:'What if… cookies… but CARROT?'},
+    {who:'bingsu', mood:'happy', say:'Carrot cookies? Hmm…'},
+    {who:'bun', act:'hop', say:'I’ll bring the carrots! You bring the magic!'},
+    {who:'bingsu', mood:'joy', say:'Deal. Partners!'},
+    {who:'bun', act:'cheer', say:'PARTNERS!'}]}
+], hazel:[
+  {title:'Brave little Hazel', beats:[
+    {who:'hazel', act:'lookAround', say:'Um… hi. Is it okay if I just… stand here?'},
+    {who:'bingsu', mood:'happy', say:'Of course, Hazel. Take your time.'},
+    {who:'hazel', act:'bow', say:'It smells so cozy in here.'},
+    {who:'hazel', act:'turn', say:'The rain outside was very loud.'},
+    {who:'bingsu', say:'Then stay as long as you like.'},
+    {who:'hazel', act:'wave', say:'…Thank you, Bingsu.'}]},
+  {title:'The muffin poem', beats:[
+    {who:'hazel', act:'bow', say:'I wrote something. Can I read it?'},
+    {who:'bingsu', mood:'happy', say:'I’d love that.'},
+    {who:'hazel', act:'turn', say:'“Little muffin, soft and round…”'},
+    {who:'hazel', act:'lookAround', say:'“…the warmest thing I ever found.”'},
+    {who:'bingsu', mood:'joy', say:'Hazel! That’s beautiful!'},
+    {who:'hazel', act:'excited', say:'You really think so?!'},
+    {who:'hazel', act:'dance', say:'I’m going to write another one!'}]},
+  {title:'Mushroom friends', beats:[
+    {who:'hazel', act:'wave', say:'I found the prettiest mushrooms in the woods today.'},
+    {who:'hazel', act:'lookAround', say:'They glow a little at night, like tiny lamps.'},
+    {who:'bingsu', say:'That sounds magical.'},
+    {who:'hazel', act:'bow', say:'I thought… maybe one could live here?'},
+    {who:'bingsu', mood:'joy', say:'Our kitchen would be honoured.'},
+    {who:'hazel', act:'cheer', say:'Yay! I’ll pick the glowiest one!'}]}
+], mo:[
+  {title:'A long walk', beats:[
+    {who:'mo', act:'wave', say:'Morning, Bingsu. I walked all the way from the big pine.'},
+    {who:'bingsu', say:'That’s so far, Mo!'},
+    {who:'mo', act:'lookAround', say:'The woods are quiet at sunrise. Good for thinking.'},
+    {who:'mo', act:'bow', say:'And thinking makes me hungry for bread.'},
+    {who:'bingsu', mood:'joy', say:'One warm loaf, coming up.'},
+    {who:'mo', act:'cheer', say:'You’re a good friend, little baker.'}]},
+  {title:'Honey trouble', beats:[
+    {who:'mo', act:'impatient', say:'Bingsu… I have a sticky problem.'},
+    {who:'bingsu', say:'Oh no, what happened?'},
+    {who:'mo', act:'turn', say:'I put honey on my bread. Then on my paws.'},
+    {who:'mo', act:'lookAround', say:'Then on my nose. Then on my hat.'},
+    {who:'bingsu', mood:'joy', say:'Ha! Here, have a napkin.'},
+    {who:'mo', act:'dance', say:'Worth it.'}]},
+  {title:'Naptime', beats:[
+    {who:'mo', act:'doze', say:'Mmm… the oven is so warm…'},
+    {who:'bingsu', say:'Mo? Are you sleeping standing up?'},
+    {who:'mo', act:'doze', say:'Just… resting… my eyes…'},
+    {who:'bingsu', mood:'happy', say:'I’ll wake you when the bread is ready.'},
+    {who:'mo', act:'excited', say:'BREAD?! I’m awake!'},
+    {who:'mo', act:'cheer', say:'I was only pretending. Mostly.'}]}
+], pip:[
+  {title:'Party planner', beats:[
+    {who:'pip', act:'hop', say:'Ribbit! Bingsu, I’m planning the BIGGEST party!'},
+    {who:'bingsu', say:'Another one, Pip?'},
+    {who:'pip', act:'dance', say:'There’s always a reason to party!'},
+    {who:'pip', act:'lookAround', say:'Today is… um… Tuesday’s birthday!'},
+    {who:'bingsu', mood:'joy', say:'Then Tuesday deserves a cake.'},
+    {who:'pip', act:'cheer', say:'I KNEW you’d understand!'}]},
+  {title:'The lily pad dance', beats:[
+    {who:'pip', act:'excited', say:'I learned a new dance at the pond!'},
+    {who:'bingsu', mood:'happy', say:'Show me!'},
+    {who:'pip', act:'dance', say:'Hop, hop, wiggle…'},
+    {who:'pip', act:'spin', say:'…and a twirl!'},
+    {who:'bingsu', mood:'joy', say:'Bravo, Pip!'},
+    {who:'pip', act:'bow', say:'Thank you, thank you. I’ll be here all week.'}]},
+  {title:'Rainy day', beats:[
+    {who:'pip', act:'impatient', say:'It’s raining on party day…'},
+    {who:'bingsu', say:'Rain is a frog’s favourite weather, isn’t it?'},
+    {who:'pip', act:'turn', say:'…Oh. Huh. It IS!'},
+    {who:'pip', act:'hop', say:'A RAIN party! Puddles for everyone!'},
+    {who:'bingsu', mood:'joy', say:'I’ll bring umbrellas for the non-frogs.'},
+    {who:'pip', act:'cheer', say:'Bingsu, you’re a genius!'}]}
+], cat:[
+  {title:'The warm window', beats:[
+    {who:'cat', act:'lookAround', say:'Is this window taken?'},
+    {who:'bingsu', say:'That’s my favourite napping spot…'},
+    {who:'cat', act:'doze', say:'…it’s perfect.'},
+    {who:'bingsu', mood:'happy', say:'I suppose we could share.'},
+    {who:'cat', act:'wave', say:'A cat who shares? You’re one of a kind, Bingsu.'}]},
+  {title:'Cat to cat', beats:[
+    {who:'cat', act:'turn', say:'So. Another cat who bakes.'},
+    {who:'bingsu', say:'And you must be the cat who naps.'},
+    {who:'cat', act:'bow', say:'A professional napper, thank you.'},
+    {who:'cat', act:'excited', say:'But these muffins? Worth waking up for.'},
+    {who:'bingsu', mood:'joy', say:'The highest compliment!'},
+    {who:'cat', act:'cheer', say:'Purrfect muffins, as always.'}]},
+  {title:'The yarn chase', beats:[
+    {who:'cat', act:'excited', say:'Bingsu, I found a ball of yarn rolling down the street!'},
+    {who:'cat', act:'spin', say:'I chased it ALL the way here!'},
+    {who:'bingsu', say:'Where is it now?'},
+    {who:'cat', act:'lookAround', say:'…'},
+    {who:'cat', act:'impatient', say:'It rolled under your oven.'},
+    {who:'bingsu', mood:'joy', say:'I’ll fish it out after this batch.'},
+    {who:'cat', act:'dance', say:'My hero!'}]}
+]};
+const CHAPTER_H = 1;   // each focused hour unlocks the next chapter of every friend's story
+const storiesFor = c => (STORIES2[c] || []).filter((_, i) => i === 0 || (S.life || 0) >= i*CHAPTER_H*3600);
+function startStory() {
+  if (!VIS || !STORIES2[VIS.c]) return;
+  const list = storiesFor(VIS.c), n = ((S.storyN = S.storyN || {})[VIS.c] || 0) % list.length;
+  S.storyN[VIS.c] = n + 1; save();
+  playBeats('📖 ' + list[n].title, list[n].beats);
+}
+function playBeats(title, beats, leave) {   // run a little scene with whoever is visiting
+  const go = () => { VIS.state = 'story'; VIS.story = {beats, i:0, t:0, title, leave}; if (title) floats.push({x:W/2, y:110, text:title, t:0}); };
+  if (VIS.state === 'enter' || VIS.state === 'turn' || VIS.state === 'wave') VIS.queuedStory = go; else go();
+}
+function storyNext() {
+  const st = VIS && VIS.story; if (!st) return;
+  st.i++; st.t = 0;
+  if (st.i >= st.beats.length) { VIS.story = null; VIS.state = st.leave ? 'leave' : 'wait'; VIS.t = 0; }
+}
+function bubble(text, x, y, tailX, tailUp, accent) {
+  ctx.font = '600 12px system-ui'; const words = text.split(' '), lines = []; let ln = '';
+  for (const w of words) { const t = ln ? ln + ' ' + w : w; if (ctx.measureText(t).width > 170 && ln) { lines.push(ln); ln = w; } else ln = t; } lines.push(ln);
+  const w = Math.max(...lines.map(l => ctx.measureText(l).width)) + 22, h = lines.length*15 + 14;
+  const v = sceneView(); x = Math.max(v.x0 + w/2 + 6, Math.min(v.x1 - w/2 - 6, x));
+  const bx = x - w/2, by = y - h;
+  shape('#fffdf7', () => { ctx.roundRect(bx, by, w, h, 12); const tx = Math.max(bx + 14, Math.min(bx + w - 14, tailX)); ctx.moveTo(tx - 7, by + h); ctx.lineTo(tx + (tailX - tx)*.4, by + h + 10); ctx.lineTo(tx + 7, by + h); }, accent, 2.2);
+  ctx.fillStyle = '#5d5049'; ctx.textAlign = 'center'; lines.forEach((l, i) => ctx.fillText(l, x, by + 18 + i*15)); ctx.textAlign = 'start';
+}
+function drawStoryBubble(V, feet) {
+  const bt = V.story && V.story.beats[V.story.i]; if (!bt || !bt.say) return;
+  const pop = Math.min(1, V.story.t*6); ctx.save(); ctx.globalAlpha = pop;
+  if (bt.who === 'bingsu') bubble(bt.say, B.x + 125, 138, B.x + 55, false, '#c46a7a');
+  else bubble(bt.say, V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f');
+  ctx.restore();
+  ctx.fillStyle = '#5d504999'; ctx.font = '10px system-ui'; ctx.textAlign = 'center'; const v = sceneView(); ctx.fillText('tap to continue', (v.x0 + v.x1)/2, 16); ctx.textAlign = 'start';
+}
+
+// ---- break room: while the bakery is closed you can still hang out with Bingsu ----
+let breakTouch = 0, petCount = 0;
+const breakBusy = () => Date.now() - breakTouch < 45e3 || (VIS && VIS.state !== 'leave');
+function scenePt(e) {
+  const r = cv.getBoundingClientRect(), cover = getComputedStyle(cv).objectFit === 'cover', k = cover ? Math.max(r.width/W, r.height/H) : Math.min(r.width/W, r.height/H);
+  const pos = (getComputedStyle(cv).objectPosition || '50% 50%').split(' ').map(v => parseFloat(v)/100);
+  return [(e.clientX - r.left - (r.width - W*k)*(pos[0] || .5))/k, (e.clientY - r.top - (r.height - H*k)*(pos[1] || .5))/k];
+}
+function breakTap(e) {
+  const [x, y] = scenePt(e); breakTouch = Date.now(); $('breakBar').hidden = false;
+  if (VIS && VIS.state === 'story') { storyNext(); return true; }
+  if (Math.abs(x - B.x) < 75 && y > 90 && y < 250) { petBingsu(x, y); return true; }
+  return true;
+}
+const PURRS = ['purr~', 'mrrp!', '♡', 'prrrr', 'nya~', '*happy wiggle*'];
+function petBingsu(x = B.x, y = 150) {
+  breakTouch = Date.now(); B.mood = 'joy'; B.moodT = 1.3; petCount++;
+  for (let i = 0; i < 6; i++) parts.push({x:x + (Math.random() - .5)*40, y:y - 10, vx:(Math.random() - .5)*60, vy:-50 - Math.random()*50, life:0, max:1.2, r:4 + Math.random()*3, color:'#f7a6b5', grow:2, heart:true});
+  floats.push({x:B.x + 60, y:120, text:PURRS[Math.random()*PURRS.length|0], t:0});
+  const d = dayLog(); d.pets = (d.pets || 0) + 1;
+  if (d.pets % 10 === 0 && (d.petCoins || 0) < 5) { d.petCoins = (d.petCoins || 0) + 1; S.coins++; floats.push({x:B.x, y:100, text:'Bingsu found a coin for you +1 🪙', t:0}); save(); }
+}
+function drawBreak(now) {
+  if (!breakBusy()) { $('breakBar').hidden = true; return; }
+  const v = sceneView();
+  ctx.fillStyle = 'rgba(253,240,223,.25)'; ctx.fillRect(0, 0, W, H);
+  const left = S.breakUntil ? Math.max(0, Math.ceil((S.breakUntil - Date.now())/60e3)) : 0;
+  ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; const tag = S.breakUntil && CUSTOMERS[S.breakWith] ? `☕ Break with ${CUSTOMERS[S.breakWith].name} · ${left}m left` : '☕ Break time · the bakery is closed';
+  const tw = ctx.measureText(tag).width + 20, tx = (v.x0 + v.x1)/2; shape('#fffaf2', rr(tx - tw/2, 18, tw, 22, 11), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(tag, tx, 33); ctx.textAlign = 'start';
+}
+$('breakBar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; breakTouch = Date.now();
+  if (b.dataset.b === 'pet') petBingsu();
+  if (b.dataset.b === 'story') { const who = Object.keys(STORIES2).filter(c => RIGS[c] && (CUSTOMERS[c].lvl || 1) <= level()); if (!who.length) return;
+    const c = who[(S.storyTurn = ((S.storyTurn || 0) + 1)) % who.length]; if (VIS && VIS.c !== c) VIS = null; bringIn(c); setTimeout(startStory, 100); }
+  if (b.dataset.b === 'open') { $('breakBar').hidden = true; if (S.breakUntil) endBreak(true); else setClosedManual(false); }
+});
+// ---- breaks with friends: after a good stretch of focus someone invites you to sit with them ----
+const wantsBreak = () => (S.sinceBreak || 0) >= 25*60 && !shopClosed && !manual;
+function showInvite(c) { $('invTxt').textContent = `${CUSTOMERS[c].name} invites you for a break`; $('invBar').hidden = false; chime(1); }
+function declineBreak() { $('invBar').hidden = true; S.sinceBreak = Math.min(S.sinceBreak || 0, 35*60); save(); if (VIS && VIS.state === 'invite') { VIS.state = 'leave'; VIS.t = 0; } }
+function startBreakWith(c) {
+  $('invBar').hidden = true; S.breakWith = c; S.breakUntil = Date.now() + (S.hours.brk || 5)*60e3; S.sinceBreak = 0;
+  setClosedManual(true); breakTouch = Date.now();
+  if (!VIS || VIS.c !== c) { VIS = null; bringIn(c); }
+  VIS.puppet = true; if (VIS.state === 'invite') { VIS.state = 'wait'; VIS.t = 0; } startStory();   // the visit comes with a story, free
+}
+function endBreak(early) {
+  const c = S.breakWith; S.breakUntil = 0; S.breakWith = null; setClosedManual(false); chime(1);
+  if (VIS && VIS.c === c && CUSTOMERS[c]) { const R = RECIPES[CUSTOMERS[c].fav];
+    playBeats('', [{who:c, act:early ? 'wave' : 'cheer', say:`Back to it, Bingsu! Save some ${R.name.toLowerCase()} for me!`}], true); }
+  save();
+}
+function breakTick() {
+  if (S.breakUntil && Date.now() >= S.breakUntil) { endBreak(false); return; }
+  if (S.breakUntil && !S.closedManual) { S.breakUntil = 0; S.breakWith = null; }   // reopened some other way
+  // a long stretch with no break: a friend drops by to invite you
+  if ((S.sinceBreak || 0) >= 50*60 && !VIS && !shopClosed && !manual && !CEL && $('invBar').hidden) {
+    const who = Object.keys(RIGS).filter(c => (CUSTOMERS[c].lvl || 1) <= level() && !(S.orders || []).some(o => o.c === c)); if (!who.length) return;
+    const c = who[Math.random()*who.length|0]; bringIn(c); VIS.invite = true; VIS.from = 1;
+  }
+}
+function goalGuest() {   // reaching the daily goal brings a friend with a story
+  if ((S.orders || []).length >= MAX_ORDERS) return;
+  const who = Object.keys(RIGS).filter(c => (CUSTOMERS[c].lvl || 1) <= level() && STORIES2[c] && !(S.orders || []).some(o => o.c === c)); if (!who.length) return;
+  const c = who[Math.random()*who.length|0]; if (spawnOrder(c)) { S.orders[S.orders.length - 1].story = true; floats.push({x:W/2, y:92, text:`🌟 ${CUSTOMERS[c].name} came to celebrate your goal!`, t:0}); }
+}
+$('invBar').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || !VIS) { $('invBar').hidden = true; return; } if (b.dataset.i === 'yes') startBreakWith(VIS.c); else declineBreak(); });
+$('reset').onclick = () => { if (confirm('Reset the bakery? Coins, recipes and bakes will be lost.')) { S = fresh(); save(); renderRecipes(); } };
+renderRecipes(); renderModes();
+
+const LABEL = {focused:'Focused', distracted:'Distracted', idle:'Away'};
+// the tracker paused the oven because you've been off your kind of work for a while (not because you left)
+const pausedWhy = () => manual ? '' : trackerWhy === 'phone' ? '📱 Awake · phone mode' : trackerWhy === 'claude' ? 'Paused · in Claude' : trackerWhy === 'other' ? 'Paused · off task' : '';
+function hud(now, eff) {
+  $('coins').textContent = S.coins; $('rep').textContent = '★ ' + repStars().toFixed(1);
+  const st = $('state'); st.className = eff;
+  st.textContent = eff === 'grace' ? `Glancing… ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'idle' && pausedWhy() ? pausedWhy() : LABEL[eff];
+  const j = J(), R = RECIPES[j.r], s = stageOf(j), q = Math.round(100*(1 - S.job.ruin/RUIN_FAIL));
+  $('jobtext').innerHTML = (preview != null ? '<small>Preview · </small>' : '') + `<b>${R.name}</b> · ${STAGE[s.a]} · ${Math.floor(100*j.p/R.time)}% <small>· quality ${q}% · ${fmt((R.time - S.job.p)/SPEED)} of focus left · focused ${fmt(streak)} in a row</small>`;
+  $('jobfill').style.width = (100*j.p/R.time) + '%';
+  { const pl = $('pill'), conn = CODE ? (trackerRaw ? '' : pcOff ? ' · 📱 phone mode' : ' · computer offline') : ' · not connected';
+    pl.className = eff === 'distracted' ? 'd' : eff === 'grace' ? 'g' : (!CODE || !trackerRaw) && !manual && !pcOff ? 'off' : '';
+    pl.textContent = shopClosed ? '☕ On a break · tap to play' : (eff === 'grace' ? `👀 ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'distracted' ? '⚠︎ Distracted' : eff === 'idle' ? (pausedWhy() ? pausedWhy().replace(' · phone mode', '') : '💤 Away') : '● Focused') + `  ·  🪙 ${S.coins}  ·  🎯 ${Math.round(goalProgress()*100)}%`; }
+  if (document.body.classList.contains('phone')) {
+    const pt = $('phoneTask'), task = (S.task || '').trim();
+    pt.textContent = task ? '📝 ' + task : 'Tap to pick a task'; pt.className = task ? '' : 'empty';
+    $('phoneProg').firstChild.style.width = (100*j.p/R.time) + '%';
+    $('phoneSub').textContent = `🔥${dayStreak()} · ${R.name} · ${STAGE[s.a]} · ${fmt((R.time - S.job.p)/SPEED)} left · ${eff === 'grace' ? 'glancing…' : eff === 'distracted' ? '⚠︎ distracted' : eff === 'idle' ? (pausedWhy() ? pausedWhy().toLowerCase() : 'away') : 'focused ' + fmt(streak)}`;
+    document.body.classList.toggle('dist', eff === 'distracted');
+  }
+  const key = j.r + s.a;
+  if (hud.key !== key) {   // step chips + stage markers on the bar
+    hud.key = key; let acc = 0, ticks = '', past = true;
+    const ICON = {mix:'🥣', shape:'🫳', knead:'👐', proof:'⏳', bake:'🔥', frost:'🎂'};
+    $('steps').innerHTML = R.stages.map(([a, w], i) => {
+      const cls = a === s.a ? 'now' : past ? 'done' : ''; if (a === s.a) past = false;
+      if (i) ticks += `<i class="tick" style="left:${acc*100}%"></i>`; acc += w;
+      return `<span class="${cls}">${cls === 'done' ? '✓' : ICON[a]} ${STAGE[a]}</span>`;
+    }).join('') + '<span>✨ Cool &amp; serve</span>';
+    $('jobbar').querySelectorAll('.tick').forEach(e => e.remove()); $('jobbar').insertAdjacentHTML('beforeend', ticks);
+  }
+  $('src').textContent = manual ? 'Demo mode (manual state)' : CODE ? (info || 'Connecting…') : trackerRaw ? `Tracker: ${info}` : 'No computer connected yet';
+  if (renderRecipes.coins !== S.coins) { renderRecipes.coins = S.coins; renderRecipes(); }
+}
+
+let last = performance.now(), hudT = 0;
+function loop(now) {
+  const rdt = Math.min(.25, (now - last)/1000); last = now;
+  const day = new Date().toDateString(); if (S.day !== day) { S.day = day; S.today = 0; S.best = 0; S.shelf = []; S.baked = 0; }
+  const eff = effective(now), sim = eff === 'grace' ? 'focused' : eff;
+  lastEff = sim; update(rdt, eff === 'grace' ? 'grace' : sim, now); drama(now, eff); if (preview == null) updateCustomers(rdt, sim);
+  B.mood = eff === 'grace' && B.moodT <= 0 ? 'glance' : B.mood; if (eff === 'grace' && B.moodT <= 0) B.bubble = '?';
+  if (sim === 'focused') { S.today += rdt; streak += rdt; S.best = Math.max(S.best, streak);
+    if (!manual) { S.sinceBreak = (S.sinceBreak || 0) + rdt; } }
+  else if (sim === 'distracted') streak = 0;
+  breakTick();
+  if (preview == null && !manual) { progressTick(rdt, sim); if (sim !== 'idle') maybeSpecial(rdt*SPEED); }
+  trackComeback(eff === 'grace' ? 'grace' : sim);
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.life += rdt; p.x += p.vx*rdt; p.y += p.vy*rdt; if (p.g) p.vy += p.g*rdt; if (p.life >= p.max) parts.splice(i, 1); }
+  for (let i = floats.length - 1; i >= 0; i--) if ((floats[i].t += rdt/1.5) >= 1) floats.splice(i, 1);
+  draw(now, eff);
+  if ((hudT += rdt) > .25) { hudT = 0; hud(now, eff); renderGoalHud(); }
+  if (shopClosed !== loop.wasClosed) { loop.wasClosed = shopClosed; applyWake(); }
+  if (shopClosed && !CEL && !breakBusy()) setTimeout(() => requestAnimationFrame(loop), 1000); else requestAnimationFrame(loop);   // closed: one frame a second
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
