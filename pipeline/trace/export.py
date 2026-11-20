@@ -92,5 +92,5 @@ for nm in NAMES:
   top=min(np.nonzero(allc)[0])
   art[nm]={'h':round((feetY-top)*SC),'lw':round(lw*SC,1),'parts':parts}
   print(nm,'lw',round(lw,1),[p['n'] for p in parts],'h',art[nm]['h'])
-open('../../site/bakery/animator/critter-art.js','w').write('// traced from the character lineup (art-src/critter-lineup.webp) by the trace pipeline: vector paths, drawn in code\nwindow.CRITTER_ART = '+json.dumps(art,separators=(',',':'))+';\n')
-import os; print(os.path.getsize('../../site/bakery/animator/critter-art.js'))
+open('../../site/bakery/critters/critter-art.js','w').write('// traced from the character lineup (art-src/critter-lineup.webp) by the trace pipeline: vector paths, drawn in code\nwindow.CRITTER_ART = '+json.dumps(art,separators=(',',':'))+';\n')
+import os; print(os.path.getsize('../../site/bakery/critters/critter-art.js'))

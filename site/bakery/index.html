@@ -239,7 +239,7 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
     <div class="kpi"><small>Day streak</small><b id="dayStreak">🔥 0</b><em id="daysOff"></em></div>
     <div class="kpi lvl"><small id="lvlName">Lv 1</small><i><u id="lvlBar"></u></i><em><span id="rep">★ 3.0</span> rating</em></div>
   </div>
-  <div class="who"><span class="chip-state"><i></i><b id="state">…</b></span><button id="bakeryBtn" class="hudbtn">🧁 Bakery</button><button id="menuBtn" class="hudbtn primary">☰ Menu</button></div>
+  <div class="who"><span class="chip-state"><i></i><b id="state">…</b></span><button id="acctTop" class="hudbtn">👤 Log in</button><button id="bakeryBtn" class="hudbtn">🧁 Bakery</button><button id="menuBtn" class="hudbtn primary">☰ Menu</button></div>
 </header>
 <main class="layout">
   <section class="stage">
@@ -252,8 +252,6 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
       <small class="lbl">Up next</small><div id="todolist"></div>
       <form id="todoAdd" class="addrow"><input id="todoNew" maxlength="80" placeholder="+ Add a task"></form>
       <div class="tdfoot"><button id="todoBtn" class="link" type="button">Connect Todoist</button></div>
-      <small class="lbl" style="margin-top:16px">Counts as work</small>
-      <div id="kind" class="chips" title="Kinds of work: apps that fit any of them count as focus. Anything else, Claude included, gets 5 minutes, then the oven pauses. Pick none for any work."><button data-k="claude">Claude</button><button data-k="writing">Writing</button><button data-k="research">Research</button><button data-k="coding">Coding</button></div>
     </div>
     <div class="card"><h3>Bake next</h3><div id="recipes" class="chips"></div></div>
   </aside>
@@ -269,18 +267,18 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
       <button id="goalBtn"><i>🎯</i>Daily goal</button><button id="hoursBtn"><i>🕘</i>Hours &amp; breaks</button><button id="closeBtn2"><i>☕</i>Take a break</button>
       <button id="connectBtn"><i>💻</i>Connect devices</button><button id="distBtn"><i>🚫</i>Distracting sites</button></div>
     <h3>Settings</h3><div class="tiles">
-      <button id="acctBtn"><i>👤</i><span>Log in</span></button><button id="sound"><i>🔕</i><span>Sound off</span></button>
+      <button id="sound"><i>🔕</i><span>Sound off</span></button>
       <button id="nightBtn"><i>🌙</i><span>Night: auto</span></button><button id="wake"><i>☀️</i><span>Keep screen on</span></button><button id="fs"><i>⛶</i><span>Full screen</span></button></div>
-    <div class="menu-foot"><button id="simBtn">🧪 Simulator</button><a href="animator/">🎬 Animator</a></div></div>
+    <div class="menu-foot"><button id="simBtn">🧪 Simulator</button></div></div>
   <div id="sim" class="panel" hidden><h2>🧪 Simulator</h2><p class="muted" style="white-space:normal">Try situations without waiting. Skipping ahead counts as real progress in your bakery.</p>
     <h3 class="lbl">Pretend I’m…</h3><div id="modes" class="chips"></div>
     <h3 class="lbl">Skip ahead</h3><div class="chips"><button data-sim="f15">⏩ 15 min focused</button><button data-sim="f45">⏩ 45 min focused</button><button data-sim="f90">⏩ 90 min focused</button></div>
     <h3 class="lbl">Make it happen</h3><div class="chips"><button data-sim="cust">🔔 Customer arrives</button><button data-sim="rare">✨ Rare visitor</button><button data-sim="back">😮‍💨 Back from a distraction</button><button data-sim="invite">☕ Break invite</button><button data-sim="endbreak">⏰ Break ends</button><button data-sim="goal">🎯 Daily goal reached</button><button data-sim="fin">✨ Finish this bake</button></div>
     <h3 class="lbl">Start over</h3><button id="reset">Reset bakery</button></div>
 </div></div>
-<div id="case" hidden></div><button id="update" hidden>✨ New version, tap to update</button><div id="pill"></div><div id="dock"></div><button id="caseBtn" title="Display case">🧁</button><div id="invBar" hidden><span id="invTxt"></span><button data-i="yes" class="primary">☕ Take a break</button><button data-i="no">Not now</button></div><div id="breakBar" hidden><button data-b="pet">🐾 Pet Bingsu</button><button data-b="story">📖 Story</button><button data-b="open" class="primary">🔓 Open bakery</button></div><button id="closeBtn" title="Take a break">☕</button><button id="gear" title="Menu">☰</button><button id="install" hidden>📲 Install app</button>
+<div id="case" hidden></div><button id="update" hidden>✨ New version, tap to update</button><div id="pill"></div><div id="dock"></div><button id="acctDock" title="Log in">👤</button><button id="caseBtn" title="Display case">🧁</button><div id="invBar" hidden><span id="invTxt"></span><button data-i="yes" class="primary">☕ Take a break</button><button data-i="no">Not now</button></div><div id="breakBar" hidden><button data-b="pet">🐾 Pet Bingsu</button><button data-b="story">📖 Story</button><button data-b="open" class="primary">🔓 Open bakery</button></div><button id="closeBtn" title="Take a break">☕</button><button id="gear" title="Menu">☰</button><button id="install" hidden>📲 Install app</button>
 <div id="phoneBar"><i id="grab"></i><div id="phoneTask"></div><button id="phoneDone" hidden>✓ Mark as done</button><div id="phoneNext"></div><div id="phoneProg"><i></i></div><div id="phoneSub"></div></div>
-<script src="animator/critter-art.js"></script><script src="animator/critters.js"></script>
+<script src="critters/critter-art.js"></script><script src="critters/critters.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const W = 640, H = 360, cv = $('c'), ctx = cv.getContext('2d');
@@ -346,7 +344,7 @@ function pushTask() {
     fetch(`${SITE}/api/task/${CODE}`, {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({text:S.task || '', id:S.taskId || '', src:S.taskId ? 'todoist' : '', from:'bakery', kind:S.kind || ''})}).catch(() => {}); }, 700);
 }
 function syncShared(d) {
-  if (typeof d.kind === 'string' && d.kind !== (S.kind || '') && Date.now() - (S.taskT || 0) > 5000) { S.kind = d.kind; showKind(); save(); }
+  if (d.kind && CODE && !syncShared.cleared) { syncShared.cleared = true; S.kind = ''; pushTask(); }   // kinds of work are gone: any work counts
   const tk = d.task;
   if (tk && tk.t > (S.taskT || 0) + 1500 && document.activeElement !== $('task')) {   // newer task from another device or Ritual
     if ((tk.text || '') !== (S.task || '')) S.taskStart = Date.now();
@@ -1185,9 +1183,6 @@ function drama(now, eff) {
 }
 const previewFinished = () => { const R = RECIPES[S.job.r]; CEL = {r:S.job.r, coins:R.sell, q:1, b:0, t0:performance.now(), preview:true}; };
 $('task').value = S.task || '';
-function showKind() { const on = (S.kind || '').split(','); $('kind').querySelectorAll('button').forEach(b => b.classList.toggle('on', on.includes(b.dataset.k))); }
-showKind();
-$('kind').onclick = e => { const b = e.target.closest('button'); if (!b) return; b.classList.toggle('on'); S.kind = [...$('kind').querySelectorAll('button.on')].map(x => x.dataset.k).join(','); S.taskT = Date.now(); save(); pushTask(); };
 $('task').addEventListener('input', e => { if (!(S.task || '').trim()) S.taskStart = Date.now(); S.task = e.target.value; S.taskId = null; save(); syncDone(); pushTask(); });
 let ritualSeen = false;   // Ritual's bakery-link.js says hello when it's on this page
 addEventListener('message', ev => { if (ev.source === window && ev.data && ev.data.type === 'focusbakery-ritual-here') { ritualSeen = true; const m = $('ritualMsg'); if (m && !m.textContent) m.textContent = 'Ritual found in this browser'; } });
@@ -1525,7 +1520,7 @@ function adoptCode(code) {
   poll();
 }
 function signedOut() { AUTH = null; ls('focusbakery-auth', null); renderAcctBtn(); }
-function renderAcctBtn() { tile($('acctBtn'), '👤', AUTH ? AUTH.email.split('@')[0] : 'Log in'); }
+function renderAcctBtn() { const n = AUTH ? AUTH.email.split('@')[0] : ''; $('acctTop').textContent = n ? '👤 ' + n : '👤 Log in'; $('acctDock').title = n ? 'Account: ' + n : 'Log in'; }
 let acctMode = 'signup', acctErr = '';
 function renderAcct() {
   const el = $('acct'), esc = t => String(t).replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
@@ -1546,7 +1541,7 @@ function renderAcct() {
     </form>
     <p>${up ? 'Already have an account?' : 'New here?'} <button class="link" id="acctSwitch" type="button">${up ? 'Log in' : 'Create an account'}</button></p>`;
 }
-$('acctBtn').onclick = () => { acctErr = ''; openPanel('acct'); renderAcct(); };
+$('acctTop').onclick = $('acctDock').onclick = () => { acctErr = ''; openPanel('acct'); renderAcct(); };
 $('acct').addEventListener('click', async e => {
   if (e.target.id === 'acctSwitch') { acctMode = acctMode === 'signup' ? 'login' : 'signup'; acctErr = ''; renderAcct(); }
   if (e.target.id === 'acctOut') { try { await api('/api/auth/logout', {method: 'POST', body: '{}'}); } catch (_) {} signedOut(); renderAcct(); }
@@ -1869,7 +1864,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---- visitors: rigged customers walk in, turn to you, wave, wait, cheer when served and walk out ----
-// customers are drawn in code (animator/critters.js): crisp at any size, nothing to load
+// customers are drawn in code (critters/critters.js): crisp at any size, nothing to load
 const RIGS = {dot: 'duck', bun: 'bunny', hazel: 'hedgehog', mo: 'bear', pip: 'frog', cat: 'cat'};
 const CRIT = {}; const critter = c => CRIT[c] || (CRIT[c] = new BakeryCritters.Critter(RIGS[c]));
 let VIS = null;   // {c, state, t, x}
@@ -1920,7 +1915,7 @@ function bringIn(c) {
   VIS = {c, state:'enter', t:0, x:sceneView().x0 - 110, puppet:!(S.orders || []).some(o => o.c === c)};
 }
 // gather the phone's round buttons into one dock
-['caseBtn', 'closeBtn', 'gear'].forEach(id => { const el = $(id); if (el) $('dock').appendChild(el); });
+['acctDock', 'caseBtn', 'closeBtn', 'gear'].forEach(id => { const el = $(id); if (el) $('dock').appendChild(el); });
 
 // ---- little stories: Mango and Bingsu chat, one scene at a time ----
 const STORIES2 = {dot:[

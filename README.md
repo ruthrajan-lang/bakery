@@ -3,7 +3,7 @@
 A cozy focus game: Bingsu the cat bakes while you focus, customers visit, and things go gently wrong when you get distracted.
 Live at https://bakery.ruththomson.workers.dev/bakery/
 
-- `site/` is published by the Cloudflare Worker (`site/bakery/` is the game; `site/bakery/animator/` holds the character code and art tools).
+- `site/` is published by the Cloudflare Worker (`site/bakery/` is the game; `site/bakery/critters/` holds the customers, traced from `art-src/critter-lineup.webp` and drawn in code).
 - `src/worker.js` is the Worker: static files, the focus relay between your devices, accounts and Todoist sign-in.
 - Everything else (`trackers/`, `art-src/`, `pipeline/`) is source material and is not published.
 
