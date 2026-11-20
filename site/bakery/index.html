@@ -217,7 +217,7 @@ body.phonefull .stage,body.phonefull .chip-state,body.phonefull #breakBar,body.p
 #onb h2{margin:0 0 6px}#onb .lead{color:var(--muted);margin:0 0 14px;white-space:normal}#onb ul{margin:0 0 16px;padding-left:20px;line-height:1.7}
 #onb .nav{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}#onb .nav .sp{flex:1}
 #onb form{display:grid;gap:10px;max-width:380px}#onb .hero{display:flex;gap:14px;align-items:center;margin-bottom:10px}#onb .hero img{width:64px;height:64px;border-radius:16px}
-#onb .ok{color:var(--good);font-weight:700}#onb .os button.on{background:var(--accent);border-color:var(--accent-d);color:#3a2610}#onb .os{display:flex;gap:8px;margin:6px 0 10px}#onb code{display:block;white-space:pre-wrap;word-break:break-all;background:#f5ebdf;border-radius:10px;padding:10px;font-size:12px;margin:6px 0}
+#onb .ok{color:var(--good);font-weight:700}#onb .custom,#goal .custom{display:inline-flex;gap:6px;align-items:center}#onb .custom[hidden],#goal .custom[hidden]{display:none}#onb .os button.on{background:var(--accent);border-color:var(--accent-d);color:#3a2610}#onb .os{display:flex;gap:8px;margin:6px 0 10px}#onb code{display:block;white-space:pre-wrap;word-break:break-all;background:#f5ebdf;border-radius:10px;padding:10px;font-size:12px;margin:6px 0}
 /* ---- night: dark page around a lamp-lit kitchen ---- */
 body.night{--bg:#16121b;--card:#221c27;--line:#352c3c;--line2:#4a3f52;--text:#efe4d8;--muted:#a99a8c}
 body.night,body.night.phone{background:#16121b;color:#efe4d8}
@@ -1625,9 +1625,10 @@ function dayLog(k = todayKey()) { S.daylog = S.daylog || {}; return S.daylog[k] 
 if (!S.started) S.started = Date.now();
 { const gone = {bowtie:30, glasses:35, flowers:45, scarf:40, lamp:30}; for (const [id, c] of Object.entries(gone)) if ((S.owned || {})[id]) { S.coins += c; delete S.owned[id]; } }   // replaced by new artwork: refund
 // ---- daily goal ----
-const GOALS = [['focus', 60], ['focus', 90], ['focus', 120], ['focus', 180], ['bakes', 2], ['bakes', 3], ['bakes', 4], ['bakes', 6], ['tasks', 1], ['tasks', 3], ['tasks', 5]];
+const GOALS = [['focus', 30], ['focus', 60], ['focus', 90], ['focus', 120], ['focus', 180], ['bakes', 2], ['bakes', 3], ['bakes', 4], ['bakes', 6], ['tasks', 1], ['tasks', 3], ['tasks', 5]];
 if (!S.goal) S.goal = {type:'focus', n:120};
-const goalLabel = (g = S.goal) => g.type === 'focus' ? `${g.n >= 60 && g.n % 60 === 0 ? g.n/60 + 'h' : g.n + 'm'} of focus` : g.type === 'tasks' ? `${g.n} task${g.n > 1 ? 's' : ''} done` : `${g.n} bakes`;
+const hm = n => n >= 60 ? `${Math.floor(n/60)}h${n % 60 ? ' ' + n % 60 + 'm' : ''}` : `${n}m`;
+const goalLabel = (g = S.goal) => g.type === 'focus' ? `${hm(g.n)} of focus` : g.type === 'tasks' ? `${g.n} task${g.n > 1 ? 's' : ''} done` : `${g.n} bakes`;
 function goalProgress() { const d = dayLog(); return S.goal.type === 'focus' ? Math.min(1, d.focus/60/S.goal.n) : S.goal.type === 'tasks' ? Math.min(1, (d.tasks || 0)/S.goal.n) : Math.min(1, d.bakes/S.goal.n); }
 function goalText() { const d = dayLog(); return S.goal.type === 'focus' ? `${fmt(d.focus)} / ${goalLabel().replace(' of focus', '')}` : S.goal.type === 'tasks' ? `${d.tasks || 0} / ${S.goal.n} tasks` : `${d.bakes} / ${S.goal.n} bakes`; }
 // ---- day streak: days the goal was met; up to 2 missed days per week (Mon–Sun) don't break it ----
@@ -1754,14 +1755,19 @@ function renderGoalHud() {
   $('dayStreak').textContent = `🔥 ${dayStreak()}`; $('daysOff').textContent = `${daysOffLeft()} day${daysOffLeft() === 1 ? '' : 's'} off left`;
   const l = level(); $('lvlName').textContent = `Lv ${l} · ${LEVELS[l - 1].name}`; $('lvlBar').style.width = Math.round(levelProgress()*100) + '%';
 }
+const PRESET_FOCUS = [30, 60, 90, 120, 180];
+const customGoal = (id) => { const c = S.goal.type === 'focus' && !PRESET_FOCUS.includes(S.goal.n);
+  return `<button data-custom="1" class="${c ? 'on' : ''}">Custom</button><span class="custom" ${c ? '' : 'hidden'}><input id="${id}" type="number" min="0.25" max="12" step="0.25" value="${c ? +(S.goal.n/60).toFixed(2) : ''}" placeholder="e.g. 2.5" style="width:90px"> hours</span>`; };
+function setCustomGoal(v) { const n = Math.round(Math.max(.25, Math.min(12, +v || 0))*60/5)*5; if (!+v) return; S.goal = {type: 'focus', n}; save(); renderGoalHud(); }
 function renderGoalPanel() {
   $('goal').innerHTML = `<h2>🎯 Daily goal</h2><p class="muted" style="white-space:normal">Close the ring each day to grow your streak and open a bonus chest. You can miss up to 2 days a week without losing your streak.</p>
-    <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">FOCUS TIME</h3><div class="chips">${GOALS.filter(g => g[0] === 'focus').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${goalLabel({type:t, n}).replace(' of focus', '')}</button>`).join('')}</div>
+    <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">FOCUS TIME</h3><div class="chips" style="align-items:center">${GOALS.filter(g => g[0] === 'focus').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${goalLabel({type:t, n}).replace(' of focus', '')}</button>`).join('')}${customGoal('goalCustom')}</div>
     <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">BAKES</h3><div class="chips">${GOALS.filter(g => g[0] === 'bakes').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${n} bakes</button>`).join('')}</div>
     <h3 style="margin:14px 0 8px;font-size:13px;color:var(--muted)">TASKS DONE</h3><div class="chips">${GOALS.filter(g => g[0] === 'tasks').map(([t, n]) => `<button data-goal="${t}:${n}" class="${S.goal.type === t && S.goal.n === n ? 'on' : ''}">${n} task${n > 1 ? 's' : ''}</button>`).join('')}</div>
     <p class="muted" style="margin-top:14px">Today: ${goalText()} · 🔥 ${dayStreak()} day streak · ${daysOffLeft()} days off left this week</p>`;
 }
-$('goal').addEventListener('click', e => { const g = e.target.dataset.goal; if (!g) return; const [type, n] = g.split(':'); S.goal = {type, n:+n}; save(); renderGoalPanel(); renderGoalHud(); });
+$('goal').addEventListener('click', e => { if (e.target.dataset.custom) { e.target.parentElement.querySelectorAll('button').forEach(x => x.classList.remove('on')); e.target.classList.add('on'); e.target.nextElementSibling.hidden = false; $('goalCustom').focus(); return; } const g = e.target.dataset.goal; if (!g) return; const [type, n] = g.split(':'); S.goal = {type, n:+n}; save(); renderGoalPanel(); renderGoalHud(); });
+$('goal').addEventListener('change', e => { if (e.target.id === 'goalCustom') { setCustomGoal(e.target.value); renderGoalPanel(); } });
 $('goalKpi').onclick = () => { openPanel('goal'); renderGoalPanel(); };
 // ---- shop tab ----
 function shopHTML() {
@@ -2268,7 +2274,7 @@ function renderOnb() {
     h = `<h2>Put it on your phone (optional)</h2><p class="lead">Your phone makes a lovely little bakery window on your desk. Scan this, ${AUTH ? 'log in, ' : ''}then add it to your home screen.</p>
       <div class="phoneRow"><div id="onbQr" style="background:#fff;padding:8px;border-radius:8px"></div><p class="lead" style="margin:0"><b>Android:</b> Chrome ⋮ → Install app<br><b>iPhone:</b> Share → Add to Home Screen</p></div>${nav()}`; }
   if (onbStep === 4) h = `<h2>Your first day</h2><p class="lead">How much focus would make today a good day? You can change this any time.</p>
-      <div class="chips">${[[60, '1 hour'], [90, '1½ hours'], [120, '2 hours'], [180, '3 hours']].map(([n, l]) => `<button data-g="${n}" class="${S.goal.type === 'focus' && S.goal.n === n ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="chips">${[[30, '½ hour'], [60, '1 hour'], [90, '1½ hours'], [120, '2 hours'], [180, '3 hours']].map(([n, l]) => `<button data-g="${n}" class="${S.goal.type === 'focus' && S.goal.n === n ? 'on' : ''}">${l}</button>`).join('')}${customGoal('onbCustom')}</div>
       <p class="lead" style="margin-top:16px">What are you working on first?</p><input id="onbTask" maxlength="80" placeholder="e.g. Write the project update" value="${esc(S.task || '')}" style="width:100%">
       ${nav('Open my bakery 🧁', false)}`;
   el.innerHTML = dots + h;
@@ -2276,6 +2282,7 @@ function renderOnb() {
     if (window.QRCode) qr(); else { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = qr; document.head.appendChild(sc); } }
 }
 function finishOnb() {
+  if ($('onbCustom') && !$('onbCustom').closest('.custom').hidden) setCustomGoal($('onbCustom').value);
   const t = $('onbTask') && $('onbTask').value.trim();
   if (t) { S.task = t; S.taskId = null; S.taskStart = Date.now(); $('task').value = t; pushTask(); syncDone(); }
   S.onboarded = true; save(); closePanels(); document.body.classList.toggle('phone', phoneish);
@@ -2285,6 +2292,7 @@ $('onb').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.os) { onbOS = b.dataset.os; renderOnb(); return; }
   if (b.dataset.g) { S.goal = {type: 'focus', n: +b.dataset.g}; save(); renderGoalHud(); renderOnb(); return; }
+  if (b.dataset.custom) { b.parentElement.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); b.nextElementSibling.hidden = false; $('onbCustom').focus(); return; }
   const o = b.dataset.o; if (!o) return;
   if (o === 'mode') { onbMode = onbMode === 'signup' ? 'login' : 'signup'; onbErr = ''; renderOnb(); }
   if (o === 'copy') navigator.clipboard?.writeText(`curl -fsSL ${SITE}/bakery/mac-tracker.sh -o ~/focus-bakery.sh && bash ~/focus-bakery.sh ${CODE}`).then(() => { b.textContent = 'Copied ✓'; });
@@ -2301,6 +2309,7 @@ $('onb').addEventListener('submit', async e => {
   } catch (err) { onbErr = err.message; renderOnb(); $('onbEmail').value = email; }
 });
 setInterval(() => { if (!$('onb').hidden && onbStep === 2 && $('onbLive') && !!trackerRaw !== $('onbLive').textContent.includes('✓')) renderOnb(); }, 1500);   // ticks over when the computer connects
+$('onb').addEventListener('change', e => { if (e.target.id === 'onbCustom') setCustomGoal(e.target.value); });
 $('onbBtn').onclick = () => openOnb(0);
 if (!S.onboarded && !AUTH && (S.life || 0) < 120 && !resetToken) setTimeout(() => openOnb(0), 600);
 let last = performance.now(), hudT = 0;
