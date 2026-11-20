@@ -119,6 +119,7 @@ button.check:hover{border-color:#4c9a3c;background:#eef8ea}button.check:hover::a
 #case .chart i{display:block;width:100%;background:#f2b25c;border-radius:6px 6px 0 0;min-height:2px}#case .chart span{font-size:11px;color:#5d5049}#case .chart small{position:absolute;bottom:-20px;color:#8a7768;font-size:11px}
 #case .list{display:flex;flex-direction:column;gap:6px;margin:8px 0 18px}#case .list>div{display:flex;align-items:center;gap:10px;background:#fffaf2;border:2px solid #5d5049;border-radius:12px;padding:6px 12px}
 #case .list img{height:30px}#case .list span{flex:1}#case .list small{color:#8a7768}
+#case .rew>div>button{flex:none;border-radius:999px;padding:6px 12px}#case .rew .ic{flex:none;width:34px;text-align:center}
 #case .rew{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:8px 0 18px}
 #case .rew>div{display:flex;gap:10px;align-items:center;background:#fffaf2;border:3px solid #d8cbbd;border-radius:14px;padding:10px;opacity:.75}
 #case .rew>div.ok{border-color:#5d5049;opacity:1;background:#fff3d6}#case .rew .ic{font-size:28px;filter:grayscale(1)}#case .rew .ok .ic{filter:none}
@@ -1071,10 +1072,11 @@ const stars = q => q > .85 ? '★★★' : q > .5 ? '★★☆' : '★☆☆';
 let caseTab = 'case';
 function openCase(tab) {
   if (typeof tab === 'string') caseTab = tab;
-  const el = $('case'), tabs = `<div class="tabs">${[['case', '🧁 Display case'], ['shop', '🛍️ Shop'], ['earn', '🪙 Earnings'], ['rew', '🏆 Rewards'], ['news', '📰 Weekly']].map(([k, l]) => `<button data-tab="${k}" class="${caseTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const el = $('case'), tabs = `<div class="tabs">${[['case', '🧁 Display case'], ['shop', '🛍️ Shop'], ['earn', '🪙 Earnings'], ['rew', '🏆 Rewards'], ['stories', '📖 Stories'], ['news', '📰 Weekly']].map(([k, l]) => `<button data-tab="${k}" class="${caseTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   if (caseTab === 'earn') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + earningsHTML(); el.hidden = false; return; }
   if (caseTab === 'shop') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + shopHTML(); el.hidden = false; return; }
   if (caseTab === 'news') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + newsHTML(); el.hidden = false; return; }
+  if (caseTab === 'stories') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + storiesHTML(); el.hidden = false; return; }
   if (caseTab === 'rew') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + rewardsHTML(); el.hidden = false; return; }
   const H2 = S.hist || [], today = new Date().toDateString();
   const todays = H2.filter(h => new Date(h.t).toDateString() === today);
@@ -1109,6 +1111,22 @@ function earningsHTML() {
     ${!L.length ? '<p class="sub">Coins show up here once you collect your first reward.</p>' : ''}`;
 }
 // ---- rewards: milestones with progress ----
+// ---- stories: every friend's chapters, replay any you've unlocked ----
+const FRIEND_EMO = {dot: '🐥', bun: '🐰', hazel: '🦔', mo: '🐻', pip: '🐸', cat: '🐱'};
+function storiesHTML() {
+  const lv = level(), hrs = (S.life || 0)/3600;
+  const rows = Object.keys(STORIES2).sort((a, b) => (CUSTOMERS[a].lvl || 1) - (CUSTOMERS[b].lvl || 1)).map(c => { const C = CUSTOMERS[c], met = (C.lvl || 1) <= lv;
+    const ch = STORIES2[c].map((st, i) => { const open = met && (i === 0 || hrs >= i*CHAPTER_H);
+      return `<div class="${open ? 'ok' : ''}"><div class="ic">${open ? '📖' : '🔒'}</div><div><b>${i + 1}. ${open ? st.title : '???'}</b><small>${!met ? `Meet ${C.name} at level ${C.lvl}` : open ? `${st.beats.length} lines` : `Focus ${Math.max(1, Math.ceil(i*CHAPTER_H - hrs))} more hour${Math.ceil(i*CHAPTER_H - hrs) > 1 ? 's' : ''} to unlock`}</small></div>${open ? `<button data-play="${c}:${i}">▶ Play</button>` : ''}</div>`; }).join('');
+    return `<h3 style="margin:18px 0 8px">${FRIEND_EMO[c] || '🙂'} ${C.name}</h3><div class="rew">${ch}</div>`; }).join('');
+  const total = Object.values(STORIES2).reduce((a, l) => a + l.length, 0), open = Object.keys(STORIES2).reduce((a, c) => a + ((CUSTOMERS[c].lvl || 1) <= lv ? storiesFor(c).length : 0), 0);
+  return `<h2>📖 Stories</h2><p class="sub">${open} of ${total} unlocked · each focused hour unlocks the next chapter for every friend</p>${rows}`;
+}
+function playStory(c, n) {
+  $('case').hidden = true;
+  if (!VIS || VIS.c !== c) { VIS = null; bringIn(c); }
+  VIS.puppet = true; const st = STORIES2[c][n]; playBeats('📖 ' + st.title, st.beats);
+}
 function rewardsHTML() {
   const H2 = S.hist || [], L = S.ledger || [], fr = S.friends || {};
   const perfect = H2.filter(h => h.q > .85).length, kinds = new Set(H2.map(h => h.r)).size;
@@ -1822,6 +1840,7 @@ function newsHTML() {
     <p>🔥 <b>Streak:</b> ${dayStreak()} day${dayStreak() === 1 ? '' : 's'}. 🥐 <b>Your bakery:</b> ${LEVELS[level() - 1].name}.</p></div>
     <div class="chips"><button data-newsweek="1" class="${newsWeek ? 'on' : ''}">Last week</button><button data-newsweek="0" class="${newsWeek ? '' : 'on'}">This week</button><button id="newsCopy">📋 Copy to share</button></div></div>`;
 }
+$('case').addEventListener('click', e => { const p = e.target.closest('[data-play]'); if (p) { const [c, n] = p.dataset.play.split(':'); playStory(c, +n); } });
 $('case').addEventListener('click', e => { const b = e.target.closest('[data-newsweek]'); if (b) { newsWeek = +b.dataset.newsweek; openCase('news'); } });
 // Monday morning: the paper for last week is on the counter
 { const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
