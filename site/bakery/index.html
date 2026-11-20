@@ -1971,7 +1971,7 @@ function drawVisitor(now) {
     if (bt.who === 'bingsu') { B.mood = bt.mood || 'happy'; B.moodT = .2; A = 'idle'; at = now/1000; dir = 1; }
     V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
   else if (V.state === 'act') { A = V.act; if (V.t >= 2.2) { V.state = V.puppet && !o ? 'wait' : 'wait'; V.t = 0; } }
-  else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1;
+  else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1; chatter(V, dt, o, f);
     A = f < .3 || lastEff === 'distracted' ? 'impatient' : 'idle'; at = now/1000; }
   else if (V.state === 'served') { A = 'cheer'; if (V.t >= CHEER) { V.t = 0; if (wantsBreak()) { V.state = 'invite'; showInvite(V.c); } else V.state = 'leave'; } }
   else if (V.state === 'invite') { A = 'idle'; at = now/1000; dir = 1; if (V.t > 60) { declineBreak(); } }
@@ -1981,10 +1981,11 @@ function drawVisitor(now) {
   // drawn straight into the scene as vector shapes: crisp at any screen size
   const feet = 372;   // feet just below the frame: standing right at the counter, head above it
   critter(V.c).draw(ctx, A, at, dt, V.x, feet, VIS_H*.86, dir);
-  if (V.state === 'wait' && o) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#5d5049'; const b = `${CUSTOMERS[V.c].name} · ⏳${Math.max(0, Math.ceil(o.pat/SPEED/60))}m`; const w = ctx.measureText(b).width + 14;
+  if (V.state === 'wait' && o && !(V.chat && V.chat.t > 0)) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#5d5049'; const b = `${CUSTOMERS[V.c].name} · ⏳${Math.max(0, Math.ceil(o.pat/SPEED/60))}m`; const w = ctx.measureText(b).width + 14;
     const ty = feet - VIS_H*.9 - 24; shape('#fffaf2', rr(V.x - w/2, ty, w, 18, 9), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(b, V.x, ty + 13); ctx.textAlign = 'start'; }
   V.hit = [V.x - 60, feet - VIS_H, V.x + 60, feet];
   if (V.state === 'story') drawStoryBubble(V, feet);
+  if (V.chat && V.chat.t > 0 && V.state === 'wait') { ctx.save(); ctx.globalAlpha = Math.min(1, V.chat.t*3, (4.5 - V.chat.t)*6); bubble(V.chat.text, V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f'); ctx.restore(); }
   if (V.state === 'invite') bubble(V.from ? 'You’ve been working so hard! Come sit with me? ☕' : 'Got a minute? Come sit with me! ☕', V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f');
 }
 
@@ -2194,6 +2195,25 @@ function scenePt(e) {
 const TAP_ACTS = ['hop', 'dance', 'cheer', 'excited', 'wave', 'bow', 'shy', 'lookAround'];
 const TAP_LINES = {hop: ['Boing!', 'Wheee!'], dance: ['♪ la la la ♪', 'Dance with me!'], cheer: ['Yay!', 'Hooray!'], excited: ['Ooh! Ooh!', 'So exciting!'],
   wave: ['Hi hi!', 'Hello again!'], bow: ['Thank you kindly', 'At your service'], shy: ['Hehe… stop it', 'You’re making me blush'], lookAround: ['Hm? What is it?', 'Something smells good…']};
+// waiting customers chat now and then: about your focus, their bake, or just themselves
+const CHAT = {
+  any: ['Mmm, it smells amazing in here', 'Take your time, Bingsu!', 'I love watching you bake', 'Cosy in here today', 'This is my favourite spot in town'],
+  focus: ['You’re on a roll!', 'Look at you go!', 'So focused… I’m impressed', 'Don’t mind me, keep going!', 'Ooh, it’s coming along nicely'],
+  distracted: ['Um… is the oven okay?', 'Bingsu? Hellooo?', 'I think something’s burning…', 'Maybe back to work?', 'I’m getting a bit hungry…'],
+  late: ['Almost ready…?', 'I can wait a little longer', 'My tummy’s rumbling'],
+  bun: ['My brothers will love these', 'Carrot cookies next time?', 'Hop hop!'], hazel: ['It’s so warm in here', 'I wrote a new poem…', 'Shh, I’m being brave'],
+  mo: ['I walked a long way for this', 'Is that honey I smell?', '*sleepy bear yawn*'], pip: ['Party later! Want to come?', 'Ribbit!', 'I hope it rains tomorrow'],
+  cat: ['That sunny window is calling me', 'Purr…', 'One more nap after this'], dot: ['Quack! Hehe', 'I’m practising being a baker', 'Rainy days are the best days'],
+};
+function chatter(V, dt, o, f) {
+  if (V.chat) V.chat.t -= dt;
+  V.chatIn = (V.chatIn ?? 25) - dt;   // first line after 25s, the next 5 minutes later, then every 3–10 minutes
+  if (V.chatIn > 0 || shopClosed) return;
+  V.chatN = (V.chatN || 0) + 1; V.chatIn = V.chatN === 1 ? 300 : 180 + Math.random()*420;
+  const pool = lastEff === 'distracted' ? CHAT.distracted : f < .35 ? CHAT.late : Math.random() < .45 ? (CHAT[V.c] || CHAT.any) : Math.random() < .5 ? CHAT.focus : CHAT.any;
+  let t; do t = pool[Math.random()*pool.length|0]; while (t === V.lastChat && pool.length > 1);
+  V.lastChat = t; V.chat = {text: t, t: 4.5};
+}
 function tapVisitor(x, y) {
   const V = VIS; if (!V || !V.hit || x < V.hit[0] || x > V.hit[2] || y < V.hit[1] - 30 || y > V.hit[3]) return false;
   if (!['wait', 'act', 'invite'].includes(V.state)) return false;
