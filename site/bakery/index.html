@@ -207,7 +207,7 @@ body.phone #dock>button.off{opacity:.45}
 body.phone #dock>button[hidden]{display:none!important}
 body.phone #gear{width:44px;height:44px;padding:0;border-radius:50%;font-size:20px}
 @media (orientation:landscape){
-  body.phone #dock{margin:0 0 14px}
+  body.phone #dock{position:absolute;top:calc(14px + env(safe-area-inset-top));left:18px;margin:0}   /* pinned to the top of the side drawer */
 }
 /* ---- game HUD + menu ---- */
 .hudbtn{border-radius:999px;padding:8px 16px;font-weight:700;white-space:nowrap;background:transparent;border:1px solid var(--ink);color:var(--ink);display:inline-flex;gap:6px;align-items:center}.hudbtn.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
@@ -232,6 +232,7 @@ body.night{--ink:#f3e9dd;--soft:#3a2f40;--line2:#5a4d62;--bg:#16121b;--card:#221
 body.night,body.night.phone{background:#16121b;color:#efe4d8}
 body.night .top{background:#16121bee;border-color:#352c3c}
 body.night .card,body.night .sheet-box,body.night #case{background:#221c27;color:#efe4d8}
+#invBar,#breakBar{color:#5d5049}body.night #invBar,body.night #breakBar{background:#221c27f2;color:#f3e9dd;border-color:#4a3f52}body.night #invBar button.primary,body.night #breakBar button.primary{color:#3a2610}
 body.night{--sec:#2c2532}body.night .panel code,body.night #onb code{background:#16121b;color:#efe4d8}body.night button.link{background:none!important;border:0!important;color:#f2c27a;text-decoration:underline}body.night .panel h2,body.night .panel h3{color:#efe4d8}
 body.night button:not(.primary):not(.on),body.night input,body.night select,body.night .tiles>button,body.night .tiles>a{background:#2c2532;color:#efe4d8;border-color:#4a3f52}
 body.night.phone #phoneBar{background:#221c27;color:#efe4d8;border-color:#0d0a10}
