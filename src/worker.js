@@ -116,6 +116,21 @@ export class Accounts extends DurableObject {
       await this.ctx.storage.delete('fail:' + email);
       return json({ token: await this.session(email), email, code: u.code });
     }
+    if (path === '/api/admin/reset-link') {   // only callable by the Worker itself after checking ADMIN_KEY
+      const email = String(d.email || '').trim().toLowerCase();
+      if (!(await this.ctx.storage.get('u:' + email))) return json({ error: 'No account with that email.' }, 404);
+      const t = rand(32); await this.ctx.storage.put('reset:' + t, { email, exp: Date.now() + 30 * 60e3 });
+      return json({ token: t });
+    }
+    if (path === '/api/auth/reset') {   // set a new password with a one-time link; the account and its saved progress are kept
+      const r = await this.ctx.storage.get('reset:' + String(d.token || ''));
+      if (!r || r.exp < Date.now()) return json({ error: 'This reset link has expired. Ask for a new one.' }, 400);
+      const pw = String(d.password || ''); if (pw.length < 8) return json({ error: 'Use a password with at least 8 characters.' }, 400);
+      const u = await this.ctx.storage.get('u:' + r.email), salt = rand(16);
+      await this.ctx.storage.put('u:' + r.email, { ...u, salt, hash: await hashPw(pw, salt) });
+      await this.ctx.storage.delete('reset:' + String(d.token)); await this.ctx.storage.delete('fail:' + r.email);
+      return json({ token: await this.session(r.email), email: r.email, code: u.code });
+    }
     const u = await this.user(token);
     if (!u) return json({ error: 'Please log in again.' }, 401);
     if (path === '/api/auth/logout') { await this.ctx.storage.delete('tok:' + token); return json({ ok: true }); }
@@ -138,7 +153,15 @@ export class Accounts extends DurableObject {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if (/^\/api\/(auth\/(signup|login|logout)|me|save)$/.test(url.pathname)) {
+    if (url.pathname === '/api/admin/reset-link') {   // https://…/api/admin/reset-link?email=…&key=ADMIN_KEY  ->  a one-time link to set a new password
+      const key = url.searchParams.get('key') || '';
+      if (!env.ADMIN_KEY || key.length < 16 || key !== env.ADMIN_KEY) return json({ error: 'not allowed' }, 403);
+      const r = await env.ACCOUNTS.get(env.ACCOUNTS.idFromName('accounts')).fetch(new Request(new URL('/api/admin/reset-link', url), { method: 'POST', body: JSON.stringify({ email: url.searchParams.get('email') }) }));
+      const d = await r.json(); if (!d.token) return json(d, r.status);
+      const link = new URL('/bakery/#reset=' + d.token, url).toString();
+      return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font:16px system-ui;padding:30px;background:#fdf0df;color:#5d5049"><p>Reset link (works once, for 30 minutes):</p><p><a href="${link}">Set a new password</a></p>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    }
+    if (/^\/api\/(auth\/(signup|login|logout|reset)|me|save)$/.test(url.pathname)) {
       if (req.method === 'OPTIONS') return new Response(null, { headers: { ...CORS, 'access-control-allow-headers': 'content-type, authorization', 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS' } });
       return env.ACCOUNTS.get(env.ACCOUNTS.idFromName('accounts')).fetch(req);
     }

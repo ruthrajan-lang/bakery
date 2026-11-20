@@ -1530,6 +1530,12 @@ function renderAcct() {
       <div class="chips"><button id="acctSync">↻ Sync now</button><button id="acctOut">Log out</button></div><p class="muted" id="acctMsg" style="margin-top:10px"></p>`;
     return;
   }
+  if (acctMode === 'reset') {
+    el.innerHTML = `<h2>Set a new password</h2><p class="muted" style="white-space:normal">Your bakery and all your progress stay just as they are.</p>
+      <form id="acctForm" style="display:grid;gap:10px;max-width:380px"><input id="acctPw" type="password" autocomplete="new-password" placeholder="New password (8+ characters)" required minlength="8">
+      <button class="primary" type="submit">Save password and log in</button><small style="color:var(--bad)">${esc(acctErr)}</small></form>`;
+    return;
+  }
   const up = acctMode === 'signup';
   el.innerHTML = `<h2>${up ? 'Create your bakery account' : 'Welcome back'}</h2>
     <p class="muted" style="white-space:normal">${up ? 'Save your bakery and use it on your phone and computers. Your current progress comes with you.' : 'Log in to open your bakery on this device.'}</p>
@@ -1542,6 +1548,9 @@ function renderAcct() {
     <p>${up ? 'Already have an account?' : 'New here?'} <button class="link" id="acctSwitch" type="button">${up ? 'Log in' : 'Create an account'}</button></p>`;
 }
 $('acctTop').onclick = $('acctDock').onclick = () => { acctErr = ''; openPanel('acct'); renderAcct(); };
+// a password reset link: #reset=<one-time token>
+const resetToken = (location.hash.match(/^#reset=([a-z0-9]{20,64})$/) || [])[1];
+if (resetToken) { acctMode = 'reset'; setTimeout(() => { document.body.classList.remove('phone'); openPanel('acct'); renderAcct(); }, 300); }
 $('acct').addEventListener('click', async e => {
   if (e.target.id === 'acctSwitch') { acctMode = acctMode === 'signup' ? 'login' : 'signup'; acctErr = ''; renderAcct(); }
   if (e.target.id === 'acctOut') { try { await api('/api/auth/logout', {method: 'POST', body: '{}'}); } catch (_) {} signedOut(); renderAcct(); }
@@ -1549,6 +1558,13 @@ $('acct').addEventListener('click', async e => {
 });
 $('acct').addEventListener('submit', async e => {
   e.preventDefault();
+  if (acctMode === 'reset') {
+    try { const d = await api('/api/auth/reset', {method: 'POST', body: JSON.stringify({token: resetToken, password: $('acctPw').value})});
+      AUTH = {token: d.token, email: d.email}; ls('focusbakery-auth', JSON.stringify(AUTH)); adoptCode(d.code); renderAcctBtn(); await pullSave(true);
+      acctMode = 'login'; history.replaceState(null, '', location.pathname + location.search); closePanels(); floats.push({x: W/2, y: 120, text: 'New password saved ✓', t: 0});
+    } catch (err) { acctErr = err.message; renderAcct(); }
+    return;
+  }
   const email = $('acctEmail').value.trim(), password = $('acctPw').value, up = acctMode === 'signup';
   try {
     const d = await api(up ? '/api/auth/signup' : '/api/auth/login', {method: 'POST', body: JSON.stringify({email, password, code: up ? CODE : undefined})});
