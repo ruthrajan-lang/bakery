@@ -1183,10 +1183,13 @@ $('modes').onclick = e => { const k = e.target.dataset.k; if (k) { manual = k ==
 let soundOn = false, actx = null, lastChime = 0, titleT = 0;
 const tile = (el, ic, t) => { if (el) el.innerHTML = `<i>${ic}</i><span>${t}</span>`; };
 applyNight();
+const startAudio = () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state !== 'running') actx.resume(); } catch (e) {} };
 $('sound').onclick = () => {
-  soundOn = !soundOn; tile($('sound'), soundOn ? '🔔' : '🔕', soundOn ? 'Sound on' : 'Sound off');
-  if (soundOn) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); chime(1); } catch (e) {} }
+  soundOn = !soundOn; ls('focusbakery-sound', soundOn ? '1' : '0'); tile($('sound'), soundOn ? '🔔' : '🔕', soundOn ? 'Sound on' : 'Sound off');
+  if (soundOn) { startAudio(); chime(1); }
 };
+// remember the choice; browsers only allow sound after a tap, so it wakes up on the first one
+if (ls('focusbakery-sound') === '1') { soundOn = true; tile($('sound'), '🔔', 'Sound on'); ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, startAudio, {passive: true})); }
 function chime(level) {
   if (!soundOn || !actx) return;
   const notes = level > 1 ? [880, 660, 880, 660] : [660, 880];
