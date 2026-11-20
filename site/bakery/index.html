@@ -1072,10 +1072,11 @@ const stars = q => q > .85 ? '★★★' : q > .5 ? '★★☆' : '★☆☆';
 let caseTab = 'case';
 function openCase(tab) {
   if (typeof tab === 'string') caseTab = tab;
-  const el = $('case'), tabs = `<div class="tabs">${[['case', '🧁 Display case'], ['shop', '🛍️ Shop'], ['earn', '🪙 Earnings'], ['rew', '🏆 Rewards'], ['stories', '📖 Stories'], ['news', '📰 Weekly']].map(([k, l]) => `<button data-tab="${k}" class="${caseTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const el = $('case'), tabs = `<div class="tabs">${[['case', '🧁 Display case'], ['shop', '🛍️ Shop'], ['earn', '🪙 Earnings'], ['rew', '🏆 Rewards'], ['stories', '📖 Stories'], ['music', '🎵 Music'], ['news', '📰 Weekly']].map(([k, l]) => `<button data-tab="${k}" class="${caseTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   if (caseTab === 'earn') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + earningsHTML(); el.hidden = false; return; }
   if (caseTab === 'shop') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + shopHTML(); el.hidden = false; return; }
   if (caseTab === 'news') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + newsHTML(); el.hidden = false; return; }
+  if (caseTab === 'music') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + musicHTML(); el.hidden = false; return; }
   if (caseTab === 'stories') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + storiesHTML(); el.hidden = false; return; }
   if (caseTab === 'rew') { el.innerHTML = '<button class="close" id="caseClose">✕ Close</button>' + tabs + rewardsHTML(); el.hidden = false; return; }
   const H2 = S.hist || [], today = new Date().toDateString();
@@ -1121,6 +1122,14 @@ function storiesHTML() {
     return `<h3 style="margin:18px 0 8px">${FRIEND_EMO[c] || '🙂'} ${C.name}</h3><div class="rew">${ch}</div>`; }).join('');
   const total = Object.values(STORIES2).reduce((a, l) => a + l.length, 0), open = Object.keys(STORIES2).reduce((a, c) => a + ((CUSTOMERS[c].lvl || 1) <= lv ? storiesFor(c).length : 0), 0);
   return `<h2>📖 Stories</h2><p class="sub">${open} of ${total} unlocked · each focused hour unlocks the next chapter for every friend</p>${rows}`;
+}
+function musicHTML() {
+  const hrs = (S.life || 0)/3600;
+  const rows = Object.entries(BakeryMusic.TRACKS).map(([id, t]) => { const ok = musicUnlocked(id), cur = curTrack() === id;
+    return `<div class="${ok ? 'ok' : ''}"><div class="ic">${ok ? (cur && musicOn ? '🎶' : '🎵') : '🔒'}</div><div><b>${ok ? t.name : '???'}</b><small>${ok ? t.desc : `Focus ${Math.max(1, Math.ceil(t.hours - hrs))} more hour${Math.ceil(t.hours - hrs) > 1 ? 's' : ''} to unlock`}</small></div>${ok ? `<button data-track="${id}">${cur && musicOn ? '✓ Playing' : '▶ Play'}</button>` : ''}</div>`; }).join('');
+  const n = Object.keys(BakeryMusic.TRACKS).filter(musicUnlocked).length;
+  return `<h2>🎵 Music</h2><p class="sub">${n} of ${Object.keys(BakeryMusic.TRACKS).length} pieces unlocked · new pieces unlock as you focus</p><div class="rew">${rows}</div>
+    <p class="sub" style="margin-top:12px">${musicOn ? 'Music is on.' : 'Music is off.'} <button class="link" data-musictoggle="1">${musicOn ? 'Turn it off' : 'Turn it on'}</button></p>`;
 }
 function playStory(c, n) {
   $('case').hidden = true;
@@ -1203,7 +1212,9 @@ $('sound').onclick = () => {
 // gentle background music (music.js): its own toggle, remembered, quiet, pauses when the app isn't on screen
 let musicOn = ls('focusbakery-music') === '1';
 const showMusic = () => tile($('musicBtn'), musicOn ? '🎶' : '🎵', musicOn ? 'Music on' : 'Music off');
-function syncMusic() { if (musicOn && !document.hidden && actx && actx.state !== 'closed') { if (actx.state !== 'running') actx.resume().then(syncMusic).catch(() => {}); else BakeryMusic.start(actx); } else BakeryMusic.stop(); }
+const musicUnlocked = id => (S.life || 0) >= BakeryMusic.TRACKS[id].hours*3600;
+const curTrack = () => S.track && BakeryMusic.TRACKS[S.track] && musicUnlocked(S.track) ? S.track : 'waltz';
+function syncMusic() { if (musicOn && !document.hidden && actx && actx.state !== 'closed') { if (actx.state !== 'running') actx.resume().then(syncMusic).catch(() => {}); else BakeryMusic.start(actx, curTrack()); } else BakeryMusic.stop(); }
 $('musicBtn').onclick = () => { musicOn = !musicOn; ls('focusbakery-music', musicOn ? '1' : '0'); showMusic(); if (musicOn) startAudio(); setTimeout(syncMusic, 100); };
 document.addEventListener('visibilitychange', syncMusic); showMusic();
 if (musicOn) ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => addEventListener(ev, () => { startAudio(); syncMusic(); setTimeout(syncMusic, 150); }, {passive: true}));
@@ -1773,6 +1784,8 @@ function trackComeback(eff) {
 function progressTick(rdt, sim) {
   if (sim === 'focused' && Math.floor(((S.life || 0) + rdt)/(CHAPTER_H*3600)) > Math.floor((S.life || 0)/(CHAPTER_H*3600)) && Math.floor((S.life || 0)/(CHAPTER_H*3600)) < 3)
     floats.push({x:W/2, y:96, text:'📖 New chapters unlocked in your friends’ stories', t:0});
+  if (sim === 'focused' && window.BakeryMusic) for (const [id, t] of Object.entries(BakeryMusic.TRACKS)) if (t.hours && (S.life || 0) < t.hours*3600 && (S.life || 0) + rdt >= t.hours*3600)
+    queueReward({kind: 'bonus', icon: '🎵', title: `New music: ${t.name}`, sub: 'Play it from 🧁 → 🎵 Music', coins: 0});
   if (sim === 'focused') { S.life = (S.life || 0) + rdt; const d = dayLog(); d.focus += rdt; d.best = Math.max(d.best, streak); }
   const d = dayLog();
   if (!d.goalMet && goalProgress() >= 1) { d.goalMet = true; const st = dayStreak();
@@ -1870,6 +1883,10 @@ function newsHTML() {
     <p>🔥 <b>Streak:</b> ${dayStreak()} day${dayStreak() === 1 ? '' : 's'}. 🥐 <b>Your bakery:</b> ${LEVELS[level() - 1].name}.</p></div>
     <div class="chips"><button data-newsweek="1" class="${newsWeek ? 'on' : ''}">Last week</button><button data-newsweek="0" class="${newsWeek ? '' : 'on'}">This week</button><button id="newsCopy">📋 Copy to share</button></div></div>`;
 }
+$('case').addEventListener('click', e => {
+  const tr = e.target.closest('[data-track]'), mt = e.target.closest('[data-musictoggle]');
+  if (tr) { S.track = tr.dataset.track; save(); if (!musicOn) { musicOn = true; ls('focusbakery-music', '1'); showMusic(); } startAudio(); BakeryMusic.start(actx, curTrack()); openCase('music'); }
+  if (mt) { $('musicBtn').click(); setTimeout(() => openCase('music'), 150); } });
 $('case').addEventListener('click', e => { const p = e.target.closest('[data-play]'); if (p) { const [c, n] = p.dataset.play.split(':'); playStory(c, +n); } });
 $('case').addEventListener('click', e => { const b = e.target.closest('[data-newsweek]'); if (b) { newsWeek = +b.dataset.newsweek; openCase('news'); } });
 // Monday morning: the paper for last week is on the counter
@@ -1972,7 +1989,7 @@ function drawVisitor(now) {
     V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
   else if (V.state === 'act') { A = V.act; if (V.t >= 2.2) { V.state = V.puppet && !o ? 'wait' : 'wait'; V.t = 0; } }
   else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1; chatter(V, dt, o, f);
-    A = (o && o.pat/SPEED < 120) || lastEff === 'distracted' ? 'impatient' : 'idle'   // taps only when you're distracted or they're about to leave (last 2 minutes); at = now/1000; }
+    A = (o && o.pat/SPEED < 120) || lastEff === 'distracted' ? 'impatient' : 'idle'; at = now/1000; }   // taps only when you're distracted or they're about to leave (last 2 minutes)
   else if (V.state === 'served') { A = 'cheer'; if (V.t >= CHEER) { V.t = 0; if (wantsBreak()) { V.state = 'invite'; showInvite(V.c); } else V.state = 'leave'; } }
   else if (V.state === 'invite') { A = 'idle'; at = now/1000; dir = 1; if (V.t > 60) { declineBreak(); } }
   else if (V.state === 'upset') { A = 'impatient'; if (V.t >= 1.4) { V.state = 'leave'; V.t = 0; } }
