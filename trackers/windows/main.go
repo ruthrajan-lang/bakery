@@ -27,7 +27,7 @@ import (
 )
 
 const site = "https://bakery.ruththomson.workers.dev"
-const version = 6   // bump with each release; the app updates itself when /bakery/winapp-version.txt is higher
+const version = 7   // bump with each release; the app updates itself when /bakery/winapp-version.txt is higher
 const idleAfter = 120 * time.Second
 
 var defaultList = []string{"YouTube", "Reddit", "Twitter", " / X", "Instagram", "Facebook", "TikTok", "Netflix", "Twitch", "Hulu", "Disney+", "Discord", "Steam"}
@@ -232,50 +232,54 @@ func send(code, state, why, dev string) error {
 }
 
 // self-update: download the newer exe next to this one, swap it in, restart
-func checkUpdate() {
+func checkUpdate() string {
 	r, err := client.Get(site + "/bakery/winapp-version.txt")
 	if err != nil {
-		return
+		return "Couldn’t reach the bakery to check. Check your internet connection and try again."
 	}
 	b := make([]byte, 16)
 	n, _ := r.Body.Read(b)
 	r.Body.Close()
 	var v int
-	if _, err := fmt.Sscan(strings.TrimSpace(string(b[:n])), &v); err != nil || v <= version {
-		return
+	if _, err := fmt.Sscan(strings.TrimSpace(string(b[:n])), &v); err != nil {
+		return "Couldn’t check for updates right now. Try again in a minute."
+	}
+	if v <= version {
+		return fmt.Sprintf("You’re up to date (version %d).", version)
 	}
 	exe, err := os.Executable()
 	if err != nil {
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	dl := &http.Client{Timeout: 2 * time.Minute}
 	resp, err := dl.Get(site + "/bakery/FocusBakery.exe")
 	if err != nil || resp.StatusCode != 200 {
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	defer resp.Body.Close()
 	tmp := exe + ".new"
 	f, err := os.Create(tmp)
 	if err != nil {
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	if _, err := io.Copy(f, resp.Body); err != nil {
 		f.Close()
 		os.Remove(tmp)
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	f.Close()
 	os.Remove(exe + ".old")
 	if os.Rename(exe, exe+".old") != nil {   // Windows lets a running exe be renamed, not overwritten
 		os.Remove(tmp)
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	if os.Rename(tmp, exe) != nil {
 		os.Rename(exe+".old", exe)
-		return
+		return "The update didn’t download. Try again in a minute."
 	}
 	exec.Command(exe).Start()
 	os.Exit(0)
+	return ""
 }
 
 func main() {
@@ -317,6 +321,7 @@ func onReady(code string) {
 	mSites := systray.AddMenuItem("Choose distracting sites…", "")
 	mPause := systray.AddMenuItem("Pause for 30 minutes", "Counts as away, so nothing is lost")
 	mAuto := systray.AddMenuItemCheckbox("Start with Windows", "", autostart())
+	mUpd := systray.AddMenuItem(fmt.Sprintf("Check for updates (v%d)", version), "Download the newest version and restart")
 	systray.AddSeparator()
 	mQuit := systray.AddMenuItem("Quit", "")
 
@@ -347,6 +352,9 @@ func onReady(code string) {
 					mAuto.Uncheck()
 					os.WriteFile(marker, nil, 0o600)
 				}
+			case <-mUpd.ClickedCh:
+				mUpd.SetTitle("Checking for updates…")
+				go func() { msg := checkUpdate(); mUpd.SetTitle(fmt.Sprintf("Check for updates (v%d)", version)); msgBox(msg) }()   // on a new version it restarts itself instead
 			case <-mQuit.ClickedCh:
 				systray.Quit()
 				return
