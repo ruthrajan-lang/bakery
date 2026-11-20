@@ -1317,7 +1317,9 @@ function renderConnect() {
       <section><h3>📱 Phone</h3>
         <div class="phoneRow"><div id="qr"></div><div><p class="muted" style="white-space:normal">Scan or open <b>${phone.replace(/^https?:\/\//, '')}</b>${AUTH ? ' and log in' : ''}, then:<br><b>Android:</b> Chrome ⋮ → Install app<br><b>iPhone:</b> Share → Add to Home Screen</p><button id="copylink">Copy link</button></div></div><code hidden>${phone}</code></section>
       <section><h3>🔗 Ritual</h3>
-        <p class="muted" style="white-space:normal">Shares your current task, focus blocks and the exact sites you visit. Use this in the browser where Ritual is installed.</p>
+        <p class="muted" style="white-space:normal"><b>Ritual</b> is a free new-tab extension for planning your day mindfully. Linked to the bakery, the task you pick in Ritual shows up here, starting a focus block starts a matching bake, and it spots distracting sites right in your browser, even on a computer without the tracker.</p>
+        <p style="margin:6px 0 10px"><a class="dl" href="https://chromewebstore.google.com/detail/ritual-mindful-productivi/pnpkbdohbndooolbhgldlfcmkgcmdgga" target="_blank" rel="noopener">Get Ritual for Chrome</a></p>
+        <p class="muted" style="white-space:normal">Already have it? Link it in this browser:</p>
         <button id="linkRitual">Link Ritual</button> <small id="ritualMsg">${ritualSeen ? 'Ritual found in this browser' : ''}</small></section>
     </div>
     ${AUTH ? '' : `<p><small>Pairing code: ${CODE} · <a href="#" id="unpair">disconnect this device</a></small></p>`}`;
@@ -2462,7 +2464,7 @@ function renderOnb() {
       <div class="os"><button data-os="win" class="${onbOS === 'win' ? 'on' : ''}">💻 Windows</button><button data-os="mac" class="${onbOS === 'mac' ? 'on' : ''}">🍎 Mac</button></div>
       ${onbOS === 'win' ? `<a class="dl" href="FocusBakery.exe" download="FocusBakery-${CODE}.exe">⬇︎ Download for Windows</a><p class="lead">Open it and a little cat appears by the clock. If Windows says it “protected your PC”, choose <b>More info → Run anyway</b>.</p>`
         : `<p class="lead" style="margin-bottom:4px">Open <b>Terminal</b>, paste this and leave it running. Click <b>OK</b> when macOS asks.</p><code>${esc(cmd)}</code><button data-o="copy">Copy</button>`}
-      ${isPhone ? '<p class="lead">You’re on a phone: do this step on your computer, then come back.</p>' : ''}
+      ${isPhone ? '<p class="lead">You’re on a phone: do this step on your computer, then come back.</p>' : `<p class="lead" style="font-size:13px">Tip: <a href="https://chromewebstore.google.com/detail/ritual-mindful-productivi/pnpkbdohbndooolbhgldlfcmkgcmdgga" target="_blank" rel="noopener">Ritual</a>, a free Chrome new-tab extension, can send your tasks and focus blocks to the bakery too. Link it later from ☰ → Connect devices.</p>`}
       <p id="onbLive">${trackerRaw ? '<span class="ok">✓ Your computer is connected</span>' : '<span class="muted">Waiting for your computer…</span>'}</p>${nav(trackerRaw ? 'Next' : 'I’ll do this later', false)}`; }
   if (onbStep === 3) { ensureCode(); const link = AUTH ? `${SITE}/bakery/` : `${SITE}/bakery/?code=${CODE}`;
     h = `<h2>Put it on your phone (optional)</h2><p class="lead">Your phone makes a lovely little bakery window on your desk. Scan this, ${AUTH ? 'log in, ' : ''}then add it to your home screen.</p>
