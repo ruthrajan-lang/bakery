@@ -79,15 +79,13 @@
       for (const [n, st] of [['footL', p.stepL || 0], ['footR', p.stepR || 0]]) if ((q = part(n))) { g.save(); g.translate(0, -st*34); paint(q); g.restore(); }
       if ((q = part('tuft'))) { const hq = part('head'); about(hq, hd, () => about(q, tf*.5, () => paint(q))); }
       if ((q = part('head'))) about(q, hd, () => paint(q, {lx: lk*26, draw: hq => {   // expressions drawn over the traced eyes
-        if (face === 'cross') {   // angry: slanted brows, red flush, and a little anger mark
+        if (face === 'cross') {   // mildly put out: gently slanted brows and a small pout
           const [[lx, ly, r], [rx]] = hq.eyes;
-          g.strokeStyle = ink; g.lineWidth = r*.5; g.lineCap = 'round';
-          for (const [ex, sd] of [[lx, -1], [rx, 1]]) { g.beginPath(); g.moveTo(ex + sd*r*1.3, ly - r*2.2); g.lineTo(ex - sd*r*.9, ly - r*1.35); g.stroke(); }   // inner ends low = cross
-          if (hq.mouth) { const [x0, y0, x1, y1, col] = hq.mouth, cxm = (x0 + x1)/2, w = (x1 - x0)*.36, cy = (y0 + y1)/2;   // swap the smile for a pout
+          g.strokeStyle = ink; g.lineWidth = r*.36; g.lineCap = 'round';
+          for (const [ex, sd] of [[lx, -1], [rx, 1]]) { g.beginPath(); g.moveTo(ex + sd*r*1.1, ly - r*1.95); g.lineTo(ex - sd*r*.8, ly - r*1.6); g.stroke(); }
+          if (hq.mouth) { const [x0, y0, x1, y1, col] = hq.mouth, cxm = (x0 + x1)/2, w = (x1 - x0)*.26, cy = (y0 + y1)/2;
             g.fillStyle = col; g.beginPath(); g.roundRect(x0 - 6, y0 - 6, x1 - x0 + 12, y1 - y0 + 12, 12); g.fill();
-            g.lineWidth = r*.42; g.beginPath(); g.moveTo(cxm - w, cy + r*.45); g.quadraticCurveTo(cxm, cy - r*.55, cxm + w, cy + r*.45); g.stroke(); }
-          const mx = rx + r*3.2, my = ly - r*4.2, k = r*.75 + Math.sin(this.tm*9)*r*.08; g.strokeStyle = '#e0534f'; g.lineWidth = r*.42;
-          for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.moveTo(mx + a*k*.35, my + b*k*1.1); g.quadraticCurveTo(mx + a*k*.35, my + b*k*.35, mx + a*k*1.1, my + b*k*.35); g.stroke(); }
+            g.lineWidth = r*.36; g.beginPath(); g.moveTo(cxm - w, cy + r*.25); g.quadraticCurveTo(cxm, cy - r*.3, cxm + w, cy + r*.25); g.stroke(); }
           return; }
         if (face === 'happy' && this.blink <= 0 || face === 'shy') return;
         for (const [ex, ey, r] of hq.eyes) {

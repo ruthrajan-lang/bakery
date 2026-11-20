@@ -139,7 +139,7 @@ button.check:hover{border-color:#4c9a3c;background:#eef8ea}button.check:hover::a
 #case .rew i{display:block;height:6px;background:#eadfd2;border-radius:3px;margin-top:5px;overflow:hidden}#case .rew u{display:block;height:100%;background:#f2b25c}
 #case .rew em{font-style:normal;font-weight:700;font-size:13px;color:#8a7768}#case .rew .ok em{color:#4c9a3c}
 #pill{display:none}
-body.phone #pill{display:block;cursor:pointer;max-width:calc(100vw - 180px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:fixed;top:calc(18px + env(safe-area-inset-top));left:14px;padding:6px 12px;border-radius:999px;font:600 13px system-ui;background:#fffaf2e6;color:#5d5049;border:2px solid #5d5049}
+body.phone #pill{display:block;cursor:pointer;max-width:calc(100vw - 28px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:fixed;top:calc(18px + env(safe-area-inset-top));left:14px;padding:6px 12px;border-radius:999px;font:600 13px system-ui;background:#fffaf2e6;color:#5d5049;border:2px solid #5d5049}
 #pill.d{background:#e0533f;color:#fff;border-color:#a83426}#pill.g{background:#f2b25c;border-color:#b9802f}#pill.off{opacity:.7}
 body.phone.dist #phoneBar{background:#b8434b;color:#fff1ee}
 body.phone.dist #phoneSub{color:#ffd3cc}
@@ -170,7 +170,7 @@ body.phone.dist{background:#c9545a}
   body.phone{flex-direction:row;justify-content:flex-start}
   body.phone #phoneBar{left:auto;right:0;top:0;bottom:0;width:240px;display:flex;flex-direction:column;justify-content:center;padding:16px calc(16px + env(safe-area-inset-right)) 16px 18px;border-top:0;border-left:3px solid #5d5049;text-align:left}
   body.phone #phoneTask{white-space:normal;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
-  body.phone #pill{left:14px;right:auto;top:calc(var(--dockh, 54px) + 18px + env(safe-area-inset-top));bottom:auto}
+  body.phone #pill{left:14px;right:auto;top:calc(12px + env(safe-area-inset-top));bottom:auto}
 }
 /* bottom bar tucked away until swiped up (side panel in landscape: swipe left) */
 body.phone #phoneBar{transition:transform .35s ease,background .8s;touch-action:none}
@@ -200,14 +200,14 @@ body.phone:not(.barOpen) #phoneBar{transform:translateY(calc(100% - 22px - env(s
 
 /* phone: one tidy dock of round icon buttons under the status pill */
 #dock{display:none}
-body.phone #dock{display:flex;position:fixed;z-index:11;top:calc(8px + env(safe-area-inset-top));right:12px;gap:4px;padding:4px;background:#fffaf2e6;border:2px solid #5d5049;border-radius:999px;box-shadow:0 4px 14px #5d50491a}
+body.phone #dock{display:flex;position:static;width:max-content;margin:0 auto 12px;justify-content:center;gap:4px;padding:4px;background:#fffaf2e6;border:2px solid #5d5049;border-radius:999px;box-shadow:0 4px 14px #5d50491a}
 body.phone #dock>button{position:static!important;display:grid!important;place-items:center;width:40px;height:40px;padding:0;border:0!important;border-radius:50%;background:transparent!important;font-size:19px;line-height:1;color:#5d5049}
 body.phone #dock>button:active{background:#f6e6cf!important}
 body.phone #dock>button.off{opacity:.45}
 body.phone #dock>button[hidden]{display:none!important}
 body.phone #gear{width:44px;height:44px;padding:0;border-radius:50%;font-size:20px}
 @media (orientation:landscape){
-  body.phone #dock{top:calc(10px + env(safe-area-inset-top));left:12px;right:auto}
+  body.phone #dock{margin:0 0 14px}
 }
 /* ---- game HUD + menu ---- */
 .hudbtn{border-radius:999px;padding:8px 16px;font-weight:700;white-space:nowrap;background:transparent;border:1px solid var(--ink);color:var(--ink);display:inline-flex;gap:6px;align-items:center}.hudbtn.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
@@ -1549,7 +1549,7 @@ addEventListener('touchend', e => {
   if (land && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) setBar(dx < 0);
   if (!land && Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) setBar(dy < 0);
 }, {passive: true});
-$('phoneBar').addEventListener('click', e => { if (e.target.id === 'phoneDone') { completeTask(); return; } setBar(!document.body.classList.contains('barOpen')); });
+$('phoneBar').addEventListener('click', e => { if (e.target.closest('#dock')) return; if (e.target.id === 'phoneDone') { completeTask(); return; } setBar(!document.body.classList.contains('barOpen')); });
 // ---- install as an app (Android Chrome) ----
 let installEvt = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('install').hidden = false; });
@@ -2118,7 +2118,7 @@ function drawVisitor(now) {
     V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
   else if (V.state === 'act') { A = V.act; if (V.t >= 2.2) { V.state = V.puppet && !o ? 'wait' : 'wait'; V.t = 0; } }
   else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1; chatter(V, dt, o, f);
-    const cross = (o && o.pat/SPEED < 120) || lastEff === 'distracted'; V.crossT = cross ? (V.crossT || 0) + dt : 0;
+    const cross = lastEff === 'distracted';   // only while you're off focus V.crossT = cross ? (V.crossT || 0) + dt : 0;
     A = !cross ? 'idle' : V.crossT < 10 ? 'impatient' : 'grumpy'; at = now/1000; }   // a 10s foot tap, then a cross huff   // taps only when you're distracted or they're about to leave (last 2 minutes)
   else if (V.state === 'served') { A = 'cheer'; if (V.t >= CHEER) { V.t = 0; if (wantsBreak()) { V.state = 'invite'; showInvite(V.c); } else V.state = 'leave'; } }
   else if (V.state === 'invite') { A = 'idle'; at = now/1000; dir = 1; if (V.t > 60) { declineBreak(); } }
@@ -2141,6 +2141,7 @@ function bringIn(c) {
 }
 // gather the phone's round buttons into one dock
 ['acctDock', 'caseBtn', 'closeBtn', 'gear'].forEach(id => { const el = $(id); if (el) $('dock').appendChild(el); });
+$('phoneBar').insertBefore($('dock'), $('phoneTask'));   // the buttons live in the drawer: nothing floats over the bakery when it's closed
 
 // ---- little stories: Mango and Bingsu chat, one scene at a time ----
 const STORIES2 = {dot:[
