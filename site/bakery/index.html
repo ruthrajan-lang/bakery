@@ -2116,7 +2116,7 @@ function drawVisitor(now) {
   else if (V.state === 'wave') { A = 'wave'; if (V.t >= WAVE) { if (V.invite) { V.invite = false; V.state = 'invite'; showInvite(V.c); } else if (V.queuedStory) { const f = V.queuedStory; V.queuedStory = null; f(); } else if (V.queued) { V.state = 'act'; V.act = V.queued; V.queued = null; } else V.state = 'wait'; V.t = 0; } }
   else if (V.state === 'story') { const bt = V.story.beats[V.story.i] || {}; A = bt.act || 'idle'; at = V.story.t;
     if (bt.who === 'bingsu') { B.mood = bt.mood || 'happy'; B.moodT = .2; A = 'idle'; at = now/1000; dir = 1; }
-    V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
+    V.story.t += dt; if (V.story.t > (V.story.i === 0 ? 45 : (bt.wait || Math.max(2.6, (bt.say || '').length*.075)))) storyNext(); }   // the first line waits for your tap, the rest flow on
   else if (V.state === 'act') { A = V.act; if (V.t >= 2.2) { V.state = V.puppet && !o ? 'wait' : 'wait'; V.t = 0; } }
   else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1; chatter(V, dt, o, f);
     const cross = lastEff === 'distracted';   // only while you're off focus V.crossT = cross ? (V.crossT || 0) + dt : 0;
@@ -2327,7 +2327,7 @@ function drawStoryBubble(V, feet) {
   if (bt.who === 'bingsu') bubble(bt.say, B.x + 125, 138, B.x + 55, false, '#c46a7a');
   else bubble(bt.say, V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f');
   ctx.restore();
-  if (V.story.i === 0 && V.story.t < 6) { ctx.fillStyle = night() ? '#f3e9ddaa' : '#5d5049aa'; ctx.font = '600 10px Nunito, system-ui'; ctx.textAlign = 'center'; ctx.fillText('tap to continue', V.x + 70, feet - VIS_H*.95 + 16); ctx.textAlign = 'start'; }   // just under the bubble, only at the start
+  if (V.story.i === 0) { ctx.fillStyle = night() ? '#f3e9ddaa' : '#5d5049aa'; ctx.font = '600 10px Nunito, system-ui'; ctx.textAlign = 'center'; ctx.fillText('tap to continue', V.x + 70, feet - VIS_H*.95 + 16); ctx.textAlign = 'start'; }   // just under the bubble, only at the start
 }
 
 // ---- break room: while the bakery is closed you can still hang out with Bingsu ----
