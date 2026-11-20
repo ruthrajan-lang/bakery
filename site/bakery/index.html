@@ -96,7 +96,7 @@ button.check:hover{border-color:#4c9a3c;background:#eef8ea}button.check:hover::a
 #update{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom));z-index:30;background:#f2b25c;color:#2a211c;border-color:#5d5049;font-weight:700}
 #update[hidden]{display:none}
 #breakBar{position:fixed;left:8px;right:8px;bottom:calc(30px + env(safe-area-inset-bottom));z-index:13;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:700px;margin:0 auto;background:#fffaf2ee;border:2px solid #5d5049;border-radius:18px;padding:8px 10px;box-shadow:0 6px 20px #5d504926}
-#breakBar[hidden],#invBar[hidden]{display:none}#invBar{position:fixed;left:8px;right:8px;bottom:calc(30px + env(safe-area-inset-bottom));z-index:14;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:560px;margin:0 auto;background:#fffaf2f2;border:2px solid #5d5049;border-radius:18px;padding:8px 10px;box-shadow:0 6px 20px #5d504926}#invBar span{font-weight:600;padding:0 4px}#invBar button{border-radius:999px;padding:7px 12px}#breakBar button{border-radius:999px;padding:7px 12px;white-space:nowrap;flex:none}
+#breakBar[hidden],#invBar[hidden]{display:none}#invBar{color:#5d5049;position:fixed;left:8px;right:8px;bottom:calc(30px + env(safe-area-inset-bottom));z-index:14;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:560px;margin:0 auto;background:#fffaf2f2;border:2px solid #5d5049;border-radius:18px;padding:8px 10px;box-shadow:0 6px 20px #5d504926}#invBar span{font-weight:600;padding:0 4px}#invBar button{border-radius:999px;padding:7px 12px}#breakBar button{border-radius:999px;padding:7px 12px;white-space:nowrap;flex:none}
 /* display case */
 #case{position:fixed;inset:0;z-index:20;background:#fbf3e8;color:#5d5049;overflow:auto;padding:calc(22px + env(safe-area-inset-top)) max(18px, calc(50vw - 520px)) 30px;font-family:system-ui}
 #case .close{right:max(14px, calc(50vw - 520px))}
@@ -1447,9 +1447,9 @@ $('dist').addEventListener('click', async e => {
 $('dist').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'distNew') $('distAdd').click(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 // ---- keep the screen on (Screen Wake Lock) ----
-let wakeOn = ls('focusbakery-wake') !== '0', wakeLock = null;
+let wakeOn = ls('focusbakery-wake') !== '0', wakeLock = null, wakeBusy = false;   // wakeBusy: a friend is visiting or telling a story during a break
 async function applyWake() {
-  const want = wakeOn && document.body.classList.contains('phone') && document.visibilityState === 'visible' && !(shopClosed && S.hours && S.hours.sleep);
+  const want = wakeOn && document.body.classList.contains('phone') && document.visibilityState === 'visible' && !(shopClosed && S.hours && S.hours.sleep && !S.breakUntil && !wakeBusy);
   try {
     if (want && !wakeLock && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
     if (!want && wakeLock) { await wakeLock.release(); wakeLock = null; }
@@ -2261,7 +2261,7 @@ function petBingsu(x = B.x, y = 150) {
 function drawBreak(now) {
   if (!breakBusy()) { $('breakBar').hidden = true; return; }
   const v = sceneView();
-  ctx.fillStyle = 'rgba(253,240,223,.25)'; ctx.fillRect(0, 0, W, H);
+  if (!(VIS && VIS.state === 'story')) { ctx.fillStyle = 'rgba(253,240,223,.25)'; ctx.fillRect(0, 0, W, H); }   // no haze over a friend's story
   const left = S.breakUntil ? Math.max(0, Math.ceil((S.breakUntil - Date.now())/60e3)) : 0;
   ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; const tag = S.breakUntil && CUSTOMERS[S.breakWith] ? `☕ Break with ${CUSTOMERS[S.breakWith].name} · ${left}m left` : '☕ Break time · the bakery is closed';
   const tw = ctx.measureText(tag).width + 20, tx = (v.x0 + v.x1)/2; shape('#fffaf2', rr(tx - tw/2, 18, tw, 22, 11), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(tag, tx, 33); ctx.textAlign = 'start';
@@ -2433,6 +2433,7 @@ function loop(now) {
   draw(now, eff);
   if ((hudT += rdt) > .25) { hudT = 0; hud(now, eff); renderGoalHud(); }
   if (shopClosed !== loop.wasClosed) { loop.wasClosed = shopClosed; applyWake(); }
+  { const busy = !!shopClosed && breakBusy(); if (busy !== wakeBusy) { wakeBusy = busy; applyWake(); } }
   if (shopClosed && !CEL && !breakBusy()) setTimeout(() => requestAnimationFrame(loop), 1000); else requestAnimationFrame(loop);   // closed: one frame a second
 }
 requestAnimationFrame(loop);
