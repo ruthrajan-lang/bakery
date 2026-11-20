@@ -170,7 +170,7 @@ body.phone.dist{background:#c9545a}
   body.phone{flex-direction:row;justify-content:flex-start}
   body.phone #phoneBar{left:auto;right:0;top:0;bottom:0;width:240px;display:flex;flex-direction:column;justify-content:center;padding:16px calc(16px + env(safe-area-inset-right)) 16px 18px;border-top:0;border-left:3px solid #5d5049;text-align:left}
   body.phone #phoneTask{white-space:normal;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
-  body.phone #pill{left:12px;right:auto;top:auto;bottom:calc(12px + env(safe-area-inset-bottom))}
+  body.phone #pill{left:14px;right:auto;top:calc(var(--dockh, 54px) + 18px + env(safe-area-inset-top));bottom:auto}
 }
 /* bottom bar tucked away until swiped up (side panel in landscape: swipe left) */
 body.phone #phoneBar{transition:transform .35s ease,background .8s;touch-action:none}
@@ -310,6 +310,8 @@ function fit() {
   if (bar) { const b = bar.getBoundingClientRect();
     if (b.width >= r.width - 2) sh = Math.max(120, Math.min(r.height, b.top - r.top));      // bar along the bottom
     else sw = Math.max(200, Math.min(r.width, b.left - r.left)); }                          // bar along the right
+  if (phone) for (const id of ['breakBar', 'invBar']) { const el = document.getElementById(id); if (el && !el.hidden) { const b = el.getBoundingClientRect(); if (b.height) sh = Math.max(120, Math.min(sh, b.top - r.top - 4)); } }   // keep friends above the bar
+  if (phone) { const d = document.getElementById('dock'); if (d) document.body.style.setProperty('--dockh', Math.round(d.getBoundingClientRect().height) + 'px'); }
   const portrait = phone && sh > sw;
   const k = portrait ? Math.min(sh/H, sw/(W*.7)) : Math.min(sh/H, sw/W);
   const vw = r.width/k, vh = r.height/k, svw = sw/k, svh = sh/k;
@@ -2305,7 +2307,7 @@ function drawStoryBubble(V, feet) {
   if (bt.who === 'bingsu') bubble(bt.say, B.x + 125, 138, B.x + 55, false, '#c46a7a');
   else bubble(bt.say, V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f');
   ctx.restore();
-  ctx.fillStyle = '#5d504999'; ctx.font = '10px system-ui'; ctx.textAlign = 'center'; const v = sceneView(); ctx.fillText('tap to continue', (v.x0 + v.x1)/2, 16); ctx.textAlign = 'start';
+  if (V.story.i === 0 && V.story.t < 6) { ctx.fillStyle = night() ? '#f3e9ddaa' : '#5d5049aa'; ctx.font = '600 10px Nunito, system-ui'; ctx.textAlign = 'center'; ctx.fillText('tap to continue', V.x + 70, feet - VIS_H*.95 + 16); ctx.textAlign = 'start'; }   // just under the bubble, only at the start
 }
 
 // ---- break room: while the bakery is closed you can still hang out with Bingsu ----
@@ -2367,10 +2369,10 @@ function petBingsu(x = B.x, y = 150) {
 function drawBreak(now) {
   if (!breakBusy()) { $('breakBar').hidden = true; return; }
   const v = sceneView();
-  ctx.fillStyle = 'rgba(253,240,223,.25)'; fillView();
+  if (!night()) { ctx.fillStyle = 'rgba(253,240,223,.18)'; fillView(); }
   const left = S.breakUntil ? Math.max(0, Math.ceil((S.breakUntil - Date.now())/60e3)) : 0;
   ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; const tag = S.breakUntil && CUSTOMERS[S.breakWith] ? `☕ Break with ${CUSTOMERS[S.breakWith].name} · ${left}m left` : '☕ Break time · the bakery is closed';
-  const tw = ctx.measureText(tag).width + 20, tx = (v.x0 + v.x1)/2; shape('#fffaf2', rr(tx - tw/2, 18, tw, 22, 11), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(tag, tx, 33); ctx.textAlign = 'start';
+  if (!document.body.classList.contains('phone')) { const tw = ctx.measureText(tag).width + 20, tx = (v.x0 + v.x1)/2; shape('#fffaf2', rr(tx - tw/2, 84, tw, 22, 11), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(tag, tx, 99); } ctx.textAlign = 'start';   // below the order tickets; phones show it in the pill
 }
 $('breakBar').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return; breakTouch = Date.now();
@@ -2425,7 +2427,7 @@ function hud(now, eff) {
   $('jobfill').style.width = (100*j.p/R.time) + '%';
   { const pl = $('pill'), conn = CODE ? (trackerRaw ? '' : pcOff ? ' · 📱 phone mode' : ' · computer offline') : ' · not connected';
     pl.className = eff === 'distracted' ? 'd' : eff === 'grace' ? 'g' : (!CODE || !trackerRaw) && !manual && !pcOff ? 'off' : '';
-    { const I = n => `<i class="ph-duotone ph-${n}"></i>`, html = shopClosed ? `${I('coffee')} On a break · tap to play` : (eff === 'grace' ? `${I('eye')} ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'distracted' ? `${I('warning')} Distracted` : eff === 'idle' ? (pausedWhy() || (trackerWhy === 'phone' ? '' : `${I('moon')} Away`)) : '● Focused') + `${eff === 'idle' && trackerWhy === 'phone' ? '' : '  ·  '}${I('coins')} ${S.coins}  ·  ${I('target')} ${Math.round(goalProgress()*100)}%`;
+    { const I = n => `<i class="ph-duotone ph-${n}"></i>`, html = shopClosed ? (S.breakUntil && CUSTOMERS[S.breakWith] ? `${I('coffee')} Break with ${CUSTOMERS[S.breakWith].name} · ${Math.max(0, Math.ceil((S.breakUntil - Date.now())/60e3))}m left` : `${I('coffee')} On a break · tap to play`) : (eff === 'grace' ? `${I('eye')} ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'distracted' ? `${I('warning')} Distracted` : eff === 'idle' ? (pausedWhy() || (trackerWhy === 'phone' ? '' : `${I('moon')} Away`)) : '● Focused') + `${eff === 'idle' && trackerWhy === 'phone' ? '' : '  ·  '}${I('coins')} ${S.coins}  ·  ${I('target')} ${Math.round(goalProgress()*100)}%`;
       if (pl.innerHTML !== html && pl.dataset.h !== html) { pl.innerHTML = html; pl.dataset.h = html; } } }
   if (document.body.classList.contains('phone')) {
     const pt = $('phoneTask'), task = (S.task || '').trim();
