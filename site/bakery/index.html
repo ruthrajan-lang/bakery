@@ -1183,7 +1183,19 @@ $('modes').onclick = e => { const k = e.target.dataset.k; if (k) { manual = k ==
 let soundOn = false, actx = null, lastChime = 0, titleT = 0;
 const tile = (el, ic, t) => { if (el) el.innerHTML = `<i>${ic}</i><span>${t}</span>`; };
 applyNight();
-const startAudio = () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state !== 'running') actx.resume(); } catch (e) {} };
+// phones only allow audio started inside a tap; iPhones also mute web audio on the silent switch unless the page
+// plays an <audio> element (this tiny silent loop puts it in "playback" mode), so do both, synchronously, on the tap
+let unlockEl = null;
+const startAudio = () => {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state !== 'running') actx.resume();
+    const o = actx.createOscillator(), g = actx.createGain(); g.gain.value = 0; o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + .05);   // wakes iOS
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    if (!unlockEl) { unlockEl = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); }
+    if (unlockEl.paused) unlockEl.play().catch(() => {});
+  } catch (e) {}
+};
 $('sound').onclick = () => {
   soundOn = !soundOn; ls('focusbakery-sound', soundOn ? '1' : '0'); tile($('sound'), soundOn ? '🔔' : '🔕', soundOn ? 'Sound on' : 'Sound off');
   if (soundOn) { startAudio(); chime(1); }
@@ -1191,12 +1203,12 @@ $('sound').onclick = () => {
 // gentle background music (music.js): its own toggle, remembered, quiet, pauses when the app isn't on screen
 let musicOn = ls('focusbakery-music') === '1';
 const showMusic = () => tile($('musicBtn'), musicOn ? '🎶' : '🎵', musicOn ? 'Music on' : 'Music off');
-function syncMusic() { if (musicOn && !document.hidden && actx && actx.state === 'running') BakeryMusic.start(actx); else BakeryMusic.stop(); }
+function syncMusic() { if (musicOn && !document.hidden && actx && actx.state !== 'closed') { if (actx.state !== 'running') actx.resume().then(syncMusic).catch(() => {}); else BakeryMusic.start(actx); } else BakeryMusic.stop(); }
 $('musicBtn').onclick = () => { musicOn = !musicOn; ls('focusbakery-music', musicOn ? '1' : '0'); showMusic(); if (musicOn) startAudio(); setTimeout(syncMusic, 100); };
 document.addEventListener('visibilitychange', syncMusic); showMusic();
-if (musicOn) ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { startAudio(); setTimeout(syncMusic, 100); }, {passive: true}));
+if (musicOn) ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => addEventListener(ev, () => { startAudio(); syncMusic(); setTimeout(syncMusic, 150); }, {passive: true}));
 // remember the choice; browsers only allow sound after a tap, so it wakes up on the first one
-if (ls('focusbakery-sound') === '1') { soundOn = true; tile($('sound'), '🔔', 'Sound on'); ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, startAudio, {passive: true})); }
+if (ls('focusbakery-sound') === '1') { soundOn = true; tile($('sound'), '🔔', 'Sound on'); ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => addEventListener(ev, startAudio, {passive: true})); }
 function chime(level) {
   if (!soundOn || !actx) return;
   const notes = level > 1 ? [880, 660, 880, 660] : [660, 880];
