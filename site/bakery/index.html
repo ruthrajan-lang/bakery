@@ -458,7 +458,7 @@ function drawCelebration(now) {
   const title = CEL.title || `${RECIPES[CEL.r].name} done!`, stars = CEL.q > .85 ? '★★★' : CEL.q > .5 ? '★★☆' : '★☆☆';
   ctx.font = 'bold 30px system-ui'; ctx.lineWidth = 6; ctx.strokeStyle = '#fffaf2'; ctx.strokeText(title, cx, 52); ctx.fillStyle = CINK; ctx.fillText(title, cx, 52);
   if (CEL.served && CEL.served.special) { ctx.font = 'bold 15px system-ui'; ctx.fillStyle = '#a8651a'; ctx.fillText(`${CEL.served.special} order delivered!`, cx, 108); }
-  if (CEL.served) { const c = CUSTOMERS[CEL.served.c]; drawCritter(c.kind, cx - 150, cy + 40, 2.6, 'love'); ctx.font = 'bold 18px system-ui'; ctx.lineWidth = 5; ctx.strokeStyle = '#fffaf2'; const msg = `For ${c.name} ♥${CEL.served.fav ? ' (their favourite!)' : ''}${CEL.served.tip ? '  tip +' + CEL.served.tip : ''}`; ctx.strokeText(msg, cx, 84); ctx.fillStyle = '#e0533f'; ctx.fillText(msg, cx, 84); }
+  if (CEL.served) { const c = CUSTOMERS[CEL.served.c]; drawCritter(c.kind, cx - 150, cy + 40, 2.6, 'love'); ctx.font = 'bold 18px system-ui'; ctx.lineWidth = 5; ctx.strokeStyle = '#fffaf2'; const msg = `For ${c.name} ♥${CEL.served.fav ? ' (their favourite!)' : ''}${CEL.served.big ? `  💰 BIG TIP +${CEL.served.tip}!` : CEL.served.tip ? '  tip +' + CEL.served.tip : ''}`; ctx.strokeText(msg, cx, 84); ctx.fillStyle = '#e0533f'; ctx.fillText(msg, cx, 84); }
   if (CEL.kind) { ctx.font = '600 16px system-ui'; wrapText(CEL.sub || '', cx, 86, 520, 21); }
   ctx.font = 'bold 22px system-ui'; const sub = CEL.kind ? (CEL.coins ? `+${CEL.coins} 🪙` : '') : `${stars}   +${CEL.coins} 🪙`;
   ctx.strokeText(sub, cx, H - 64); ctx.fillStyle = '#e0533f'; ctx.fillText(sub, cx, H - 64);
@@ -525,7 +525,9 @@ function serveOrder(r, q) {
   S.rep = Math.min(5, repStars() + (q > .85 ? .25 : .1));
   S.friends = S.friends || {}; const h0 = S.friends[o.c] || 0; S.friends[o.c] = Math.min(5, h0 + (fav ? 2 : 1) + (o.special ? 1 : 0));
   friendshipMoments(o.c, h0, S.friends[o.c]); visitorLeaves(o.c, 'served');
-  return {c:o.c, tip:o.special ? tip*2 : tip, fav, special:o.special};
+  // once in a while a happy customer leaves a really big tip (more likely for a good bake and a good friend)
+  const big = q > .5 && Math.random() < .05 + .01*Math.min(5, S.friends[o.c] || 0), bigTip = big ? Math.round(15 + RECIPES[r].sell*(2 + Math.random()*2)) : 0;
+  return {c:o.c, tip:(o.special ? tip*2 : tip) + bigTip, fav, special:o.special, big: bigTip};
 }
 // what to bake next is your choice (tap a ticket to bake that customer's favourite)
 function nextRecipe() { const o = urgentOrder(); return o && inSeason(o.r) ? o.r : S.recipe; }   // next bake defaults to the next customer's favourite
@@ -600,6 +602,7 @@ function finish() {
   B.mood = 'joy'; B.moodT = 5; B.cool = S.job.r;
   const served = serveOrder(S.job.r, q);
   (S.pending = S.pending || []).push({r:S.job.r, coins:coins + (served ? served.tip : 0), q, b:S.shelf[S.shelf.length - 1].b, served});
+  if (served && served.big) { chime(2); for (let i = 0; i < 26; i++) parts.push({x:W/2 + (Math.random() - .5)*200, y:-10, vx:(Math.random() - .5)*60, vy:40 + Math.random()*80, life:0, max:2.4, r:4, color:'#ffd65c', grow:0, star:true, g:90}); }
   if (!CEL) showNextReward();
   S.job = newJob(nextRecipe()); S.recipe = S.job.r; save(); renderRecipes();
 }
