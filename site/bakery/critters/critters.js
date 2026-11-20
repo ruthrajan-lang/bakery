@@ -24,6 +24,7 @@
     dance: t => { const s = S(TAU*t*.75); return {sqk: .3, rock: .15*s, dy: -18*bob(TAU*t*1.5), al: -.8 + .8*s, ar: -.8 - .8*s, face: 'joy', stepL: .5*Math.max(0, s), stepR: .5*Math.max(0, -s), tilt: -.1*s, look: .3*s}; },
     excited: t => { const s = S(TAU*t*3); return {dy: -26*bob(TAU*t*3), rock: .05*s, al: -1.2 + .5*s, ar: -1.2 - .5*s, face: 'joy'}; },
     impatient: t => ({rock: .03*S(TAU*t*2), stepR: Math.max(0, S(TAU*t*4))*.6, al: .5, ar: .5, face: 'cross', tilt: .05*S(TAU*t*2)}),
+    grumpy: t => ({rock: -.04 + .01*S(TAU*t*.5), al: .7, ar: .7, face: 'cross', tilt: -.08, breathe: .025*Math.max(0, S(TAU*t*.25))**8}),   // arms in, huffy, no tapping
     bow: t => { const k = bob(TAU*Math.min(1, t*.8)); return {tilt: .3*k, rock: .08*k, al: .3, ar: .3, face: k > .5 ? 'shut' : 'happy'}; },
     doze: t => ({rock: .04*S(TAU*t*.3), al: .3, ar: .3, face: 'sleep', breathe: .03*S(TAU*t*.3), tilt: .14 + .04*S(TAU*t*.3)}),
     shy: t => ({rock: -.05 + .02*S(TAU*t*.6), al: .7, ar: .7, face: 'shy', look: -.4, tilt: -.13}),
@@ -48,7 +49,7 @@
       const al = s.armL.step(p.al, dt), ar = s.armR.step(p.ar, dt), lk = s.look.step((p.look || 0) + dir*.35, dt);
       if ((this.next -= dt) < 0) { this.blink = .13; this.next = 2 + Math.random()*3; } this.blink = Math.max(0, this.blink - dt);
       if (this.giggle > 0) { this.giggle -= dt; p.face = 'joy'; p.rock = (p.rock || 0) + S(t*38)*.06*Math.min(1, this.giggle*2); }
-      const face = p.face || 'happy', A = window.CRITTER_ART && CRITTER_ART[k]; if (!A) return {top: feet - h};
+      this.tm = t; const face = p.face || 'happy', A = window.CRITTER_ART && CRITTER_ART[k]; if (!A) return {top: feet - h};
       const sc = h/950, ink = '#5d463a';
       if (!A._p) for (const q of A.parts) { q.O = new Path2D(q.o); q.F = new Path2D(q.f); q.D = q.d.map(([col, d]) => [col, new Path2D(d)]); q.K = q.k ? new Path2D(q.k) : null; } A._p = 1;
       const part = n => A.parts.find(q => q.n === n);
@@ -78,7 +79,17 @@
       for (const [n, st] of [['footL', p.stepL || 0], ['footR', p.stepR || 0]]) if ((q = part(n))) { g.save(); g.translate(0, -st*34); paint(q); g.restore(); }
       if ((q = part('tuft'))) { const hq = part('head'); about(hq, hd, () => about(q, tf*.5, () => paint(q))); }
       if ((q = part('head'))) about(q, hd, () => paint(q, {lx: lk*26, draw: hq => {   // expressions drawn over the traced eyes
-        if (face === 'happy' && this.blink <= 0 || face === 'cross' || face === 'shy') return;
+        if (face === 'cross') {   // angry: slanted brows, red flush, and a little anger mark
+          const [[lx, ly, r], [rx]] = hq.eyes;
+          g.strokeStyle = ink; g.lineWidth = r*.5; g.lineCap = 'round';
+          for (const [ex, sd] of [[lx, -1], [rx, 1]]) { g.beginPath(); g.moveTo(ex + sd*r*1.3, ly - r*2.2); g.lineTo(ex - sd*r*.9, ly - r*1.35); g.stroke(); }   // inner ends low = cross
+          if (hq.mouth) { const [x0, y0, x1, y1, col] = hq.mouth, cxm = (x0 + x1)/2, w = (x1 - x0)*.36, cy = (y0 + y1)/2;   // swap the smile for a pout
+            g.fillStyle = col; g.beginPath(); g.roundRect(x0 - 6, y0 - 6, x1 - x0 + 12, y1 - y0 + 12, 12); g.fill();
+            g.lineWidth = r*.42; g.beginPath(); g.moveTo(cxm - w, cy + r*.45); g.quadraticCurveTo(cxm, cy - r*.55, cxm + w, cy + r*.45); g.stroke(); }
+          const mx = rx + r*3.2, my = ly - r*4.2, k = r*.75 + Math.sin(this.tm*9)*r*.08; g.strokeStyle = '#e0534f'; g.lineWidth = r*.42;
+          for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.moveTo(mx + a*k*.35, my + b*k*1.1); g.quadraticCurveTo(mx + a*k*.35, my + b*k*.35, mx + a*k*1.1, my + b*k*.35); g.stroke(); }
+          return; }
+        if (face === 'happy' && this.blink <= 0 || face === 'shy') return;
         for (const [ex, ey, r] of hq.eyes) {
           g.fillStyle = hq.fc; g.beginPath(); g.ellipse(ex, ey, r*1.35, r*1.35, 0, 0, TAU); g.fill();
           g.strokeStyle = ink; g.lineWidth = r*.42; g.lineCap = 'round'; g.beginPath();

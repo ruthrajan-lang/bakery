@@ -79,6 +79,19 @@ for nm in NAMES:
         fm|=l==k; yy,xx=np.nonzero(l==k); w=xx.max()-xx.min()+1; h=yy.max()-yy.min()+1
         if 120<a and .7<w/h<1.4 and a>.6*w*h: blobs.append(((xx.mean()-cx)*SC,(yy.mean()-feetY)*SC,max(w,h)/2*SC,a))
     blobs.sort(key=lambda b:-b[3]); eyes=sorted(blobs[:2],key=lambda b:b[0]) if len(blobs)>=2 else []
+    mouth=None
+    if pname=='head' and len(eyes)==2:
+      ey=np.mean([e[1] for e in eyes])/SC+feetY; ex=(eyes[0][0]+eyes[1][0])/2/SC+cx; best=None
+      for k in range(1,n+1):
+        yy,xx=np.nonzero(l==k)
+        if len(yy)<15: continue
+        my,mx=yy.mean(),xx.mean(); w=xx.max()-xx.min()+1; h=yy.max()-yy.min()+1
+        if my>ey+4 and abs(mx-ex)<40 and w>h*1.3:
+          if best is None or my>best[0]: best=(my,xx.min(),yy.min(),xx.max(),yy.max())
+      if best:
+        _,x0,y0,x1,y1=best; ring=lab[max(0,y0-3):y1+4,max(0,x0-3):x1+4]; vals=ring[ring>0]
+        col=P[np.bincount(vals).argmax()] if len(vals) else P[bc]
+        mouth=[round((x0-cx)*SC,1),round((y0-feetY)*SC,1),round((x1-cx)*SC,1),round((y1-feetY)*SC,1),hexc(col)]
     eyes=[[round(b[0],1),round(b[1],1),round(b[2],1)] for b in eyes if nm!='hedgehog' or True]
     # pivots (art units)
     U=lambda x,y:[round((x-cx)*SC,1),round((y-feetY)*SC,1)]
@@ -88,9 +101,9 @@ for nm in NAMES:
     elif pname.startswith('foot'): piv=U((bx0+bx1)/2,(by0+by1)/2)
     elif pname=='tail': piv=U(bx0,by1-(by1-by0)*.15)
     elif pname=='tuft': piv=U((bx0+bx1)/2,by1)
-    parts.append({'n':pname,'piv':piv,'o':trace(sil,cx,feetY),'f':trace(base,cx,feetY),'fc':hexc(P[bc]),'d':det,'k':trace(fm,cx,feetY,.8) if fm.sum() else '','eyes':eyes if pname=='head' else [],'cap':[round((bx1-bx0)*SC,1),round((by1-by0)*SC,1)] if pname.startswith('arm') else None})
+    parts.append({'n':pname,'piv':piv,'o':trace(sil,cx,feetY),'f':trace(base,cx,feetY),'fc':hexc(P[bc]),'d':det,'k':trace(fm,cx,feetY,.8) if fm.sum() else '','eyes':eyes if pname=='head' else [],'mouth':mouth if pname=='head' else None,'cap':[round((bx1-bx0)*SC,1),round((by1-by0)*SC,1)] if pname.startswith('arm') else None})
   top=min(np.nonzero(allc)[0])
   art[nm]={'h':round((feetY-top)*SC),'lw':round(lw*SC,1),'parts':parts}
   print(nm,'lw',round(lw,1),[p['n'] for p in parts],'h',art[nm]['h'])
-open('../../site/bakery/critters/critter-art.js','w').write('// traced from the character lineup (art-src/critter-lineup.webp) by the trace pipeline: vector paths, drawn in code\nwindow.CRITTER_ART = '+json.dumps(art,separators=(',',':'))+';\n')
+open('../../site/bakery/critters/critter-art.js','w').write('// traced from the character lineup (focus-bakery/art-src/critter-lineup.webp) by the trace pipeline: vector paths, drawn in code\nwindow.CRITTER_ART = '+json.dumps(art,separators=(',',':'))+';\n')
 import os; print(os.path.getsize('../../site/bakery/critters/critter-art.js'))

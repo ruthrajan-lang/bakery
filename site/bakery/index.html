@@ -2101,7 +2101,8 @@ function drawVisitor(now) {
     V.story.t += dt; if (V.story.t > (bt.wait || Math.max(2.6, (bt.say || '').length*.075))) storyNext(); }
   else if (V.state === 'act') { A = V.act; if (V.t >= 2.2) { V.state = V.puppet && !o ? 'wait' : 'wait'; V.t = 0; } }
   else if (V.state === 'wait') { if (!o && !V.puppet) { V.state = 'leave'; V.t = 0; } const f = o ? o.pat/o.max : 1; chatter(V, dt, o, f);
-    A = (o && o.pat/SPEED < 120) || lastEff === 'distracted' ? 'impatient' : 'idle'; at = now/1000; }   // taps only when you're distracted or they're about to leave (last 2 minutes)
+    const cross = (o && o.pat/SPEED < 120) || lastEff === 'distracted'; V.crossT = cross ? (V.crossT || 0) + dt : 0;
+    A = !cross ? 'idle' : V.crossT < 10 ? 'impatient' : 'grumpy'; at = now/1000; }   // a 10s foot tap, then a cross huff   // taps only when you're distracted or they're about to leave (last 2 minutes)
   else if (V.state === 'served') { A = 'cheer'; if (V.t >= CHEER) { V.t = 0; if (wantsBreak()) { V.state = 'invite'; showInvite(V.c); } else V.state = 'leave'; } }
   else if (V.state === 'invite') { A = 'idle'; at = now/1000; dir = 1; if (V.t > 60) { declineBreak(); } }
   else if (V.state === 'upset') { A = 'impatient'; if (V.t >= 1.4) { V.state = 'leave'; V.t = 0; } }
