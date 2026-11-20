@@ -2206,22 +2206,22 @@ renderRecipes(); renderModes();
 
 const LABEL = {focused:'Focused', distracted:'Distracted', idle:'Away'};
 // the tracker paused the oven because you've been off your kind of work for a while (not because you left)
-const pausedWhy = () => manual ? '' : trackerWhy === 'phone' ? '📱 Awake · phone mode' : trackerWhy === 'claude' ? 'Paused · in Claude' : trackerWhy === 'other' ? 'Paused · off task' : '';
+const pausedWhy = () => manual ? '' : trackerWhy === 'phone' ? '' : trackerWhy === 'claude' ? 'Paused · in Claude' : trackerWhy === 'other' ? 'Paused · off task' : '';
 function hud(now, eff) {
   $('coins').textContent = S.coins; $('rep').textContent = '★ ' + repStars().toFixed(1);
   const st = $('state'); st.className = eff;
-  st.textContent = eff === 'grace' ? `Glancing… ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'idle' && pausedWhy() ? pausedWhy() : LABEL[eff];
+  st.textContent = eff === 'grace' ? `Glancing… ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'idle' && pausedWhy() ? pausedWhy() : eff === 'idle' && trackerWhy === 'phone' ? 'No computer connected' : LABEL[eff];
   const j = J(), R = RECIPES[j.r], s = stageOf(j), q = Math.round(100*(1 - S.job.ruin/RUIN_FAIL));
   $('jobtext').innerHTML = (preview != null ? '<small>Preview · </small>' : '') + `<b>${R.name}</b> · ${STAGE[s.a]} · ${Math.floor(100*j.p/R.time)}% <small>· quality ${q}% · ${fmt((R.time - S.job.p)/SPEED)} of focus left · focused ${fmt(streak)} in a row</small>`;
   $('jobfill').style.width = (100*j.p/R.time) + '%';
   { const pl = $('pill'), conn = CODE ? (trackerRaw ? '' : pcOff ? ' · 📱 phone mode' : ' · computer offline') : ' · not connected';
     pl.className = eff === 'distracted' ? 'd' : eff === 'grace' ? 'g' : (!CODE || !trackerRaw) && !manual && !pcOff ? 'off' : '';
-    pl.textContent = shopClosed ? '☕ On a break · tap to play' : (eff === 'grace' ? `👀 ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'distracted' ? '⚠︎ Distracted' : eff === 'idle' ? (pausedWhy() ? pausedWhy().replace(' · phone mode', '') : '💤 Away') : '● Focused') + `  ·  🪙 ${S.coins}  ·  🎯 ${Math.round(goalProgress()*100)}%`; }
+    pl.textContent = shopClosed ? '☕ On a break · tap to play' : (eff === 'grace' ? `👀 ${Math.ceil(GRACE - (now - distractedSince)/1000)}s` : eff === 'distracted' ? '⚠︎ Distracted' : eff === 'idle' ? (pausedWhy() || (trackerWhy === 'phone' ? '' : '💤 Away')) : '● Focused') + `${eff === 'idle' && trackerWhy === 'phone' ? '' : '  ·  '}🪙 ${S.coins}  ·  🎯 ${Math.round(goalProgress()*100)}%`; }
   if (document.body.classList.contains('phone')) {
     const pt = $('phoneTask'), task = (S.task || '').trim();
     pt.textContent = task ? '📝 ' + task : 'Tap to pick a task'; pt.className = task ? '' : 'empty';
     $('phoneProg').firstChild.style.width = (100*j.p/R.time) + '%';
-    $('phoneSub').textContent = `🔥${dayStreak()} · ${R.name} · ${STAGE[s.a]} · ${fmt((R.time - S.job.p)/SPEED)} left · ${eff === 'grace' ? 'glancing…' : eff === 'distracted' ? '⚠︎ distracted' : eff === 'idle' ? (pausedWhy() ? pausedWhy().toLowerCase() : 'away') : 'focused ' + fmt(streak)}`;
+    $('phoneSub').textContent = `🔥${dayStreak()} · ${R.name} · ${STAGE[s.a]} · ${fmt((R.time - S.job.p)/SPEED)} left${eff === 'idle' && !pausedWhy() && trackerWhy === 'phone' ? '' : ' · ' + (eff === 'grace' ? 'glancing…' : eff === 'distracted' ? '⚠︎ distracted' : eff === 'idle' ? (pausedWhy() ? pausedWhy().toLowerCase() : 'away') : 'focused ' + fmt(streak))}`;
     document.body.classList.toggle('dist', eff === 'distracted');
   }
   const key = j.r + s.a;
