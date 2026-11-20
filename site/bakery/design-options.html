@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bakery design options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#efe6da;color:#5d5049;font:15px/1.5 system-ui,sans-serif;padding:24px 16px 60px}
+  .wrap{max-width:1180px;margin:0 auto}
+  .intro h1{font:600 26px Fredoka,system-ui;margin:0 0 4px}.intro p{margin:0 0 18px;color:#8a7768;max-width:720px}
+  .pick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .pick button{border:2px solid #d9c7b0;background:#fffaf2;border-radius:999px;padding:9px 16px;font:700 14px system-ui;color:#5d5049;cursor:pointer}
+  .pick button.on{background:#5d5049;color:#fffaf2;border-color:#5d5049}
+  .opt{display:none}.opt.on{display:block}
+  .about{background:#fffaf2;border-radius:16px;padding:14px 18px;margin-bottom:18px}.about b{display:block;font-size:17px;margin-bottom:2px}.about small{color:#8a7768}
+  .row{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+  @media (max-width:900px){.row{grid-template-columns:1fr}}
+  .lbl{font:700 11px system-ui;letter-spacing:.08em;text-transform:uppercase;color:#8a7768;margin:0 0 8px}
+  .fakescene{aspect-ratio:16/9;border-radius:22px;background:linear-gradient(#fdf0df 62%,#f4c9b8 62%);display:grid;place-items:center;color:#c9a990;font:600 14px system-ui}
+
+  /* ============ A · Cosy rounded ============ */
+  .A{--bg:#fbf3e8;--card:#fffaf2;--ink:#5d5049;--muted:#9a8676;--line:#ecdcc8;--accent:#f2b25c;--accent-d:#d98f2f;--soft:#fbe7cf;font-family:Nunito,system-ui}
+  .A .top{display:flex;align-items:center;gap:18px;background:var(--card);border-radius:20px;padding:12px 18px;margin-bottom:18px}
+  .A .brand{font:600 22px Fredoka;color:#d0747f;flex:1;display:flex;align-items:center;gap:10px}
+  .A .stat{display:flex;align-items:center;gap:6px;font-weight:800}.A .stat i{font-size:22px;color:var(--accent-d)}
+  .A .btn{border:0;border-radius:14px;padding:9px 14px;font:700 14px Nunito;background:var(--soft);color:var(--ink);display:inline-flex;gap:6px;align-items:center}
+  .A .btn.p{background:var(--accent);color:#3a2610}
+  .A .card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 2px 0 var(--line)}
+  .A h3{font:600 15px Fredoka;margin:0 0 10px;display:flex;gap:8px;align-items:center}.A h3 i{font-size:20px;color:var(--accent-d)}
+  .A .task{display:flex;gap:10px;align-items:center;background:var(--bg);border-radius:14px;padding:10px 12px;font-weight:700}
+  .A .chk{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--accent-d)}
+  .A .todo{display:flex;align-items:center;gap:8px;padding:7px 4px;color:var(--muted);font-weight:600}.A .todo i{font-size:18px}
+  .A .rec{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:14px;font-weight:700}.A .rec.on{background:var(--soft)}
+  .A .rec img{width:32px;height:32px;object-fit:contain}.A .rec span{flex:1}.A .rec em{font-style:normal;color:var(--muted);font-weight:600;font-size:13px}
+  .A .menu{background:var(--card);border-radius:26px;padding:22px}
+  .A .menu h2{font:600 22px Fredoka;margin:0 0 14px}.A .menu h4{font:800 11px Nunito;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+  .A .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+  .A .tile{background:var(--bg);border-radius:18px;padding:14px 8px;text-align:center;font-weight:700;font-size:13px}
+  .A .tile i{display:block;font-size:30px;color:var(--accent-d);margin-bottom:4px}
+
+  /* ============ B · Storybook ============ */
+  .B{--bg:#f7efe4;--card:#fffdf8;--ink:#4a3c35;--muted:#93806f;--line:#e5d6c3;--accent:#c96f5a;font-family:'Nunito Sans',system-ui}
+  .B .top{display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--line);padding:6px 4px 14px;margin-bottom:18px}
+  .B .brand{font:600 26px Fraunces;flex:1;font-style:italic}
+  .B .stat{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.B .stat b{display:block;font:600 18px Fraunces;color:var(--ink);text-transform:none;letter-spacing:0}
+  .B .btn{border:1px solid var(--ink);border-radius:999px;padding:8px 16px;font:600 13px 'Nunito Sans';background:transparent;color:var(--ink);display:inline-flex;gap:6px;align-items:center}
+  .B .btn.p{background:var(--ink);color:var(--card)}
+  .B .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:14px}
+  .B h3{font:500 20px Fraunces;margin:0 0 12px;display:flex;justify-content:space-between;align-items:baseline}.B h3 small{font:600 11px 'Nunito Sans';color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .B .task{border-left:3px solid var(--accent);padding:4px 0 4px 12px;font:500 17px Fraunces}
+  .B .todo{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}.B .todo i{font-size:16px;color:var(--muted)}
+  .B .rec{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.B .rec img{width:30px;height:30px;object-fit:contain}
+  .B .rec span{flex:1;font:500 16px Fraunces}.B .rec em{font-style:normal;font-size:12px;color:var(--muted)}.B .rec.on span{color:var(--accent)}
+  .B .menu{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:26px}
+  .B .menu h2{font:500 28px Fraunces;margin:0 0 6px;font-style:italic}.B .menu h4{font:600 11px 'Nunito Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 4px}
+  .B .tiles{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+  .B .tile{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-weight:600}.B .tile i{font-size:20px;color:var(--accent)}.B .tile::after{content:'→';margin-left:auto;color:var(--muted)}
+
+  /* ============ C · Playful game UI ============ */
+  .C{--bg:#fdf0df;--card:#fffaf2;--ink:#5d5049;--muted:#9a8676;--line:#5d5049;font-family:'Baloo 2',system-ui}
+  .C .top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .C .brand{font:800 26px 'Baloo 2';color:#e0738a;flex:1;text-shadow:2px 2px 0 #fff}
+  .C .pill{display:flex;align-items:center;gap:6px;background:var(--card);border:3px solid var(--line);border-radius:999px;padding:3px 14px 3px 4px;font-weight:800;font-size:17px;box-shadow:0 3px 0 var(--line)}
+  .C .pill i{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:17px;color:#fff}
+  .C .btn{border:3px solid var(--line);border-radius:16px;padding:6px 14px;font:800 15px 'Baloo 2';background:var(--card);color:var(--ink);box-shadow:0 4px 0 var(--line);display:inline-flex;gap:6px;align-items:center}
+  .C .btn.p{background:#f2b25c}
+  .C .card{background:var(--card);border:3px solid var(--line);border-radius:22px;padding:16px;margin-bottom:16px;box-shadow:0 5px 0 var(--line)}
+  .C h3{font:800 18px 'Baloo 2';margin:0 0 8px;display:flex;align-items:center;gap:8px}.C h3 i{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;color:#fff;font-size:17px}
+  .C .task{display:flex;gap:10px;align-items:center;border:2px dashed #d9c7b0;border-radius:14px;padding:8px 12px;font-weight:700;font-size:16px}
+  .C .chk{width:24px;height:24px;border-radius:8px;border:3px solid var(--line)}
+  .C .todo{display:flex;align-items:center;gap:8px;padding:4px;font-weight:600;color:var(--muted)}
+  .C .rec{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:14px;font-weight:800;font-size:16px;margin-bottom:6px;border:3px solid transparent}
+  .C .rec.on{border-color:var(--line);background:#fff3d6;box-shadow:0 3px 0 var(--line)}.C .rec img{width:34px;height:34px;object-fit:contain}.C .rec span{flex:1}
+  .C .rec em{font-style:normal;background:#ffe2a8;border-radius:999px;padding:0 10px;font-size:14px}
+  .C .menu{background:var(--card);border:3px solid var(--line);border-radius:28px;padding:20px;box-shadow:0 6px 0 var(--line)}
+  .C .menu h2{font:800 26px 'Baloo 2';margin:0 0 8px}.C .menu h4{font:800 13px 'Baloo 2';color:var(--muted);margin:14px 0 6px}
+  .C .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+  .C .tile{border:3px solid var(--line);border-radius:20px;padding:12px 6px 8px;text-align:center;font-weight:800;font-size:14px;box-shadow:0 4px 0 var(--line);background:var(--card)}
+  .C .tile i{display:grid;place-items:center;width:46px;height:46px;margin:0 auto 6px;border-radius:14px;font-size:26px;color:#fff}
+  .c1{background:#f2a65a}.c2{background:#e0738a}.c3{background:#7cb8e0}.c4{background:#8cc17a}.c5{background:#b39ddb}.c6{background:#e8c25a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro"><h1>Bingsu's Bakery · design options</h1><p>Three directions for the type, icons, top bar, desktop sidebar and menu. Pick the one you like (or mix and match) and I'll apply it to the bakery.</p></div>
+  <div class="pick" id="pick"><button data-o="A" class="on">A · Cosy rounded</button><button data-o="B">B · Storybook</button><button data-o="C">C · Playful game</button></div>
+
+  <div class="opt A on" id="A">
+    <div class="about"><b>A · Cosy rounded</b><small>Fredoka headings + Nunito text, soft duotone icons, borderless cards. Calm, warm and close to today's look, just more considered.</small></div>
+    <div class="top"><div class="brand"><i class="ph-duotone ph-cooking-pot"></i>Bingsu's Bakery</div><div class="stat"><i class="ph-duotone ph-coins"></i>42</div><div class="stat"><i class="ph-duotone ph-target"></i>1h 10m / 2h</div><div class="stat"><i class="ph-duotone ph-fire"></i>4</div><button class="btn"><i class="ph-duotone ph-user"></i>Account</button><button class="btn p"><i class="ph-duotone ph-list"></i>Menu</button></div>
+    <div class="row">
+      <div><p class="lbl">Kitchen</p><div class="fakescene">the bakery scene</div></div>
+      <div><p class="lbl">Desktop sidebar</p>
+        <div class="card"><h3><i class="ph-duotone ph-note-pencil"></i>Working on</h3><div class="task"><span class="chk"></span>Write the project update</div>
+          <div style="margin-top:10px"><div class="todo"><i class="ph-duotone ph-circle"></i>Reply to design feedback</div><div class="todo"><i class="ph-duotone ph-circle"></i>Plan next sprint</div><div class="todo"><i class="ph-duotone ph-plus"></i>Add a task</div></div></div>
+        <div class="card"><h3><i class="ph-duotone ph-bread"></i>Bake next</h3>
+          <div class="rec on"><img src="items/cookies.png" alt=""><span>Cookies</span><em>15m · 4</em></div><div class="rec"><img src="items/muffins.png" alt=""><span>Muffins</span><em>25m · 8</em></div><div class="rec"><img src="items/bread.png" alt=""><span>Bread</span><em>45m · 15</em></div></div>
+      </div>
+    </div>
+    <p class="lbl" style="margin-top:18px">Menu</p>
+    <div class="menu"><h2>Menu</h2>
+      <h4>Your bakery</h4><div class="tiles"><div class="tile"><i class="ph-duotone ph-storefront"></i>Display case</div><div class="tile"><i class="ph-duotone ph-shopping-bag"></i>Shop</div><div class="tile"><i class="ph-duotone ph-trophy"></i>Rewards</div><div class="tile"><i class="ph-duotone ph-book-open"></i>Stories</div><div class="tile"><i class="ph-duotone ph-music-notes"></i>Music</div><div class="tile"><i class="ph-duotone ph-newspaper"></i>Weekly paper</div></div>
+      <h4>Focus</h4><div class="tiles"><div class="tile"><i class="ph-duotone ph-target"></i>Daily goal</div><div class="tile"><i class="ph-duotone ph-clock"></i>Hours & breaks</div><div class="tile"><i class="ph-duotone ph-coffee"></i>Take a break</div><div class="tile"><i class="ph-duotone ph-desktop"></i>Connect devices</div><div class="tile"><i class="ph-duotone ph-prohibit"></i>Distracting sites</div></div>
+      <h4>Settings</h4><div class="tiles"><div class="tile"><i class="ph-duotone ph-speaker-high"></i>Sound</div><div class="tile"><i class="ph-duotone ph-moon-stars"></i>Night</div><div class="tile"><i class="ph-duotone ph-sun"></i>Keep screen on</div><div class="tile"><i class="ph-duotone ph-corners-out"></i>Full screen</div></div>
+    </div>
+  </div>
+
+  <div class="opt B" id="B">
+    <div class="about"><b>B · Storybook</b><small>Fraunces (a soft serif) + Nunito Sans, thin line icons, paper-like cards and lists. Editorial and grown-up, like a little café menu (closest to the portfolio styles you liked).</small></div>
+    <div class="top"><div class="brand">Bingsu's Bakery</div><div class="stat">Coins<b>42</b></div><div class="stat">Today<b>1h 10m / 2h</b></div><div class="stat">Streak<b>4 days</b></div><button class="btn">Account</button><button class="btn p"><i class="ph ph-list"></i>Menu</button></div>
+    <div class="row">
+      <div><p class="lbl">Kitchen</p><div class="fakescene">the bakery scene</div></div>
+      <div><p class="lbl">Desktop sidebar</p>
+        <div class="card"><h3>Working on <small>Now</small></h3><div class="task">Write the project update</div>
+          <div style="margin-top:12px"><div class="todo"><i class="ph ph-circle"></i>Reply to design feedback</div><div class="todo"><i class="ph ph-circle"></i>Plan next sprint</div><div class="todo" style="border:0"><i class="ph ph-plus"></i>Add a task</div></div></div>
+        <div class="card"><h3>Bake next <small>Menu</small></h3>
+          <div class="rec on"><img src="items/cookies.png" alt=""><span>Cookies</span><em>15 min · 4 coins</em></div><div class="rec"><img src="items/muffins.png" alt=""><span>Muffins</span><em>25 min · 8 coins</em></div><div class="rec" style="border:0"><img src="items/bread.png" alt=""><span>Bread</span><em>45 min · 15 coins</em></div></div>
+      </div>
+    </div>
+    <p class="lbl" style="margin-top:18px">Menu</p>
+    <div class="menu"><h2>Menu</h2>
+      <h4>Your bakery</h4><div class="tiles"><div class="tile"><i class="ph ph-storefront"></i>Display case</div><div class="tile"><i class="ph ph-shopping-bag"></i>Shop</div><div class="tile"><i class="ph ph-trophy"></i>Rewards</div><div class="tile"><i class="ph ph-book-open"></i>Stories</div><div class="tile"><i class="ph ph-music-notes"></i>Music</div><div class="tile"><i class="ph ph-newspaper"></i>Weekly paper</div></div>
+      <h4>Focus</h4><div class="tiles"><div class="tile"><i class="ph ph-target"></i>Daily goal</div><div class="tile"><i class="ph ph-clock"></i>Hours & breaks</div><div class="tile"><i class="ph ph-coffee"></i>Take a break</div><div class="tile"><i class="ph ph-desktop"></i>Connect devices</div></div>
+      <h4>Settings</h4><div class="tiles"><div class="tile"><i class="ph ph-speaker-high"></i>Sound</div><div class="tile"><i class="ph ph-moon-stars"></i>Night</div><div class="tile"><i class="ph ph-sun"></i>Keep screen on</div><div class="tile"><i class="ph ph-corners-out"></i>Full screen</div></div>
+    </div>
+  </div>
+
+  <div class="opt C" id="C">
+    <div class="about"><b>C · Playful game</b><small>Baloo 2 throughout, bold filled icons in coloured badges, chunky outlined buttons with a little drop. Feels most like a game, matching the characters' thick outlines.</small></div>
+    <div class="top"><div class="brand">Bingsu's Bakery</div><div class="pill"><i class="ph-fill ph-coins c6"></i>42</div><div class="pill"><i class="ph-fill ph-target c2"></i>1h 10m</div><div class="pill"><i class="ph-fill ph-fire c1"></i>4</div><button class="btn"><i class="ph-fill ph-user"></i>Account</button><button class="btn p"><i class="ph-fill ph-list"></i>Menu</button></div>
+    <div class="row">
+      <div><p class="lbl">Kitchen</p><div class="fakescene">the bakery scene</div></div>
+      <div><p class="lbl">Desktop sidebar</p>
+        <div class="card"><h3><i class="ph-fill ph-note-pencil c3"></i>Working on</h3><div class="task"><span class="chk"></span>Write the project update</div>
+          <div style="margin-top:8px"><div class="todo"><i class="ph-fill ph-circle"></i>Reply to design feedback</div><div class="todo"><i class="ph-fill ph-circle"></i>Plan next sprint</div><div class="todo"><i class="ph-fill ph-plus-circle"></i>Add a task</div></div></div>
+        <div class="card"><h3><i class="ph-fill ph-bread c1"></i>Bake next</h3>
+          <div class="rec on"><img src="items/cookies.png" alt=""><span>Cookies</span><em>15m · 4</em></div><div class="rec"><img src="items/muffins.png" alt=""><span>Muffins</span><em>25m · 8</em></div><div class="rec"><img src="items/bread.png" alt=""><span>Bread</span><em>45m · 15</em></div></div>
+      </div>
+    </div>
+    <p class="lbl" style="margin-top:18px">Menu</p>
+    <div class="menu"><h2>Menu</h2>
+      <h4>Your bakery</h4><div class="tiles"><div class="tile"><i class="ph-fill ph-storefront c2"></i>Display case</div><div class="tile"><i class="ph-fill ph-shopping-bag c1"></i>Shop</div><div class="tile"><i class="ph-fill ph-trophy c6"></i>Rewards</div><div class="tile"><i class="ph-fill ph-book-open c3"></i>Stories</div><div class="tile"><i class="ph-fill ph-music-notes c5"></i>Music</div><div class="tile"><i class="ph-fill ph-newspaper c4"></i>Weekly</div></div>
+      <h4>Focus</h4><div class="tiles"><div class="tile"><i class="ph-fill ph-target c2"></i>Daily goal</div><div class="tile"><i class="ph-fill ph-clock c3"></i>Hours</div><div class="tile"><i class="ph-fill ph-coffee c1"></i>Break</div><div class="tile"><i class="ph-fill ph-desktop c4"></i>Devices</div></div>
+      <h4>Settings</h4><div class="tiles"><div class="tile"><i class="ph-fill ph-speaker-high c5"></i>Sound</div><div class="tile"><i class="ph-fill ph-moon-stars c3"></i>Night</div><div class="tile"><i class="ph-fill ph-sun c6"></i>Screen on</div><div class="tile"><i class="ph-fill ph-corners-out c4"></i>Full screen</div></div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('pick').onclick = e => { const o = e.target.dataset.o; if (!o) return;
+  document.querySelectorAll('.pick button').forEach(b => b.classList.toggle('on', b.dataset.o === o));
+  document.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', x.id === o)); };
+</script>
+</body>
+</html>
