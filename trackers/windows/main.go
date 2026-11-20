@@ -1,8 +1,8 @@
 // Focus Bakery for Windows: a tray app that tells your bakery whether you're
 // focused, distracted or away. Only that one word is sent; window titles stay on this PC.
 //
-// The pairing code comes from (in order): the saved config, a "-code XXX" argument,
-// or the file name the bakery page gives the download (FocusBakery-<code>.exe).
+// The pairing code comes from (in order): a "-code XXX" argument, the file name the bakery page
+// gives the download (FocusBakery-<code>.exe), or the saved config.
 package main
 
 import (
@@ -27,7 +27,7 @@ import (
 )
 
 const site = "https://bakery.ruththomson.workers.dev"
-const version = 5   // bump with each release; the app updates itself when /bakery/winapp-version.txt is higher
+const version = 6   // bump with each release; the app updates itself when /bakery/winapp-version.txt is higher
 const idleAfter = 120 * time.Second
 
 var defaultList = []string{"YouTube", "Reddit", "Twitter", " / X", "Instagram", "Facebook", "TikTok", "Netflix", "Twitch", "Hulu", "Disney+", "Discord", "Steam"}
@@ -62,9 +62,10 @@ func cfgPath() string {
 }
 
 func loadCode() string {
-	var c config
-	if b, err := os.ReadFile(cfgPath()); err == nil && json.Unmarshal(b, &c) == nil && c.Code != "" {
-		return c.Code
+	// the newest intent wins: a "-code" argument, then the code in this download's file name, then the saved one
+	var c, saved config
+	if b, err := os.ReadFile(cfgPath()); err == nil {
+		json.Unmarshal(b, &saved)
 	}
 	for i, a := range os.Args {
 		if (a == "-code" || a == "--code") && i+1 < len(os.Args) {
@@ -77,7 +78,10 @@ func loadCode() string {
 			c.Code = m[1]
 		}
 	}
-	if c.Code != "" {
+	if c.Code == "" {
+		return saved.Code
+	}
+	if c.Code != saved.Code {
 		os.MkdirAll(filepath.Dir(cfgPath()), 0o755)
 		b, _ := json.Marshal(c)
 		os.WriteFile(cfgPath(), b, 0o600)
