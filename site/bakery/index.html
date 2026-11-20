@@ -1981,8 +1981,6 @@ function drawVisitor(now) {
   // drawn straight into the scene as vector shapes: crisp at any screen size
   const feet = 372;   // feet just below the frame: standing right at the counter, head above it
   critter(V.c).draw(ctx, A, at, dt, V.x, feet, VIS_H*.86, dir);
-  if (V.state === 'wait' && o && !(V.chat && V.chat.t > 0)) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#5d5049'; const b = `${CUSTOMERS[V.c].name} · ⏳${Math.max(0, Math.ceil(o.pat/SPEED/60))}m`; const w = ctx.measureText(b).width + 14;
-    const ty = feet - VIS_H*.9 - 24; shape('#fffaf2', rr(V.x - w/2, ty, w, 18, 9), CINK, 1.5); ctx.fillStyle = '#5d5049'; ctx.fillText(b, V.x, ty + 13); ctx.textAlign = 'start'; }
   V.hit = [V.x - 60, feet - VIS_H, V.x + 60, feet];
   if (V.state === 'story') drawStoryBubble(V, feet);
   if (V.chat && V.chat.t > 0 && V.state === 'wait') { ctx.save(); ctx.globalAlpha = Math.min(1, V.chat.t*3, (4.5 - V.chat.t)*6); bubble(V.chat.text, V.x + 70, feet - VIS_H*.95, V.x + 10, false, '#d98f2f'); ctx.restore(); }
