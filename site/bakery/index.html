@@ -138,7 +138,7 @@ body.phone.dist{background:#c9545a}
 .panel a.dl{display:inline-block;background:var(--accent);color:#3a2610;border:1px solid var(--accent-d);padding:8px 14px;border-radius:999px;font-weight:700;text-decoration:none;margin:6px 0}
 .tasks button.on{border-color:var(--bad);color:var(--bad);background:#fdeceb}
 .tasks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.steps{display:grid;gap:12px;margin-top:14px}.steps section{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:#fff}
+.steps{display:grid;gap:12px;margin-top:14px}.steps section{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--sec,#fff)}
 .steps h3{margin:0 0 8px;font-size:15px}.steps .muted{margin:8px 0}.phoneRow{display:flex;gap:14px;align-items:center}
 .steps code+button,.steps details button{margin-top:4px}
 #qr{background:#fff;padding:8px;border-radius:8px;display:inline-block;margin-top:6px}
@@ -212,11 +212,18 @@ body.phone #gear{width:44px;height:44px;padding:0;border-radius:50%;font-size:20
 .phone-only{display:none!important}body.phone .phone-only,body.phonefull .phone-only{display:flex!important}
 #sim .chips button{font-size:13px}
 body.phonefull .stage,body.phonefull .chip-state,body.phonefull #breakBar,body.phonefull #invBar,body.phonefull #bakeryBtn,body.phonefull #menuBtn{display:none!important}body.phonefull .layout{padding-top:12px}
+/* ---- onboarding ---- */
+#onb .dots{display:flex;gap:6px;margin:0 0 14px}#onb .dots i{width:26px;height:5px;border-radius:3px;background:var(--line)}#onb .dots i.on{background:var(--accent)}
+#onb h2{margin:0 0 6px}#onb .lead{color:var(--muted);margin:0 0 14px;white-space:normal}#onb ul{margin:0 0 16px;padding-left:20px;line-height:1.7}
+#onb .nav{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}#onb .nav .sp{flex:1}
+#onb form{display:grid;gap:10px;max-width:380px}#onb .hero{display:flex;gap:14px;align-items:center;margin-bottom:10px}#onb .hero img{width:64px;height:64px;border-radius:16px}
+#onb .ok{color:var(--good);font-weight:700}#onb .os button.on{background:var(--accent);border-color:var(--accent-d);color:#3a2610}#onb .os{display:flex;gap:8px;margin:6px 0 10px}#onb code{display:block;white-space:pre-wrap;word-break:break-all;background:#f5ebdf;border-radius:10px;padding:10px;font-size:12px;margin:6px 0}
 /* ---- night: dark page around a lamp-lit kitchen ---- */
 body.night{--bg:#16121b;--card:#221c27;--line:#352c3c;--line2:#4a3f52;--text:#efe4d8;--muted:#a99a8c}
 body.night,body.night.phone{background:#16121b;color:#efe4d8}
 body.night .top{background:#16121bee;border-color:#352c3c}
 body.night .card,body.night .sheet-box,body.night #case{background:#221c27;color:#efe4d8}
+body.night{--sec:#2c2532}body.night .panel code,body.night #onb code{background:#16121b;color:#efe4d8}body.night button.link{background:none!important;border:0!important;color:#f2c27a;text-decoration:underline}body.night .panel h2,body.night .panel h3{color:#efe4d8}
 body.night button:not(.primary):not(.on),body.night input,body.night select,body.night .tiles>button,body.night .tiles>a{background:#2c2532;color:#efe4d8;border-color:#4a3f52}
 body.night.phone #phoneBar{background:#221c27;color:#efe4d8;border-color:#0d0a10}
 body.night #pill,body.night.phone #dock{background:#221c27e6;color:#efe4d8;border-color:#0d0a10}
@@ -269,7 +276,8 @@ body.night #case .chart span{color:#efe4d8}body.night #case .masthead{border-col
     <h3>Settings</h3><div class="tiles">
       <button id="sound"><i>🔕</i><span>Sound off</span></button>
       <button id="nightBtn"><i>🌙</i><span>Night: auto</span></button><button id="wake"><i>☀️</i><span>Keep screen on</span></button><button id="fs"><i>⛶</i><span>Full screen</span></button></div>
-    <div class="menu-foot"><button id="simBtn">🧪 Simulator</button></div></div>
+    <div class="menu-foot"><button id="onbBtn">🚀 Getting started</button><button id="simBtn">🧪 Simulator</button></div></div>
+  <div id="onb" class="panel" hidden></div>
   <div id="sim" class="panel" hidden><h2>🧪 Simulator</h2><p class="muted" style="white-space:normal">Try situations without waiting. Skipping ahead counts as real progress in your bakery.</p>
     <h3 class="lbl">Pretend I’m…</h3><div id="modes" class="chips"></div>
     <h3 class="lbl">Skip ahead</h3><div class="chips"><button data-sim="f15">⏩ 15 min focused</button><button data-sim="f45">⏩ 45 min focused</button><button data-sim="f90">⏩ 90 min focused</button></div>
@@ -1452,7 +1460,7 @@ $('update').onclick = () => { save(); location.reload(); };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
 setInterval(() => { if (!document.hidden) checkUpdate(); }, 3*60e3); setInterval(tryUpdate, 5e3); checkUpdate();
 // ---- dialogs: one panel at a time inside the sheet ----
-const PANELS = ['acct', 'goal', 'hours', 'connect', 'todo', 'dist', 'menu', 'sim'];
+const PANELS = ['acct', 'goal', 'hours', 'connect', 'todo', 'dist', 'menu', 'sim', 'onb'];
 function openPanel(id) { PANELS.forEach(p => $(p).hidden = p !== id); }
 function closePanels() { PANELS.forEach(p => $(p).hidden = true); }
 const syncSheet = () => { const h = PANELS.every(p => $(p).hidden); if ($('sheet').hidden !== h) $('sheet').hidden = h; };
@@ -2225,6 +2233,76 @@ function hud(now, eff) {
   if (renderRecipes.coins !== S.coins) { renderRecipes.coins = S.coins; renderRecipes(); }
 }
 
+// ---- onboarding: welcome → account → computer → phone → goal & first task ----
+let onbStep = 0, onbMode = 'signup', onbErr = '';
+const ONB_N = 5, isMac = /Mac/.test(navigator.platform || navigator.userAgent) && !/iPhone|iPad/.test(navigator.userAgent), isWin = /Win/.test(navigator.platform || navigator.userAgent), isPhone = /Android|iPhone|iPad/.test(navigator.userAgent);
+let onbOS = isWin ? 'win' : isMac ? 'mac' : 'win';
+function ensureCode() { if (!CODE) { CODE = newCode(); ls('focusbakery-code', CODE); if (location.protocol !== 'file:') { const u = new URL(location.href); u.searchParams.set('code', CODE); history.replaceState(null, '', u); } poll(); } }
+function openOnb(step = 0) { onbStep = step; onbErr = ''; document.body.classList.remove('phone'); openPanel('onb'); renderOnb(); }
+function renderOnb() {
+  const el = $('onb'), esc = t => String(t).replace(/[<&"]/g, c => ({'<':'&lt;', '&':'&amp;', '"':'&quot;'}[c]));
+  const dots = `<div class="dots">${Array.from({length: ONB_N}, (_, i) => `<i class="${i <= onbStep ? 'on' : ''}"></i>`).join('')}</div>`;
+  const nav = (next = 'Next', skip = true) => `<div class="nav">${onbStep ? '<button data-o="back">← Back</button>' : ''}<span class="sp"></span>${skip ? '<button data-o="skip" class="link">Skip</button>' : ''}<button class="primary" data-o="next">${next}</button></div>`;
+  let h = '';
+  if (onbStep === 0) h = `<div class="hero"><img src="icon-192.png" alt=""><div><h2>Welcome to Bingsu’s Bakery</h2><p class="lead" style="margin:0">A cosy bakery that runs on your focus.</p></div></div>
+    <ul><li><b>Focus</b> and Bingsu bakes. Finished bakes earn coins.</li><li><b>Get distracted</b> and the oven smokes and customers grow impatient. Come back and all is forgiven.</li>
+    <li>Every 15 focused minutes a <b>customer</b> drops by. After a good stretch, a friend invites you for a <b>break</b>.</li></ul>
+    <p class="lead">Setup takes about two minutes: an account, your computer, and (if you like) your phone.</p>${nav('Let’s go', false)}`;
+  if (onbStep === 1) {
+    if (AUTH) h = `<h2>Your account</h2><p class="lead">You’re logged in as <b>${esc(AUTH.email)}</b>. Your bakery saves automatically and follows you to every device.</p>${nav('Next', false)}`;
+    else { const up = onbMode === 'signup';
+      h = `<h2>${up ? 'Save your bakery' : 'Log in'}</h2><p class="lead">${up ? 'An account keeps your coins and customers safe, and lets your phone and computer share one bakery.' : 'Welcome back! Your progress loads as soon as you log in.'}</p>
+      <form id="onbForm"><input id="onbEmail" type="email" autocomplete="email" placeholder="Email" required><input id="onbPw" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'Password (8+ characters)' : 'Password'}" required minlength="${up ? 8 : 1}">
+      <button class="primary" type="submit">${up ? 'Create account' : 'Log in'}</button><small style="color:var(--bad)">${esc(onbErr)}</small></form>
+      <p>${up ? 'Already have one?' : 'New here?'} <button class="link" data-o="mode">${up ? 'Log in' : 'Create an account'}</button></p>
+      <div class="nav">${'<button data-o="back">← Back</button>'}<span class="sp"></span><button class="link" data-o="skip">Skip for now</button></div>`; }
+  }
+  if (onbStep === 2) { ensureCode(); const cmd = `curl -fsSL ${SITE}/bakery/mac-tracker.sh -o ~/focus-bakery.sh && bash ~/focus-bakery.sh ${CODE}`;
+    h = `<h2>Connect your computer</h2><p class="lead">A tiny helper tells the bakery whether you’re focused, distracted or away. Only that is shared, never what’s on your screen.</p>
+      <div class="os"><button data-os="win" class="${onbOS === 'win' ? 'on' : ''}">💻 Windows</button><button data-os="mac" class="${onbOS === 'mac' ? 'on' : ''}">🍎 Mac</button></div>
+      ${onbOS === 'win' ? `<a class="dl" href="FocusBakery.exe" download="FocusBakery-${CODE}.exe">⬇︎ Download for Windows</a><p class="lead">Open it and a little cat appears by the clock. If Windows says it “protected your PC”, choose <b>More info → Run anyway</b>.</p>`
+        : `<p class="lead" style="margin-bottom:4px">Open <b>Terminal</b>, paste this and leave it running. Click <b>OK</b> when macOS asks.</p><code>${esc(cmd)}</code><button data-o="copy">Copy</button>`}
+      ${isPhone ? '<p class="lead">You’re on a phone: do this step on your computer, then come back.</p>' : ''}
+      <p id="onbLive">${trackerRaw ? '<span class="ok">✓ Your computer is connected</span>' : '<span class="muted">Waiting for your computer…</span>'}</p>${nav(trackerRaw ? 'Next' : 'I’ll do this later', false)}`; }
+  if (onbStep === 3) { ensureCode(); const link = AUTH ? `${SITE}/bakery/` : `${SITE}/bakery/?code=${CODE}`;
+    h = `<h2>Put it on your phone (optional)</h2><p class="lead">Your phone makes a lovely little bakery window on your desk. Scan this, ${AUTH ? 'log in, ' : ''}then add it to your home screen.</p>
+      <div class="phoneRow"><div id="onbQr" style="background:#fff;padding:8px;border-radius:8px"></div><p class="lead" style="margin:0"><b>Android:</b> Chrome ⋮ → Install app<br><b>iPhone:</b> Share → Add to Home Screen</p></div>${nav()}`; }
+  if (onbStep === 4) h = `<h2>Your first day</h2><p class="lead">How much focus would make today a good day? You can change this any time.</p>
+      <div class="chips">${[[60, '1 hour'], [90, '1½ hours'], [120, '2 hours'], [180, '3 hours']].map(([n, l]) => `<button data-g="${n}" class="${S.goal.type === 'focus' && S.goal.n === n ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <p class="lead" style="margin-top:16px">What are you working on first?</p><input id="onbTask" maxlength="80" placeholder="e.g. Write the project update" value="${esc(S.task || '')}" style="width:100%">
+      ${nav('Open my bakery 🧁', false)}`;
+  el.innerHTML = dots + h;
+  if (onbStep === 3) { const link = AUTH ? `${SITE}/bakery/` : `${SITE}/bakery/?code=${CODE}`, qr = () => { $('onbQr').innerHTML = ''; new QRCode($('onbQr'), {text: link, width: 120, height: 120}); };
+    if (window.QRCode) qr(); else { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = qr; document.head.appendChild(sc); } }
+}
+function finishOnb() {
+  const t = $('onbTask') && $('onbTask').value.trim();
+  if (t) { S.task = t; S.taskId = null; S.taskStart = Date.now(); $('task').value = t; pushTask(); syncDone(); }
+  S.onboarded = true; save(); closePanels(); document.body.classList.toggle('phone', phoneish);
+  floats.push({x: W/2, y: 120, text: 'Welcome to the bakery! 🧁', t: 0}); B.mood = 'joy'; B.moodT = 2;
+}
+$('onb').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.os) { onbOS = b.dataset.os; renderOnb(); return; }
+  if (b.dataset.g) { S.goal = {type: 'focus', n: +b.dataset.g}; save(); renderGoalHud(); renderOnb(); return; }
+  const o = b.dataset.o; if (!o) return;
+  if (o === 'mode') { onbMode = onbMode === 'signup' ? 'login' : 'signup'; onbErr = ''; renderOnb(); }
+  if (o === 'copy') navigator.clipboard?.writeText(`curl -fsSL ${SITE}/bakery/mac-tracker.sh -o ~/focus-bakery.sh && bash ~/focus-bakery.sh ${CODE}`).then(() => { b.textContent = 'Copied ✓'; });
+  if (o === 'back') { onbStep = Math.max(0, onbStep - 1); renderOnb(); }
+  if (o === 'next' || o === 'skip') { if (onbStep >= ONB_N - 1) finishOnb(); else { onbStep++; onbErr = ''; renderOnb(); } }
+});
+$('onb').addEventListener('submit', async e => {
+  e.preventDefault(); const up = onbMode === 'signup', email = $('onbEmail').value.trim();
+  try {
+    const d = await api(up ? '/api/auth/signup' : '/api/auth/login', {method: 'POST', body: JSON.stringify({email, password: $('onbPw').value, code: up ? CODE : undefined})});
+    AUTH = {token: d.token, email: d.email}; ls('focusbakery-auth', JSON.stringify(AUTH)); adoptCode(d.code); renderAcctBtn();
+    if (up) await pushSave(true); else await pullSave(true);
+    onbStep = 2; renderOnb();
+  } catch (err) { onbErr = err.message; renderOnb(); $('onbEmail').value = email; }
+});
+setInterval(() => { if (!$('onb').hidden && onbStep === 2 && $('onbLive') && !!trackerRaw !== $('onbLive').textContent.includes('✓')) renderOnb(); }, 1500);   // ticks over when the computer connects
+$('onbBtn').onclick = () => openOnb(0);
+if (!S.onboarded && !AUTH && (S.life || 0) < 120 && !resetToken) setTimeout(() => openOnb(0), 600);
 let last = performance.now(), hudT = 0;
 function loop(now) {
   const rdt = Math.min(.25, (now - last)/1000); last = now;
