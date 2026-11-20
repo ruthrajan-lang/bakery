@@ -796,13 +796,17 @@ function drawOven(now, eff, st) {
   const wx = 505, wy = 295, ww = 96, wh = 38, cx = wx + ww/2, by = wy + wh - 5;
   if (baking) {
     ctx.save(); ctx.beginPath(); ctx.roundRect(wx, wy, ww, wh, 6); ctx.clip();
-    const g = ctx.createLinearGradient(0, wy, 0, wy + wh); g.addColorStop(0, '#ffb066'); g.addColorStop(1, '#c8642e');
+    const g = ctx.createLinearGradient(0, wy, 0, wy + wh), pulse = .5 + .5*Math.sin(now/700); g.addColorStop(0, lerpC('#ffb066', '#ffc98a', pulse*.6)); g.addColorStop(1, '#c8642e');
     ctx.fillStyle = g; ctx.fillRect(wx, wy, ww, wh);
+    ctx.globalAlpha = .18; ctx.strokeStyle = '#fff3d6'; ctx.lineWidth = 1.5;   // heat shimmer rising inside the oven
+    for (let i = 0; i < 4; i++) { const hx = wx + 14 + i*22, ph = (now/1400 + i*.27) % 1; ctx.beginPath(); for (let j = 0; j <= 6; j++) ctx.lineTo(hx + Math.sin(now/240 + j + i)*2.5, wy + wh - 6 - ph*14 - j*3); ctx.stroke(); }
+    ctx.globalAlpha = 1;
     const r = S.job.r, k = st.sp, burnt = Math.min(.85, S.job.ruin/RUIN_FAIL);
     line([[wx + 12, by + 1], [wx + ww - 12, by + 1]], '#d8d2ca', 3);
     if (r === 'cake') { const hh = 20*(.6 + .4*k); shape(burnt ? lerpC('#f5c36b', '#3b2a20', burnt) : lerpC('#f6e3bf', '#f5c36b', k), rr(cx - 16, by - hh, 32, hh, 5), CINK, 2); }
-    else if (r === 'cookies') drawBaking(r, cx, by, .8, k, burnt, {sx:.85 + .15*k, n:2});
-    else drawBaking(r, cx, by, .85, k, burnt, {sy:.75 + .25*k});
+    else { const puff = Math.sin(now/650)*.03*(1 - burnt);   // breathing as it rises in the heat
+      if (r === 'cookies') drawBaking(r, cx, by, .8, k, burnt, {sx:(.85 + .15*k)*(1 + puff), sy:1 - puff, n:2});
+      else drawBaking(r, cx, by, .85, k, burnt, {sx:1 - puff*.5, sy:(.75 + .25*k)*(1 + puff)}); }
     ctx.restore();
   }
   shape(alarm && (now/300|0) % 2 ? '#ff5a4a' : baking ? '#ffb347' : null, ell(553, 253, 7, 7), baking ? CINK : null, 2);
@@ -821,8 +825,15 @@ function surface(k, x, y) {   // draws a board/tray, returns the baseline items 
 function drawProp(st, now) {
   const {x, y} = PROP;
   if (B.cool && B.moodT > 0) {   // fresh bake cooling on a tray, steaming
-    drawItem(B.cool, x, surface('tray', x, y), 1.5);
-    ctx.globalAlpha = .6; for (const dx of [-14, 0, 14]) { ctx.beginPath(); for (let i = 0; i <= 10; i++) ctx.lineTo(x + dx + Math.sin(now/300 + i*.8 + dx)*3, y - 50 - i*3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke(); } ctx.globalAlpha = 1;
+    if (B.coolAt == null || B.coolFor !== B.cool) { B.coolAt = now; B.coolFor = B.cool; }
+    const ct = (now - B.coolAt)/1000, land = Math.max(0, 1 - ct*1.8), boing = Math.sin(ct*16)*Math.exp(-ct*4);   // drops in, squashes, settles
+    drawItem(B.cool, x, surface('tray', x, y) - land*land*40, 1.5, 0, {sx: 1 + boing*.14, sy: 1 - boing*.16});
+    for (const dx of [-16, 0, 16]) for (let w = 0; w < 2; w++) {   // wisps of steam that curl up and fade
+      const ph = ((now/1800 + dx*.03 + w*.5) % 1); ctx.globalAlpha = .55*Math.sin(Math.PI*ph);
+      ctx.beginPath(); for (let i = 0; i <= 10; i++) ctx.lineTo(x + dx + Math.sin(now/380 + i*.7 + dx)*(2 + i*.5), y - 46 - ph*26 - i*3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < 3; i++) { const tw = Math.sin(now/260 + i*2.1); if (tw > .6) { const sx = x - 22 + i*22, sy = y - 30 - (i % 2)*12, k = (tw - .6)*12;
+      ctx.fillStyle = '#fff6c8'; ctx.fillRect(sx - k/2, sy - .8, k, 1.6); ctx.fillRect(sx - .8, sy - k/2, 1.6, k); } }
     return;
   }
   if (Math.abs(B.x - COUNTER_X) > 2) return;
@@ -832,7 +843,9 @@ function drawProp(st, now) {
     const ry = BOWL_RIM(), batter = {cookies:'#f3d9a4', muffins:'#f6e3bf', bread:'#f8ead0', cake:'#f9cdd5', croissants:'#f6e3bf', pumpkin:'#f2a65a', gingerbread:'#d9a06a', hotcross:'#f6e3bf', tart:'#f6e3bf'}[S.job.r] || R.batter;
     shape(lerpC(batter, '#c9ad86', dry), ell(bx, ry, 33, 7), CINK, 2.5);
     const dots = S.job.r === 'cookies' ? '#5a3520' : S.job.r === 'muffins' ? '#6b6bc0' : S.job.r === 'tart' ? '#e0533f' : S.job.r === 'hotcross' ? '#8a5a3c' : null;
-    if (dots) for (const [a, b] of [[-18, 0], [-6, -2], [7, 2], [18, -1], [0, 3]]) shape(dots, ell(bx + a, ry + b, 2.4, 1.8), null);
+    ctx.save(); ctx.globalAlpha = .35; ctx.strokeStyle = lerpC(batter, '#8a6a4a', .35); ctx.lineWidth = 1.6; ctx.beginPath();   // swirl turning with the spoon
+    for (let i = 0; i <= 40; i++) { const a = now/500 + i*.32, r = 3 + i*.62; ctx.lineTo(bx + Math.cos(a)*r, ry + Math.sin(a)*r*.2); } ctx.stroke(); ctx.restore();
+    if (dots) for (let i = 0; i < 5; i++) { const a = now/650 + i*1.26, r = 8 + (i*7) % 22; shape(dots, ell(bx + Math.cos(a)*r, ry + Math.sin(a)*r*.2, 2.4, 1.8), null); }
   } else if (st.a === 'mix') {
     shape(MINT, () => { ctx.ellipse(x, y - 36, 44, 36, 0, 0, Math.PI); ctx.closePath(); }, ink, 3.5);
     ctx.save(); ctx.beginPath(); ctx.ellipse(x, y - 36, 44, 36, 0, 0, Math.PI); ctx.clip();
@@ -851,11 +864,13 @@ function drawProp(st, now) {
     if (st.sp > .7) for (let i = 0; i < 6; i++) shape(['#e05a7a', '#5ab0e0', '#f2c94c'][i % 3], ell(x - 18 + i*7, y - 47, 1.8, 1.8), null);
   } else if (st.a === 'shape' && (S.job.r === 'cookies' || S.job.r === 'muffins' || RAWIMG[S.job.r])) {
     const by = surface('tray', x, y), n = 1 + Math.floor(st.sp*3.99);
-    if (RAWIMG[S.job.r]) drawRaw(S.job.r, x, by, 1.25);
-    else if (S.job.r === 'cookies') drawRaw('cookies', x, by, 1.45, {n:Math.min(n, 3)});
-    else for (let i = 0; i < Math.min(n, 3); i++) drawRaw(S.job.r, x - 30 + i*30, by, 1.05);
+    if (B.shapeN !== n) { B.shapeN = n; B.shapeAt = now; }
+    const pt = (now - (B.shapeAt || 0))/1000, pop = Math.sin(pt*14)*Math.exp(-pt*5)*.25;
+    if (RAWIMG[S.job.r]) drawRaw(S.job.r, x, by, 1.25, {sx: 1 + pop*.5, sy: 1 - pop*.5});
+    else if (S.job.r === 'cookies') drawRaw('cookies', x, by, 1.45, {n:Math.min(n, 3), sx: 1 + pop*.4, sy: 1 - pop*.4});
+    else for (let i = 0; i < Math.min(n, 3); i++) drawRaw(S.job.r, x - 30 + i*30, by, 1.05, i === Math.min(n, 3) - 1 ? {sx: 1 + pop, sy: 1 - pop} : {});
   } else if (st.a === 'proof') {   // shaped raw loaf / croissant rising
-    drawRaw(S.job.r, x, surface('board', x, y), 1.45, {sx:.85 + .15*st.sp, sy:.6 + .4*st.sp});
+    { const br = Math.sin(now/900)*.035; drawRaw(S.job.r, x, surface('board', x, y), 1.45, {sx:(.85 + .15*st.sp)*(1 - br*.5), sy:(.6 + .4*st.sp)*(1 + br)}); }
   } else {
     const grow = 1, squish = st.a === 'knead' ? Math.abs(Math.sin(now/250))*.12 : 0;
     const by = surface('board', x, y);
