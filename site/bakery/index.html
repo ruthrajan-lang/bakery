@@ -2349,8 +2349,6 @@ $('onb').addEventListener('submit', async e => {
 setInterval(() => { if (!$('onb').hidden && onbStep === 2 && $('onbLive') && !!trackerRaw !== $('onbLive').textContent.includes('✓')) renderOnb(); }, 1500);   // ticks over when the computer connects
 $('onb').addEventListener('change', e => { if (e.target.id === 'onbCustom') setCustomGoal(e.target.value); });
 $('onbBtn').onclick = () => openOnb(0);
-// admin only: a link to the sign-ups page
-if (AUTH) api('/api/me').then(d => { if (d.admin && !$('adminLink')) document.querySelector('#menu .menu-foot').insertAdjacentHTML('afterbegin', '<a id="adminLink" href="admin">📊 Sign-ups</a>'); }).catch(() => {});
 if (!S.onboarded && !AUTH && (S.life || 0) < 120 && !resetToken) setTimeout(() => openOnb(0), 600);
 let last = performance.now(), hudT = 0;
 function loop(now) {
