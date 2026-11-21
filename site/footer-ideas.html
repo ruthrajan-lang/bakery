@@ -77,6 +77,15 @@ canvas { display: block; }
 .balloon { position: absolute; right: -10px; bottom: 1.2em; width: 86px; height: 128px; pointer-events: none; }
 #sky { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; }
 
+/* speech bubbles */
+.bub { position: absolute; z-index: 5; background: #fff; color: var(--ink); font: 600 13px/1.3 Archivo, sans-serif; padding: 8px 12px; border-radius: 12px; white-space: nowrap; box-shadow: 0 6px 20px -8px rgba(38,34,46,.35); border: 1.5px solid #5d5049; pointer-events: none; opacity: 0; transform: translateY(6px) scale(.94); transform-origin: 100% 100%; transition: opacity .18s, transform .3s cubic-bezier(.3,1.6,.5,1); }
+.bub::after { content: ''; position: absolute; right: -7px; bottom: 12px; width: 10px; height: 10px; background: #fff; border: 1.5px solid #5d5049; border-left: 0; border-bottom: 0; transform: rotate(45deg); }
+.bub.on { opacity: 1; transform: none; }
+.bub-b { right: calc(clamp(24px, 14vw, 200px) + 128px); bottom: calc(100% + 40px); }
+.bub-m { right: 74px; bottom: 2.6em; }
+#v8 .balloon { pointer-events: auto; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .bub { transition: none; } }
+
 /* 6 ticket */
 .tkwrap { position: relative; flex: none; transform: rotate(2.5deg); transition: transform .5s cubic-bezier(.3,1.5,.5,1); width: min(272px, 100%); }
 @media (min-width: 900px) { #v6 .fm { flex-wrap: nowrap; } }
@@ -97,7 +106,7 @@ canvas { display: block; }
 
 @media (prefers-reduced-motion: reduce) { .cta, .tkwrap, .stamp { transition: none; } }
 @media (max-width: 640px) {
-  .peek { right: 20px; } .nap { left: auto; right: 16px; }
+  .peek { right: 20px; } .bub-b { right: 150px; } .nap { left: auto; right: 16px; }
   .ft .fm > .ctawrap, .ft .fm > .cta { margin-top: 8px; }
   .ft .fm > .ctawrap { margin-top: 56px; } .oven { height: 120px; width: 140px; }
   .tkwrap { margin-top: 40px; }
@@ -108,9 +117,18 @@ canvas { display: block; }
 
 <header class="intro">
   <h1>Footer ideas, with Bingsu</h1>
-  <p>Seven takes on the portfolio footer, each built on the current layout (headline, “Let’s talk”, bottom row). Everything is live: hover, click, scroll. Headline face: <b>Archivo</b> at 125% width, weight 800, with its true italic for “make next?”. Bingsu, the bakes and the customers are the real game art.</p>
-  <nav><a href="#v1">1 Peekaboo</a><a href="#v2">2 Fresh bake</a><a href="#v3">3 Catnap</a><a href="#v4">4 Piped</a><a href="#v5">5 Lift-off</a><a href="#v6">6 Order ticket</a><a href="#v7">7 Regulars</a></nav>
+  <p>Seven takes on the portfolio footer, plus a combined favorite (★), each built on the current layout (headline, “Let’s talk”, bottom row). Everything is live: hover, click, scroll. Headline face: <b>Archivo</b> at 125% width, weight 800, with its true italic for “make next?”. Bingsu, the bakes and the customers are the real game art.</p>
+  <nav><a href="#v8">★ Peekaboo + Lift-off</a><a href="#v1">1 Peekaboo</a><a href="#v2">2 Fresh bake</a><a href="#v3">3 Catnap</a><a href="#v4">4 Piped</a><a href="#v5">5 Lift-off</a><a href="#v6">6 Order ticket</a><a href="#v7">7 Regulars</a></nav>
 </header>
+
+<section class="var" id="v8">
+  <div class="vh"><span class="vn">1+5</span><h2>Peekaboo + Lift-off</h2><p>Bingsu peeks over the divider and Mo waits on “Back to top” with the balloon. Hover either one for a hint; Bingsu watches Mo float away.</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft"><canvas class="peek" aria-hidden="true"></canvas><span class="bub bub-b" aria-hidden="true"></span>
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top" class="totop"><canvas class="balloon" aria-hidden="true"></canvas><span class="bub bub-m" aria-hidden="true"></span>Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
 
 <section class="var" id="v1">
   <div class="vh"><span class="vn">01</span><h2>Peekaboo</h2><p>Bingsu peeks over the divider and watches your cursor; he ducks, a bit shy, when you go for “Let’s talk”. Click him for a smile.</p></div>
@@ -265,9 +283,10 @@ function place(f, x, y, k, rot = 0, sy = 1) {
 function blinker() { let n = 1 + Math.random()*3, b = 0; return dt => { if (RM) return false; if ((n -= dt) < 0) { b = .14; n = 2.5 + Math.random()*4; } b = Math.max(0, b - dt); return b > 0; }; }
 const P = {x: -1e4, y: -1e4, has: false};
 addEventListener('pointermove', e => { P.x = e.clientX; P.y = e.clientY; P.has = e.pointerType === 'mouse' || P.has; }, {passive: true});
-function look(cx, cy, t, wander = true) {   // viewport point of the eyes -> look vector
-  if (!P.has) return wander && !RM ? [Math.sin(t*.45)*.6, .15] : [0, .1];
-  const dx = P.x - cx, dy = P.y - cy;
+function look(cx, cy, t, wander = true, pt = null) {   // viewport point of the eyes -> look vector
+  const Q = pt || P;
+  if (!pt && !P.has) return wander && !RM ? [Math.sin(t*.45)*.6, .15] : [0, .1];
+  const dx = Q.x - cx, dy = Q.y - cy;
   return [clamp(dx/(Math.abs(dx) + 160), -1, 1), clamp(dy/(Math.abs(dy) + 160), -1, 1)];
 }
 const follow = (cur, tgt, dt, rate = 10) => RM ? tgt.slice() : cur.map((v, i) => ease(v, tgt[i], Math.min(1, dt*rate)));
@@ -288,23 +307,27 @@ document.querySelectorAll('[data-replay]').forEach(b => b.onclick = () => replay
 document.querySelectorAll('a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
 
 // 1 · Peekaboo ------------------------------------------------------------
-reg('v1', el => {
-  const c = el.querySelector('.peek'), cta = el.querySelector('.cta'), bl = blinker();
+function say(b, lines) { if (!b) return; b.i = ((b.i ?? -1) + 1) % lines.length; b.textContent = lines[b.i]; b.classList.add('on'); }
+function peekaboo(el, watch) {
+  const c = el.querySelector('.peek'), bub = el.querySelector('.bub-b'), cta = el.querySelector('.cta'), bl = blinker();
   let hov = 0, duck = 0, joy = 0, lk = [0, 0], bump = 0;
   cta.addEventListener('pointerenter', () => hov = 1); cta.addEventListener('pointerleave', () => hov = 0);
   cta.addEventListener('focus', () => hov = 1); cta.addEventListener('blur', () => hov = 0);
   c.addEventListener('click', () => { joy = 1.6; bump = 1; });
+  if (bub) { c.addEventListener('pointerenter', () => say(bub, ['Psst… “Let’s talk” is right there →', 'I bake, Your Name designs. Say hi!', 'Got a project? I’ll put the oven on.'])); c.addEventListener('pointerleave', () => bub.classList.remove('on')); }
   return (t, dt) => {
     const f = fit(c), k = Math.min(.17, f.w/820);
     duck = RM ? hov : ease(duck, hov, Math.min(1, dt*(hov ? 14 : 4)));
     joy = Math.max(0, joy - dt); bump = Math.max(0, bump - dt*3);
     const eyeY = f.h - (700 - 630)*k + duck*f.h;
-    lk = follow(lk, hov ? [-.7, .7] : look(f.r.left + f.w/2, f.r.top + eyeY, t), dt);
+    const wp = watch && watch();
+    lk = follow(lk, wp ? look(f.r.left + f.w/2, f.r.top + eyeY, t, true, wp) : hov ? [-.7, .7] : look(f.r.left + f.w/2, f.r.top + eyeY, t), dt);
     const y = f.h + (711 - 700)*k + duck*(f.h + 10) - Math.sin(bump*Math.PI)*10 + (RM ? 0 : Math.sin(t*1.7)*1.2);
     place(f, f.w/2, y, k, lk[0]*.09);
-    bingsu(f.g, {t, look: lk, blink: bl(dt), mood: joy > 0 ? 'joy' : 'open', earL: lk[0]*.15, earR: -lk[0]*.15});
+    bingsu(f.g, {t, look: lk, blink: bl(dt), mood: joy > 0 ? 'joy' : wp ? 'o' : 'open', earL: lk[0]*.15, earR: -lk[0]*.15});
   };
-});
+}
+reg('v1', el => peekaboo(el));
 
 // 2 · Fresh bake ----------------------------------------------------------
 reg('v2', el => {
@@ -545,6 +568,56 @@ reg('v7', el => {
       }
     }
     crowd = crowd.filter(q => q.x > -60);
+  };
+});
+
+// ★ Peekaboo + Lift-off (Mo) ---------------------------------------------
+reg('v8', el => {
+  const c = el.querySelector('.balloon'), a = el.querySelector('.totop'), bub = el.querySelector('.bub-m'), sky = document.getElementById('sky');
+  const mo = window.BakeryCritters ? new BakeryCritters.Critter('bear') : null;
+  let tug = 0, hov = 0, fly = null;
+  const peek = peekaboo(el, () => fly && fly.pt);
+  const enter = () => { hov = 1; say(bub, ['Hop on! I’ll float you back up ↑', 'Going up? Hold the string ↑', 'Top floor: the whole portfolio ↑']); };
+  const leave = () => { hov = 0; bub.classList.remove('on'); };
+  a.addEventListener('pointerenter', enter); a.addEventListener('pointerleave', leave); a.addEventListener('focus', enter); a.addEventListener('blur', leave);
+  a.addEventListener('click', e => {
+    e.preventDefault(); leave();
+    if (RM) { scrollTo(0, 0); return; }
+    if (fly) return;
+    const r = c.getBoundingClientRect(); fly = {x: r.left, y: r.top, w: r.width, h: r.height, t: 0, pt: null};
+    setTimeout(() => scrollTo({top: 0, behavior: 'smooth'}), 350);
+  });
+  setTimeout(() => regs.find(q => q.el === el).always = () => !!fly, 0);
+  // Mo holds the string up in his right paw; balloon sways above
+  function moBalloon(f, x, feet, h, t, dt, act, lift = 0) {
+    const g = f.g, s = h/60, sw = RM ? 0 : Math.sin(t*1.8)*.08;
+    const hx = x + h*.42, hy = feet - h*.66, bx = x + h*.62 + (RM ? 0 : Math.sin(t*1.3)*3*s), by = feet - h - 34*s - lift*4*s;
+    g.setTransform(f.d, 0, 0, f.d, 0, 0);
+    g.beginPath(); g.moveTo(hx, hy); g.quadraticCurveTo(hx + 8*s + (RM ? 0 : Math.sin(t*2)*4*s), (hy + by)/2, bx, by + 21*s); g.strokeStyle = CINK; g.lineWidth = 1.2*s; g.stroke();
+    g.save(); g.translate(bx, by); g.rotate(sw);
+    g.beginPath(); g.ellipse(0, 0, 16*s, 19*s, 0, 0, 7); g.fillStyle = PURPLE; g.fill(); g.strokeStyle = CINK; g.lineWidth = 2*s; g.stroke();
+    g.beginPath(); g.moveTo(-3*s, 22*s); g.lineTo(0, 19*s); g.lineTo(3*s, 22*s); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.ellipse(-6*s, -7*s, 3*s, 5.5*s, .5, 0, 7); g.fillStyle = 'rgba(255,255,255,.35)'; g.fill();
+    g.restore();
+    if (mo) mo.draw(g, act, RM ? 0 : t, dt, x, feet, h, 0);
+    g.setTransform(f.d, 0, 0, f.d, 0, 0);
+  }
+  return (t, dt) => {
+    tug = RM ? hov : ease(tug, hov, Math.min(1, dt*8));
+    if (fly) {
+      fly.t += dt;
+      const f = fit(sky), p = fly.t, rise = p < .35 ? -p*30 : -10 - (p - .35)**2*420 - (p - .35)*120;
+      const x = fly.x + fly.w*.4 + Math.sin(p*2.4)*18, feet = fly.y + fly.h + rise;
+      moBalloon(f, x, feet, 64, t, dt, 'cheer', 1);
+      fly.pt = {x, y: feet - 40};
+      fit(c);
+      if (feet < -120) { fly = null; fit(sky); }
+    } else {
+      const f = fit(c);
+      moBalloon(f, f.w*.4, f.h - 2 + (RM ? 0 : -Math.abs(Math.sin(t*3))*tug*4), 56, t, dt, hov ? 'excited' : 'idle', tug);
+    }
+    const pr = el.getBoundingClientRect();
+    if (pr.bottom > 0 && pr.top < innerHeight) peek(t, dt);
   };
 });
 
