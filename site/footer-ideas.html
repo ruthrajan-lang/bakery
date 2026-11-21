@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Footer ideas · Bingsu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#f7f5f1; --ink:#26222e; --purple:#6a46b8; --muted:#6b6572; --line:#e2ddd4; --page:#e8e5df; color-scheme: light; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: Archivo, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.intro { max-width: 1240px; margin: 0 auto; padding: 56px 16px 24px; }
+.intro h1 { font-size: clamp(28px, 4vw, 40px); font-stretch: 125%; font-weight: 800; letter-spacing: -.03em; margin: 0 0 10px; }
+.intro p { max-width: 680px; color: var(--muted); line-height: 1.55; margin: 0; }
+.intro nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.intro nav a { text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 99px; background: #fff; border: 1px solid var(--line); }
+.var { max-width: 1240px; margin: 0 auto; padding: 32px 16px; }
+.vh { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.vh .vn { font: 600 12px 'IBM Plex Mono', monospace; color: var(--purple); }
+.vh h2 { font-size: 20px; font-stretch: 112%; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.vh p { margin: 0; color: var(--muted); font-size: 15px; flex: 1 1 320px; }
+.vh button { font: 500 13px Archivo, sans-serif; background: none; border: 1px solid #cfc9bf; border-radius: 99px; padding: 5px 12px; cursor: pointer; color: var(--ink); }
+.vh button:hover { background: #fff; }
+.frame { border-radius: 14px; overflow: hidden; background: #fdfcfa; box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 12px 40px -24px rgba(38,34,46,.35); }
+.above { height: 150px; padding: 40px clamp(16px, 6vw, 88px) 0; }
+.above i { display: block; height: 10px; border-radius: 5px; background: #ece8e1; margin-bottom: 12px; width: min(560px, 80%); }
+.above i:nth-child(2) { width: min(480px, 66%); } .above i:nth-child(3) { width: min(300px, 40%); }
+
+/* the footer, as it is today */
+.ft { position: relative; background: var(--bg); border-top: 1px solid var(--line); padding: clamp(56px, 9vw, 104px) clamp(16px, 6vw, 88px) 28px; }
+.fm { display: flex; align-items: center; justify-content: space-between; gap: 28px 40px; flex-wrap: wrap; }
+.big { margin: 0; font-weight: 800; font-stretch: 125%; font-size: clamp(29px, 8.2vw, 78px); line-height: .98; letter-spacing: -.035em; color: var(--ink); }
+.big em { display: block; font-style: italic; color: var(--purple); }
+.cta { display: inline-flex; align-items: center; gap: .4em; background: var(--ink); color: #fff; text-decoration: none; border: 0; border-radius: 6px; padding: 17px 24px; font: 600 16px Archivo, sans-serif; cursor: pointer; position: relative; z-index: 2; transition: transform .45s cubic-bezier(.3,1.7,.5,1), border-radius .45s cubic-bezier(.3,1.7,.5,1), background .2s; }
+.cta:hover { background: #3a3445; }
+.cta:focus-visible, .fb a:focus-visible, .vh button:focus-visible { outline: 2px solid var(--purple); outline-offset: 3px; }
+.fb { position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 12px 28px; flex-wrap: wrap; margin-top: clamp(64px, 9vw, 104px); font-size: 14px; color: var(--muted); }
+.fb nav { display: flex; gap: 12px 26px; flex-wrap: wrap; }
+.fb a { text-decoration: none; color: var(--ink); }
+.fb a:hover { color: var(--purple); }
+canvas { display: block; }
+
+/* 1 peekaboo */
+.peek { position: absolute; bottom: 100%; right: clamp(24px, 14vw, 200px); width: 150px; height: 112px; cursor: pointer; }
+
+/* 2 fresh bake */
+.ctawrap { position: relative; }
+.oven { position: absolute; left: 50%; bottom: calc(100% - 16px); width: 190px; height: 170px; transform: translateX(-50%); pointer-events: none; z-index: 1; }
+.dough:hover, .dough:focus-visible { transform: translateY(-3px) scale(1.05, 1.1); border-radius: 22px 22px 6px 6px; }
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.note { position: absolute; left: 50%; top: calc(100% + 10px); transform: translateX(-50%); white-space: nowrap; font-size: 13px; color: var(--purple); opacity: 0; transition: opacity .3s; }
+.note.on { opacity: 1; }
+
+/* 3 nap */
+.nap { position: absolute; bottom: 100%; left: 56%; width: 170px; height: 150px; cursor: pointer; }
+
+/* 4 piped */
+.pipe { display: block; height: 1.06em; width: auto; overflow: visible; cursor: pointer; }
+.l2 { display: flex; align-items: flex-end; }
+.piper { width: 1.15em; height: 1.15em; margin-left: .08em; flex: none; }
+.pipe .g { fill: transparent; stroke: var(--purple); stroke-width: 3.4; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+.pipe.go .g { animation: pipe .55s cubic-bezier(.5,0,.4,1) forwards, fill .35s ease-out forwards; animation-delay: var(--d), calc(var(--d) + .4s); }
+@keyframes pipe { to { stroke-dashoffset: 0; } }
+@keyframes fill { to { fill: var(--purple); } }
+.pipe .treat { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
+.pipe.go .treat { animation: drop .6s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--d); }
+@keyframes drop { from { opacity: 0; transform: translateY(-60px) rotate(-30deg); } 30% { opacity: 1; } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pipe .g { stroke-dashoffset: 0; fill: var(--purple); animation: none !important; } .pipe .treat { opacity: 1; animation: none !important; } }
+
+/* 5 lift-off */
+.totop { position: relative; }
+.balloon { position: absolute; right: -10px; bottom: 1.2em; width: 86px; height: 128px; pointer-events: none; }
+#sky { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; }
+
+/* 6 ticket */
+.tkwrap { position: relative; flex: none; transform: rotate(2.5deg); transition: transform .5s cubic-bezier(.3,1.5,.5,1); width: min(272px, 100%); }
+@media (min-width: 900px) { #v6 .fm { flex-wrap: nowrap; } }
+.tkwrap:hover, .tkwrap:focus-within { transform: rotate(0) translateY(-4px); }
+.tkcat { position: absolute; right: 22px; bottom: calc(100% - 30px); width: 104px; height: 96px; }
+.ticket { position: relative; z-index: 1; background: #fff; padding: 20px 22px 30px; font: 500 13px/1.45 'IBM Plex Mono', monospace; color: var(--ink); box-shadow: 0 10px 30px -14px rgba(38,34,46,.35);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%; mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%; }
+.tkh { display: flex; justify-content: space-between; font-weight: 600; letter-spacing: .08em; border-bottom: 1.5px dashed #cfc9bf; padding-bottom: 10px; margin-bottom: 12px; }
+.ticket dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0 0 18px; }
+.ticket dt { color: var(--muted); } .ticket dd { margin: 0; }
+.ticket .cta { width: 100%; justify-content: center; }
+.stamp { position: absolute; z-index: 2; right: 14px; top: 64px; font: 800 22px Archivo, sans-serif; font-stretch: 125%; text-transform: uppercase; letter-spacing: -.01em; color: var(--purple); border: 3px solid var(--purple); border-radius: 8px; padding: 4px 10px; transform: rotate(-12deg) scale(2.4); opacity: 0; pointer-events: none; mix-blend-mode: multiply; transition: transform .35s cubic-bezier(.5,1.9,.6,1), opacity .2s; }
+.stamp.on { transform: rotate(-12deg) scale(1); opacity: .9; }
+
+/* 7 regulars */
+.street { position: absolute; left: 0; right: 0; bottom: 100%; width: 100%; height: 96px; pointer-events: none; }
+.v7 .fb { margin-top: clamp(110px, 13vw, 150px); }
+
+@media (prefers-reduced-motion: reduce) { .cta, .tkwrap, .stamp { transition: none; } }
+@media (max-width: 640px) {
+  .peek { right: 20px; } .nap { left: auto; right: 16px; }
+  .ft .fm > .ctawrap, .ft .fm > .cta { margin-top: 8px; }
+  .ft .fm > .ctawrap { margin-top: 56px; } .oven { height: 120px; width: 140px; }
+  .tkwrap { margin-top: 40px; }
+}
+</style>
+</head>
+<body id="top">
+
+<header class="intro">
+  <h1>Footer ideas, with Bingsu</h1>
+  <p>Seven takes on the portfolio footer, each built on the current layout (headline, “Let’s talk”, bottom row). Everything is live: hover, click, scroll. Headline face: <b>Archivo</b> at 125% width, weight 800, with its true italic for “make next?”. Bingsu, the bakes and the customers are the real game art.</p>
+  <nav><a href="#v1">1 Peekaboo</a><a href="#v2">2 Fresh bake</a><a href="#v3">3 Catnap</a><a href="#v4">4 Piped</a><a href="#v5">5 Lift-off</a><a href="#v6">6 Order ticket</a><a href="#v7">7 Regulars</a></nav>
+</header>
+
+<section class="var" id="v1">
+  <div class="vh"><span class="vn">01</span><h2>Peekaboo</h2><p>Bingsu peeks over the divider and watches your cursor; he ducks, a bit shy, when you go for “Let’s talk”. Click him for a smile.</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft"><canvas class="peek" aria-hidden="true"></canvas>
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var" id="v2">
+  <div class="vh"><span class="vn">02</span><h2>Fresh bake</h2><p>The button rises like dough on hover and Bingsu pops up behind it with something fresh. Click for sprinkles and the next bake.</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft"><canvas class="fx" aria-hidden="true"></canvas>
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2>
+      <div class="ctawrap"><canvas class="oven" aria-hidden="true"></canvas><a class="cta dough" href="#">Let’s talk ↗</a><span class="note" aria-live="polite"></span></div></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var" id="v3">
+  <div class="vh"><span class="vn">03</span><h2>Catnap</h2><p>Bingsu dozes on the divider. Scroll him into view and he wakes, stretches and waves; leave him alone and he nods off again.</p><button data-replay="v3">Replay</button></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft"><canvas class="nap" aria-hidden="true"></canvas>
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var" id="v4">
+  <div class="vh"><span class="vn">04</span><h2>Piped</h2><p>“make next?” is piped in icing, letter by letter, by a tiny Bingsu, and the dot of the “?” lands as a bake. Click the line for another batch.</p><button data-replay="v4">Replay</button></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft">
+    <div class="fm"><h2 class="big">What should we<span class="l2"><svg class="pipe" role="img" aria-label="make next?"></svg><canvas class="piper" aria-hidden="true"></canvas></span></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var" id="v5">
+  <div class="vh"><span class="vn">05</span><h2>Lift-off</h2><p>Bingsu waits on “Back to top” with a balloon. Click it and he floats you up the page (this scrolls the whole page to the top).</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft">
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top" class="totop"><canvas class="balloon" aria-hidden="true"></canvas>Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var" id="v6">
+  <div class="vh"><span class="vn">06</span><h2>Order ticket</h2><p>The CTA becomes a bakery order slip with Bingsu peeking over the top. Hover straightens it; “Place order” stamps it.</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft">
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2>
+      <div class="tkwrap"><canvas class="tkcat" aria-hidden="true"></canvas>
+        <div class="ticket"><div class="tkh"><span>ORDER</span><span class="tkno">#027</span></div>
+          <dl><dt>Item</dt><dd>1 × new project</dd><dt>Baker</dt><dd>Your Name</dd><dt>Ready</dt><dd>Whenever you are</dd></dl>
+          <a class="cta" href="#">Place order ↗</a><div class="stamp">Order up!</div></div></div></div>
+    <div class="fb"><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<section class="var v7" id="v7">
+  <div class="vh"><span class="vn">07</span><h2>Regulars</h2><p>The bakery’s customers wander through above the bottom row, one at a time. They wave at your cursor, perk up near the links and hop if you click them.</p></div>
+  <div class="frame"><div class="above"><i></i><i></i><i></i></div>
+  <footer class="ft">
+    <div class="fm"><h2 class="big">What should we<em>make next?</em></h2><a class="cta" href="#">Let’s talk ↗</a></div>
+    <div class="fb"><canvas class="street" aria-hidden="true"></canvas><span>Your Name · Product designer</span><nav><a href="#">Email ↗</a><a href="#">LinkedIn ↗</a><a href="#top">Back to top ↑</a></nav></div>
+  </footer></div>
+</section>
+
+<div style="height:60px"></div>
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<script src="bakery/critters/critter-art.js"></script>
+<script src="bakery/critters/critters.js"></script>
+<script>
+(() => {
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CINK = '#5d5049', CAT = '#fad2b7', HAT = '#f9e8d0', PURPLE = '#6a46b8';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), ease = (a, b, k) => a + (b - a)*k;
+
+// ---- art ----
+const PARTS = {body:[279,378], ear:[364,380], tail:[858,685], spots:[522,410], blushL:[407,642], blushR:[761,642], face_joy:[400,570], face_sleep:[400,570]};
+const IM = {}, ITEMS = {};
+const load = (src) => new Promise(r => { const im = new Image(); im.onload = im.onerror = () => r(im); im.src = src; });
+const ready = Promise.all([
+  ...Object.keys(PARTS).map(k => load(`bakery/cat/${k}.png`).then(im => IM[k] = im)),
+  ...['croissants', 'cookies', 'muffins', 'bread', 'cake', 'tart'].map(k => load(`bakery/items/${k}.png`).then(im => ITEMS[k] = im)),
+]);
+// parts live on a shared 1278×1230 canvas; the PNGs are half size
+function pimg(g, k, dx = 0, dy = 0) { const [x, y] = PARTS[k], im = IM[k]; if (im && im.naturalWidth) g.drawImage(im, x + dx, y + dy, im.naturalWidth*2, im.naturalHeight*2); }
+function nub(g, x, y, open) {
+  g.beginPath(); g.ellipse(x, y, 50, 45, 0, 0, 7); g.fillStyle = CAT; g.fill();
+  g.beginPath(); open ? g.ellipse(x, y, 50, 45, 0, -.3, Math.PI + .3) : g.ellipse(x, y, 50, 45, 0, 0, 7);
+  g.strokeStyle = CINK; g.lineWidth = 15; g.lineCap = 'round'; g.stroke();
+}
+function hat(g) {
+  g.save(); g.translate(593, 411); g.scale(5, 5); g.rotate(-.13);
+  const puffs = [[-17, -22, 14], [1, -31, 16], [18, -21, 13]];
+  g.lineWidth = 6; g.strokeStyle = CINK; g.fillStyle = HAT;
+  for (const [a, b, r] of puffs) { g.beginPath(); g.arc(a, b, r, 0, 7); g.stroke(); }
+  for (const [a, b, r] of puffs) { g.beginPath(); g.arc(a, b, r, 0, 7); g.fill(); }
+  g.fillRect(-20, -22, 40, 16);
+  g.beginPath(); g.roundRect(-19, -10, 38, 17, 5); g.fill(); g.lineWidth = 3; g.lineJoin = 'round'; g.stroke();
+  g.fillRect(-17, -13, 34, 5);
+  g.beginPath(); g.moveTo(-17, -4); g.lineTo(17, -7); g.strokeStyle = '#f6a988'; g.lineWidth = 4; g.lineCap = 'round'; g.stroke();
+  g.restore();
+}
+// Bingsu in source units, origin of the cat at (623,711). o: mood open|joy|sleep|o, look [-1..1]², blink, droop, tail, pawL/pawR [x,y,raised], before(g) (drawn over body, under paws)
+function bingsu(g, o = {}) {
+  const t = o.t || 0, mood = o.mood || 'open';
+  g.save(); g.translate(880, 895); g.rotate(o.tail ?? Math.sin(t*1.6)*.25); g.translate(-880, -895); pimg(g, 'tail'); g.restore();
+  for (const s of [-1, 1]) {
+    g.save(); if (s > 0) { g.translate(1246, 0); g.scale(-1, 1); }
+    g.translate(470, 515); g.rotate(-(o.droop || 0)*.45 + (s > 0 ? o.earR || 0 : o.earL || 0)); g.scale(1.25, 1.25); g.translate(-470, -535); pimg(g, 'ear'); g.restore();
+  }
+  pimg(g, 'body'); pimg(g, 'spots');
+  const [lx, ly] = (o.look || [0, 0]).map((v, i) => v*(i ? 18 : 30));
+  if (mood === 'joy' || mood === 'sleep') pimg(g, 'face_' + mood, lx*.5, ly*.5);
+  else {
+    pimg(g, 'blushL', lx*.5, ly*.4); pimg(g, 'blushR', lx*.5, ly*.4);
+    g.strokeStyle = CINK; g.fillStyle = CINK; g.lineWidth = 12.5; g.lineCap = 'round';
+    for (const ex of [505 + lx, 745 + lx]) {
+      g.beginPath();
+      if (o.blink) { g.arc(ex, 625 + ly, 25, Math.PI*.2, Math.PI*.8); g.stroke(); }
+      else { g.ellipse(ex, 630 + ly, 25, 26, 0, 0, 7); g.fill(); g.beginPath(); g.fillStyle = '#fff'; g.arc(ex + 8, 621 + ly, 7, 0, 7); g.fill(); g.fillStyle = CINK; }
+    }
+    const mx = 627 + lx*.7, my = 652 + ly*.7;
+    g.beginPath();
+    if (mood === 'o') { g.ellipse(mx, my + 4, 11, 14, 0, 0, 7); g.stroke(); }
+    else { g.arc(mx, my - 15, 25, Math.PI*.15, Math.PI*.85); g.stroke(); }
+  }
+  if (o.before) o.before(g);
+  const L = o.pawL || [513, 841], R = o.pawR || [733, 841];
+  nub(g, L[0], L[1], !L[2]); nub(g, R[0], R[1], !R[2]);
+  if (o.after) o.after(g);
+  if (o.hat !== false) hat(g);
+}
+function bake(g, k, cx, cy, w) { const im = ITEMS[k]; if (!im || !im.naturalWidth) return; const h = w*im.naturalHeight/im.naturalWidth; g.drawImage(im, cx - w/2, cy - h/2, w, h); }
+
+// ---- canvas helpers ----
+const DPR = () => Math.min(2, devicePixelRatio || 1);
+function fit(c) {
+  const r = c.getBoundingClientRect(), d = DPR(), W = Math.round(r.width*d), H = Math.round(r.height*d);
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, r.width, r.height);
+  return {g, w: r.width, h: r.height, r, d};
+}
+// put the cat's origin at (x,y) css px, k px per source unit; squash keeps the feet (source y 1046) planted
+function place(f, x, y, k, rot = 0, sy = 1) {
+  const g = f.g; g.setTransform(f.d, 0, 0, f.d, 0, 0); g.translate(x, y + (1046 - 711)*k*(1 - sy)); g.rotate(rot); g.scale(k, k*sy); g.translate(-623, -711);
+}
+function blinker() { let n = 1 + Math.random()*3, b = 0; return dt => { if (RM) return false; if ((n -= dt) < 0) { b = .14; n = 2.5 + Math.random()*4; } b = Math.max(0, b - dt); return b > 0; }; }
+const P = {x: -1e4, y: -1e4, has: false};
+addEventListener('pointermove', e => { P.x = e.clientX; P.y = e.clientY; P.has = e.pointerType === 'mouse' || P.has; }, {passive: true});
+function look(cx, cy, t, wander = true) {   // viewport point of the eyes -> look vector
+  if (!P.has) return wander && !RM ? [Math.sin(t*.45)*.6, .15] : [0, .1];
+  const dx = P.x - cx, dy = P.y - cy;
+  return [clamp(dx/(Math.abs(dx) + 160), -1, 1), clamp(dy/(Math.abs(dy) + 160), -1, 1)];
+}
+const follow = (cur, tgt, dt, rate = 10) => RM ? tgt.slice() : cur.map((v, i) => ease(v, tgt[i], Math.min(1, dt*rate)));
+
+// ---- loop: only visible variations draw ----
+const regs = [];
+function reg(id, make) { const el = document.getElementById(id), r = {el, vis: false, fn: make(el)}; regs.push(r); io.observe(el); return r; }
+const io = new IntersectionObserver(es => es.forEach(e => { const r = regs.find(r => r.el === e.target); if (r) { r.vis = e.isIntersecting; r.ratio = e.intersectionRatio; r.el.dispatchEvent(new CustomEvent('vis', {detail: e})); } }), {threshold: [0, .35, .7]});
+let last = 0;
+function frame(now) {
+  const s = now/1000, dt = Math.min(.05, s - (last || s)); last = s;
+  const t = RM ? 0 : s;
+  for (const r of regs) if (r.vis || (r.always && r.always())) r.fn(t, dt, s);
+  requestAnimationFrame(frame);
+}
+const replays = {};
+document.querySelectorAll('[data-replay]').forEach(b => b.onclick = () => replays[b.dataset.replay]?.());
+document.querySelectorAll('a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+
+// 1 · Peekaboo ------------------------------------------------------------
+reg('v1', el => {
+  const c = el.querySelector('.peek'), cta = el.querySelector('.cta'), bl = blinker();
+  let hov = 0, duck = 0, joy = 0, lk = [0, 0], bump = 0;
+  cta.addEventListener('pointerenter', () => hov = 1); cta.addEventListener('pointerleave', () => hov = 0);
+  cta.addEventListener('focus', () => hov = 1); cta.addEventListener('blur', () => hov = 0);
+  c.addEventListener('click', () => { joy = 1.6; bump = 1; });
+  return (t, dt) => {
+    const f = fit(c), k = Math.min(.17, f.w/820);
+    duck = RM ? hov : ease(duck, hov, Math.min(1, dt*(hov ? 14 : 4)));
+    joy = Math.max(0, joy - dt); bump = Math.max(0, bump - dt*3);
+    const eyeY = f.h - (700 - 630)*k + duck*f.h;
+    lk = follow(lk, hov ? [-.7, .7] : look(f.r.left + f.w/2, f.r.top + eyeY, t), dt);
+    const y = f.h + (711 - 700)*k + duck*(f.h + 10) - Math.sin(bump*Math.PI)*10 + (RM ? 0 : Math.sin(t*1.7)*1.2);
+    place(f, f.w/2, y, k, lk[0]*.09);
+    bingsu(f.g, {t, look: lk, blink: bl(dt), mood: joy > 0 ? 'joy' : 'open', earL: lk[0]*.15, earR: -lk[0]*.15});
+  };
+});
+
+// 2 · Fresh bake ----------------------------------------------------------
+reg('v2', el => {
+  const c = el.querySelector('.oven'), fx = el.querySelector('.fx'), cta = el.querySelector('.cta'), note = el.querySelector('.note'), bl = blinker();
+  const BAKES = [['croissants', 'Croissants, fresh out of the oven'], ['cookies', 'Warm cookies, just for you'], ['cake', 'A whole cake. Let’s celebrate'], ['muffins', 'Muffins, still steaming'], ['bread', 'A crusty loaf, hot from the oven'], ['tart', 'A berry tart, just glazed']];
+  let hov = 0, rise = 0, hop = 0, bi = 0, joy = 0, lk = [0, 0], parts = [], nt;
+  const on = v => () => hov = v;
+  cta.addEventListener('pointerenter', on(1)); cta.addEventListener('pointerleave', on(0)); cta.addEventListener('focus', on(1)); cta.addEventListener('blur', on(0));
+  cta.addEventListener('click', e => {
+    e.preventDefault(); hop = 1; joy = 1.8;
+    note.textContent = BAKES[bi][1]; note.classList.add('on'); clearTimeout(nt); nt = setTimeout(() => { note.classList.remove('on'); bi = (bi + 1) % BAKES.length; }, 1600);
+    const fr = el.querySelector('.ft').getBoundingClientRect(), br = cta.getBoundingClientRect(), ox = br.left - fr.left + br.width/2, oy = br.top - fr.top;
+    if (!RM) for (let i = 0; i < 70; i++) { const a = -Math.PI/2 + (Math.random() - .5)*2.4, v = 260 + Math.random()*360; parts.push({x: ox + (Math.random() - .5)*br.width*.8, y: oy + 6, vx: Math.cos(a)*v, vy: Math.sin(a)*v, r: Math.random()*6, vr: (Math.random() - .5)*14, col: ['#6a46b8', '#f7b6c2', '#f6a988', '#9fd8c0', '#f6d36b', '#f4b183'][i % 6], life: 1.6 + Math.random()*.6}); }
+  });
+  return (t, dt) => {
+    const f = fit(c), k = Math.min(.14, f.h/1200);
+    rise = RM ? hov || joy > 0 ? 1 : 0 : ease(rise, hov || joy > 0 ? 1 : 0, Math.min(1, dt*(hov ? 9 : 5)));
+    hop = Math.max(0, hop - dt*2.2); joy = Math.max(0, joy - dt);
+    const lift = rise*(980 - 700)*k + Math.sin(hop*Math.PI)*26;
+    const eyeY = f.h - 16 - (690 - 630)*k - lift;
+    lk = follow(lk, rise > .5 ? [0, .2] : look(f.r.left + f.w/2, f.r.top + eyeY, t), dt);
+    place(f, f.w/2, f.h - 16 + (711 - 690)*k - lift, k, Math.sin(hop*Math.PI*2)*.05);
+    const show = rise > .02, by = 800 - (1 - rise)*60;
+    bingsu(f.g, {t, look: lk, blink: bl(dt), mood: rise > .5 || joy > 0 ? 'joy' : 'open',
+      after: show ? g => { g.globalAlpha = Math.min(1, rise*1.5); bake(g, BAKES[bi][0], 623, by, 430); g.globalAlpha = 1; nub(g, 440, by + 50, false); nub(g, 806, by + 50, false); } : null,
+      pawL: show ? [-999, 0] : undefined, pawR: show ? [-999, 0] : undefined});
+    // sprinkles
+    const F = fit(fx), g = F.g;
+    parts = parts.filter(p => (p.life -= dt) > 0);
+    for (const p of parts) {
+      p.vy += 900*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= .99; p.r += p.vr*dt;
+      g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.globalAlpha = Math.min(1, p.life*2); g.fillStyle = p.col; g.beginPath(); g.roundRect(-5, -2, 10, 4, 2); g.fill(); g.restore();
+    }
+  };
+});
+
+// 3 · Catnap --------------------------------------------------------------
+{
+  const r = reg('v3', el => {
+    const c = el.querySelector('.nap'), bl = blinker();
+    let st = 'sleep', since = 0, idle = 0, lk = [0, 0], wakeT;
+    const wake = () => { if (st === 'sleep') { st = 'wake'; since = 0; idle = 0; } };
+    el.addEventListener('vis', e => {
+      clearTimeout(wakeT);
+      if (!e.detail.isIntersecting) { st = 'sleep'; return; }
+      if (e.detail.intersectionRatio >= .35) wakeT = setTimeout(wake, 700);
+    });
+    c.addEventListener('pointerenter', () => { wake(); idle = 0; });
+    c.addEventListener('click', () => { st = 'wake'; since = .6; idle = 0; });
+    replays.v3 = () => { st = 'sleep'; clearTimeout(wakeT); wakeT = setTimeout(wake, 1200); };
+    return (t, dt) => {
+      const f = fit(c), k = Math.min(.15, f.w/900), g = f.g;
+      since += dt; idle += dt;
+      const ftr = el.querySelector('.ft').getBoundingClientRect();
+      if (P.x > ftr.left && P.x < ftr.right && P.y > ftr.top - 160 && P.y < ftr.bottom) idle = Math.min(idle, 3);
+      if (st === 'wake' && since > 3.2) st = 'awake';
+      if (st === 'awake' && idle > 9) st = 'sleep';
+      const x = f.w/2, y = f.h - (1046 - 711)*k;
+      if (st === 'sleep') {
+        const br = RM ? 0 : Math.sin(t*1.3);
+        place(f, x, y, k, .1, .93 + br*.015);
+        bingsu(g, {t, mood: 'sleep', droop: .6, tail: .35});
+        g.setTransform(f.d, 0, 0, f.d, 0, 0); g.fillStyle = PURPLE; g.textAlign = 'center';
+        for (let i = 0; i < 3; i++) {
+          const p = RM ? i/3 + .15 : (t*.32 + i/3) % 1;
+          g.globalAlpha = Math.sin(p*Math.PI)*.75; g.font = `italic 800 ${10 + p*9}px Archivo`;
+          g.fillText('z', x + 40*k/.15 + p*26, y - 330*k/.15*.2 - 18 - p*34);
+        }
+        g.globalAlpha = 1;
+        return;
+      }
+      const w = st === 'wake' ? since : 9;   // 0–.6 stretch, .6–3 wave
+      const stretch = RM ? 1 : w < .6 ? 1 + Math.sin(w/.6*Math.PI)*.08 : 1;
+      const waving = st === 'wake' && w > .5, wv = RM ? 0 : Math.sin(t*11)*45;
+      lk = follow(lk, waving ? [.2, .1] : look(f.r.left + x, f.r.top + y - 80*k, t), dt, 6);
+      place(f, x, y, k, waving ? -.05 : lk[0]*.06, stretch);
+      bingsu(g, {t, look: lk, mood: w < .3 && st === 'wake' ? 'sleep' : waving && w > 1 && w < 2.4 ? 'joy' : 'open', blink: bl(dt),
+        droop: st === 'wake' ? Math.max(0, .6 - w) : 0, pawR: waving ? [950, 600 + wv, 1] : undefined});
+    };
+  });
+}
+
+// 4 · Piped ---------------------------------------------------------------
+reg('v4', el => {
+  const svg = el.querySelector('.pipe'), c = el.querySelector('.piper'), bl = blinker(), NS = 'http://www.w3.org/2000/svg';
+  const TREATS = ['croissants', 'cookies', 'tart', 'muffins'];
+  let ti = 0, start = -1, total = 1.6, built = false, played = false, lk = [0, 0];
+  const build = () => {
+    svg.innerHTML = '';
+    const mk = (tag, a) => { const n = document.createElementNS(NS, tag); for (const k in a) n.setAttribute(k, a[k]); return n; };
+    const style = 'font: italic 800 100px Archivo, sans-serif; font-stretch: 125%; letter-spacing: -3.5px';
+    const probe = mk('text', {x: 0, y: 90, style}); probe.textContent = 'make next?'; svg.appendChild(probe);
+    const n = probe.textContent.length, xs = [...Array(n)].map((_, i) => probe.getStartPositionOfChar(i).x), wEnd = probe.getComputedTextLength();
+    svg.removeChild(probe);
+    const defs = mk('defs', {}); svg.appendChild(defs);
+    const qi = n - 1, step = .09;
+    for (let i = 0; i < n; i++) {
+      const ch = probe.textContent[i]; if (ch === ' ') continue;
+      const tx = mk('text', {x: xs[i], y: 90, class: 'g', style: style + `; --d: ${(i*step).toFixed(2)}s`}); tx.textContent = ch;
+      if (i === qi) { const cp = mk('clipPath', {id: 'qclip'}); cp.appendChild(mk('rect', {x: xs[i] - 20, y: -20, width: 120, height: 88})); defs.appendChild(cp); tx.setAttribute('clip-path', 'url(#qclip)'); }
+      svg.appendChild(tx);
+    }
+    const qx = xs[qi], tw = 34;
+    const im = mk('image', {class: 'treat', href: `bakery/items/${TREATS[ti]}.png`, x: qx + 2, y: 90 - 22, width: tw - 4, height: 22, preserveAspectRatio: 'xMidYMax meet', style: `--d: ${(qi*step + .45).toFixed(2)}s`});
+    svg.appendChild(im);
+    svg.setAttribute('viewBox', `-6 0 ${wEnd + 14} 106`);
+    total = qi*step + 1.1; built = true;
+  };
+  const play = () => { if (!built) return; svg.classList.remove('go'); void svg.getBoundingClientRect(); svg.classList.add('go'); start = performance.now()/1000; played = true; };
+  svg.addEventListener('click', () => { ti = (ti + 1) % TREATS.length; build(); play(); });
+  replays.v4 = () => { build(); play(); };
+  document.fonts.ready.then(() => { build(); if (RM) svg.classList.add('go'); });
+  el.addEventListener('vis', e => { if (e.detail.intersectionRatio >= .35 && !played) setTimeout(play, 300); });
+  return (t, dt, s) => {
+    const f = fit(c), k = f.h/1150, g = f.g, p = start < 0 ? 0 : s - start, piping = !RM && start >= 0 && p < total, done = start >= 0 && p >= total && p < total + 1.8;
+    lk = follow(lk, piping ? [-.9, .5] : look(f.r.left + f.w/2, f.r.top + f.h*.45, t), dt);
+    const shake = piping ? Math.sin(t*30)*12 : 0;
+    place(f, f.w*.58, f.h - (1046 - 711)*k + (piping ? -Math.abs(Math.sin(t*9))*3 : 0), k, piping ? -.08 : 0);
+    bingsu(g, {t, look: lk, blink: bl(dt), mood: done ? 'joy' : 'open',
+      pawL: [470 + shake, 830, 1], pawR: [680 + shake, 760, 1],
+      before: g => {   // piping bag, tip toward the "?"
+        g.save(); g.translate(shake, 0);
+        g.beginPath(); g.moveTo(640, 640); g.lineTo(800, 760); g.lineTo(300, 960); g.closePath();
+        g.fillStyle = '#fffaf2'; g.fill(); g.strokeStyle = CINK; g.lineWidth = 14; g.lineJoin = 'round'; g.stroke();
+        g.beginPath(); g.moveTo(560, 720); g.lineTo(700, 830); g.lineTo(300, 960); g.closePath(); g.fillStyle = PURPLE; g.globalAlpha = .85; g.fill(); g.globalAlpha = 1;
+        g.beginPath(); g.moveTo(330, 930); g.lineTo(290, 975); g.lineTo(360, 950); g.fillStyle = '#c8c2bb'; g.fill(); g.stroke();
+        g.restore();
+      }});
+  };
+});
+
+// 5 · Lift-off ------------------------------------------------------------
+{
+  const sky = document.getElementById('sky');
+  function balloonCat(f, x, y, k, t, o = {}) {
+    const g = f.g, sw = RM ? 0 : Math.sin(t*1.8)*.06 + (o.tug || 0)*.08;
+    place(f, x, y, k, o.rot || 0);
+    const bx = 1080 + Math.sin(t*1.3)*30*(RM ? 0 : 1), by = -260 - (o.tug || 0)*40;
+    // string
+    g.beginPath(); g.moveTo(950, 560); g.quadraticCurveTo(1060 + Math.sin(t*2)*40, 200, bx, by + 230); g.strokeStyle = CINK; g.lineWidth = 8; g.stroke();
+    // balloon
+    g.save(); g.translate(bx, by); g.rotate(sw);
+    g.beginPath(); g.ellipse(0, 0, 175, 205, 0, 0, 7); g.fillStyle = PURPLE; g.fill(); g.strokeStyle = CINK; g.lineWidth = 15; g.stroke();
+    g.beginPath(); g.moveTo(-26, 222); g.lineTo(0, 200); g.lineTo(26, 222); g.closePath(); g.fillStyle = PURPLE; g.fill(); g.lineWidth = 10; g.stroke();
+    g.beginPath(); g.ellipse(-70, -80, 34, 58, .5, 0, 7); g.fillStyle = 'rgba(255,255,255,.35)'; g.fill();
+    g.restore();
+    bingsu(g, {t, look: o.look, blink: o.blink, mood: o.mood, pawR: [950, 580, 1], pawL: o.fly ? [300, 600 + Math.sin(t*9)*30, 1] : undefined, tail: o.fly ? Math.sin(t*5)*.4 : undefined});
+  }
+  reg('v5', el => {
+    const c = el.querySelector('.balloon'), a = el.querySelector('.totop'), bl = blinker();
+    let tug = 0, hov = 0, fly = null, lk = [0, 0];
+    a.addEventListener('pointerenter', () => hov = 1); a.addEventListener('pointerleave', () => hov = 0);
+    a.addEventListener('focus', () => hov = 1); a.addEventListener('blur', () => hov = 0);
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (RM) { scrollTo(0, 0); return; }
+      if (fly) return;
+      const r = c.getBoundingClientRect(); fly = {x: r.left, y: r.top, w: r.width, h: r.height, t: 0};
+      setTimeout(() => scrollTo({top: 0, behavior: 'smooth'}), 350);
+    });
+    setTimeout(() => regs.find(q => q.el === el).always = () => !!fly, 0);
+    return (t, dt) => {
+      tug = RM ? hov : ease(tug, hov, Math.min(1, dt*8));
+      const k = .07;
+      if (fly) {
+        fly.t += dt;
+        const f = fit(sky), p = fly.t, rise = p < .35 ? -p*30 : -10 - (p - .35)**2*420 - (p - .35)*120;
+        const x = fly.x + fly.w*.42 + Math.sin(p*2.4)*18, y = fly.y + fly.h - (1046 - 711)*k + rise;
+        balloonCat(f, x, y, k*1.1, t, {fly: true, mood: 'joy', rot: Math.sin(p*3)*.08});
+        fit(c);
+        if (y < -200) { fly = null; fit(sky); }
+        return;
+      }
+      const f = fit(c);
+      lk = follow(lk, hov ? [.3, -.9] : look(f.r.left + f.w*.42, f.r.top + f.h - 40, t), dt);
+      balloonCat(f, f.w*.42, f.h - (1046 - 711)*k - tug*5, k, t, {tug, look: lk, blink: bl(dt), mood: hov ? 'joy' : 'open'});
+    };
+  });
+}
+
+// 6 · Order ticket --------------------------------------------------------
+reg('v6', el => {
+  const c = el.querySelector('.tkcat'), cta = el.querySelector('.cta'), stamp = el.querySelector('.stamp'), no = el.querySelector('.tkno'), bl = blinker();
+  let n = 27, joy = 0, hop = 0, lk = [0, 0];
+  cta.addEventListener('click', e => {
+    e.preventDefault();
+    if (stamp.classList.contains('on')) { stamp.classList.remove('on'); no.textContent = '#0' + (++n); cta.firstChild.textContent = 'Place order ↗'; return; }
+    stamp.classList.add('on'); joy = 2.2; hop = 1; cta.firstChild.textContent = 'New order ↺';
+  });
+  return (t, dt) => {
+    const f = fit(c), k = Math.min(.12, f.w/850);
+    joy = Math.max(0, joy - dt); hop = Math.max(0, hop - dt*2.5);
+    lk = follow(lk, look(f.r.left + f.w/2, f.r.top + f.h - 50, t), dt);
+    place(f, f.w/2, f.h + (711 - 720)*k - 30 - Math.sin(hop*Math.PI)*16, k, lk[0]*.07);
+    bingsu(f.g, {t, look: lk, blink: bl(dt), mood: joy > 0 ? 'joy' : 'open', pawL: [470, 720], pawR: [776, 720]});
+  };
+});
+
+// 7 · Regulars ------------------------------------------------------------
+reg('v7', el => {
+  const c = el.querySelector('.street'), ft = el.querySelector('.ft'), links = [...el.querySelectorAll('.fb a')];
+  const CAST = [['Bun', 'bunny'], ['Hazel', 'hedgehog'], ['Mo', 'bear'], ['Pip', 'frog'], ['Tango', 'cat'], ['Mango', 'duck']];
+  const B = window.BakeryCritters;
+  let ci = 0, crowd = [], W = 800, hot = null, nextIn = 0;
+  const spawn = (x, state = 'in') => {
+    const [name, kind] = CAST[ci++ % CAST.length];
+    crowd.push({name, crit: B ? new B.Critter(kind) : null, x: x ?? W + 50, dir: -1, state, target: W*(.25 + Math.random()*.45), stay: 6 + Math.random()*3, at: 0, hop: 0, tt: Math.random()*10});
+  };
+  links.forEach(a => { a.addEventListener('pointerenter', () => hot = a); a.addEventListener('pointerleave', () => hot = null); });
+  ft.addEventListener('click', e => {
+    const r = c.getBoundingClientRect();
+    for (const q of crowd) if (Math.abs(e.clientX - r.left - q.x) < 34 && e.clientY > r.bottom - 80 && e.clientY < r.bottom + 4) { q.hop = 1.4; q.tag = 2; }
+  });
+  return (t, dt) => {
+    const f = fit(c), g = f.g, H = Math.min(70, f.w*.14), feet = f.h - 6; W = f.w;
+    if (RM) { if (!crowd.length) { spawn(W*.3, 'stand'); spawn(W*.62, 'stand'); crowd.forEach(q => q.stay = 1e9); } }
+    else if (!crowd.some(q => q.state !== 'out') && (nextIn -= dt) < 0) { spawn(); nextIn = 1.5; }
+    const hr = hot && hot.getBoundingClientRect();
+    for (const q of crowd) {
+      q.tt += dt; q.hop = Math.max(0, q.hop - dt); q.tag = Math.max(0, (q.tag || 0) - dt);
+      const sx = f.r.left + q.x, near = P.has && Math.abs(P.x - sx) < 120 && Math.abs(P.y - (f.r.top + feet - H*.6)) < 140;
+      if (near) q.tag = Math.max(q.tag, .3);
+      let act = 'idle', dir = 0;
+      if (q.state === 'in') { q.x -= 70*dt; act = 'walk'; dir = -1; if (q.x <= q.target) { q.state = 'stand'; q.at = 0; } }
+      else if (q.state === 'stand') {
+        q.at += dt; act = q.at % 7 < 3 ? 'idle' : 'lookAround';
+        if (near) { act = 'wave'; q.at = Math.min(q.at, q.stay - 2); }
+        if (hr) { const lx = hr.left + hr.width/2 - f.r.left; dir = lx > q.x ? 1 : -1; act = Math.abs(lx - q.x) < 260 ? 'excited' : act; }
+        if (q.at > q.stay) q.state = 'out';
+      } else { q.x -= 70*dt; act = 'walk'; dir = -1; }
+      if (q.hop > 0) act = 'hop';
+      if (q.crit) q.crit.draw(g, act, RM ? 0 : q.tt, dt, q.x, feet, H, dir);
+      if (q.tag > 0) {
+        g.setTransform(f.d, 0, 0, f.d, 0, 0); g.globalAlpha = Math.min(1, q.tag*4);
+        g.font = '600 12px Archivo, sans-serif'; g.textAlign = 'center'; g.fillStyle = '#26222e';
+        const tw = g.measureText(q.name).width + 14; g.beginPath(); g.roundRect(q.x - tw/2, feet - H - 26, tw, 20, 10); g.fill();
+        g.fillStyle = '#fff'; g.fillText(q.name, q.x, feet - H - 12); g.globalAlpha = 1;
+      }
+    }
+    crowd = crowd.filter(q => q.x > -60);
+  };
+});
+
+ready.then(() => requestAnimationFrame(frame));
+})();
+</script>
+</body>
+</html>
