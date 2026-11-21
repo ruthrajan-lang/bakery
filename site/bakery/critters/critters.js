@@ -55,7 +55,7 @@
       const part = n => A.parts.find(q => q.n === n);
       const paint = (q, face2) => { g.fillStyle = ink; g.fill(q.O, 'evenodd'); g.fillStyle = q.fc; g.fill(q.F, 'evenodd');
         if (face2) { g.save(); g.clip(q.F, 'evenodd'); g.translate(face2.lx, 0); }
-        for (const [col, d] of q.D) { g.fillStyle = col; g.fill(d, 'evenodd'); }
+        if (q.n !== 'mane') for (const [col, d] of q.D) { g.fillStyle = col; g.fill(d, 'evenodd'); }   // the coat reads best as one clean colour
         if (q.K) { g.fillStyle = ink; g.fill(q.K, 'evenodd'); }
         if (face2) { face2.draw(q); g.restore(); } };
       const about = (q, ang, fn) => { g.save(); g.translate(q.piv[0], q.piv[1]); g.rotate(ang); g.translate(-q.piv[0], -q.piv[1]); fn(); g.restore(); };
