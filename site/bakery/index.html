@@ -2366,7 +2366,8 @@ function tapVisitor(x, y) {
   let a; do a = TAP_ACTS[Math.random()*TAP_ACTS.length|0]; while (a === V.lastTap && TAP_ACTS.length > 1); V.lastTap = a;
   if (V.state !== 'invite') { V.state = 'act'; V.act = a; V.t = 0; }
   if (critter(V.c)) { critter(V.c).poke = 1; critter(V.c).giggle = .9; } giggleSound();
-  const L = Math.random() < .5 ? ['Hehe!', 'Teehee~', 'Hihi!', '*giggles*'] : TAP_LINES[a]; floats.push({x: V.x + 40, y: V.hit[1] - 6, text: L[Math.random()*L.length|0], t: 0});
+  const L = Math.random() < .5 ? ['Hehe!', 'Teehee~', 'Hihi!', '*giggles*'] : TAP_LINES[a]; for (let i = floats.length - 1; i >= 0; i--) if (floats[i].tap) floats.splice(i, 1);   // one reaction line at a time
+  floats.push({x: V.x + 40, y: V.hit[1] - 6, text: L[Math.random()*L.length|0], t: 0, tap: true});
   for (let i = 0; i < 5; i++) parts.push({x: V.x + (Math.random() - .5)*60, y: V.hit[1] + 30, vx: (Math.random() - .5)*50, vy: -40 - Math.random()*50, life: 0, max: 1.1, r: 4 + Math.random()*3, color: '#f7a6b5', grow: 2, heart: true});
   if (shopClosed) breakTouch = Date.now();
   return true;
